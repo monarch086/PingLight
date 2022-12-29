@@ -29,16 +29,23 @@ namespace PingLight.App
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
                 Logging.LogError(ex);
+
                 return new State();
             }
         }
 
         public static void SaveState(State state)
         {
-            string jsonString = JsonSerializer.Serialize(state);
-            File.WriteAllText(fileName, jsonString);
+            try
+            {
+                string jsonString = JsonSerializer.Serialize(state);
+                File.WriteAllText(fileName, jsonString);
+            }
+            catch (Exception ex)
+            {
+                Logging.LogError(ex);
+            }
         }
     }
 }

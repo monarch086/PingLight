@@ -38,7 +38,6 @@ namespace PingLight.App
                 }
                 catch(Exception ex)
                 {
-                    Console.WriteLine(ex.ToString());
                     Logging.LogError(ex);
                 }
             }
@@ -58,9 +57,6 @@ namespace PingLight.App
             StateManager.SaveState(currentState);
 
             var message = successPing ? bot.GetLightOnMessage(timeSpan) : bot.GetLightOffMessage(timeSpan);
-            Console.OutputEncoding = Encoding.UTF8;
-            Console.ForegroundColor = successPing ? ConsoleColor.Green : ConsoleColor.Red;
-            Console.WriteLine(message);
 
             await bot.Post(message, channelId);
 
