@@ -12,6 +12,28 @@ For publishing project two profiles available:
  - local folder profile
  - docker image profile - Dockerfile included
 
+## Docker Image
+ - build image:
+```
+docker build -t pingapp -f PingLight.App\Dockerfile .
+```
+ - run container:
+```
+docker run -it pingapp
+```
+ - stop container:
+```
+docker stop pingapp
+```
+ - remove container:
+```
+docker rm pingapp
+```
+ - remove image:
+```
+docker rmi pingapp:latest
+```
+
 ## Running
 To start app open command terminal and run one of these commands:
  - to run with TEST configs:
