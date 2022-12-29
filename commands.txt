@@ -1,0 +1,12 @@
+# Docker Commands
+
+# build
+docker build -t pingapp -f PingLight.App\Dockerfile .
+# run
+docker run -it pingapp
+
+docker --context pingacicontext run -it pingapp
+
+docker stop pingapp
+docker rm pingapp
+docker rmi pingapp:latest

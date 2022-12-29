@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "PingLight.App": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}
