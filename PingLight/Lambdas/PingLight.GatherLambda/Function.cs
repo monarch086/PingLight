@@ -21,14 +21,14 @@ public class Function
         var client = new AmazonDynamoDBClient();
         var table = Table.LoadTable(client, tableName);
 
-        var item = createDynamoDBItem(inputData.Id);
+        var item = createDBItem(inputData.Id);
 
         var document = Document.FromAttributeMap(item);
 
         await table.PutItemAsync(document);
     }
 
-    private Dictionary<string, AttributeValue> createDynamoDBItem(string id)
+    private Dictionary<string, AttributeValue> createDBItem(string id)
     {
         return new Dictionary<string, AttributeValue>()
           {

@@ -1,6 +1,6 @@
-﻿namespace PingLight.AggregateChanges.Lambda
+﻿namespace PingLight.Core.Model
 {
-    internal class Change
+    public class Change
     {
         public string DeviceId { get; set; }
 
