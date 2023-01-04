@@ -1,9 +1,7 @@
-using Amazon.DynamoDBv2.DocumentModel;
-using Amazon.DynamoDBv2;
 using Amazon.Lambda.Core;
 using System.Text.Json.Nodes;
 using System.Text.Json;
-using Amazon.DynamoDBv2.Model;
+using PingLight.Core;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
@@ -17,23 +15,10 @@ public class Function
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
     {
         var inputData = input["queryStringParameters"].Deserialize<InputModel>();
+        if (inputData == null) { return; }
 
-        var client = new AmazonDynamoDBClient();
-        var table = Table.LoadTable(client, tableName);
+        var repo = new DynamoDbRepository(context.Logger);
 
-        var item = createDBItem(inputData.Id);
-
-        var document = Document.FromAttributeMap(item);
-
-        await table.PutItemAsync(document);
-    }
-
-    private Dictionary<string, AttributeValue> createDBItem(string id)
-    {
-        return new Dictionary<string, AttributeValue>()
-          {
-              { "Id", new AttributeValue { S = id }},
-              { "LastPingDate", new AttributeValue { S = DateTime.UtcNow.ToString("O") }},
-          };
+        await repo.AddPing(inputData.Id);
     }
 }

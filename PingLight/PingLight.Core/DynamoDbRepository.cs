@@ -1,12 +1,11 @@
 ﻿using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2;
 using Amazon.Lambda.Core;
-using Amazon.DynamoDBv2.Model;
 using PingLight.Core.Model;
 
-namespace PingLight.AggregateChanges.Lambda
+namespace PingLight.Core
 {
-    internal class DynamoDbRepository
+    public class DynamoDbRepository
     {
         private static string pingTableName = "PingLight.Status";
         private static string changesTableName = "PingLight.Changes";
@@ -24,6 +23,13 @@ namespace PingLight.AggregateChanges.Lambda
             this.logger = logger;
         }
 
+        public async Task AddPing(string deviceId)
+        {
+            var item = new PingInfo { Id = deviceId, LastPingDate = DateTime.UtcNow };
+
+            await pingTable.PutItemAsync(item.ToDocument());
+        }
+
         public async Task<List<PingInfo>> GetPings()
         {
             var pings = new List<PingInfo>();
@@ -38,14 +44,16 @@ namespace PingLight.AggregateChanges.Lambda
                 var documents = await scanResult.GetNextSetAsync();
                 foreach (var document in documents)
                 {
-                    var deviceId = document["Id"];
-                    var lastPingDate = DateTime.Parse(document["LastPingDate"]);
-
-                    pings.Add(new PingInfo { Id = deviceId, LastPingDate = lastPingDate });
+                    pings.Add(document.ToPingInfo());
                 }
             } while (!scanResult.IsDone);
 
             return pings;
+        }
+
+        public async Task AddChange(Change change)
+        {
+            await changesTable.PutItemAsync(change.ToDocument());
         }
 
         public async Task<Change?> GetLatestChange(string deviceId)
@@ -62,35 +70,21 @@ namespace PingLight.AggregateChanges.Lambda
             var queryResult = changesTable.Query(config);
             logger.LogInformation($"Query result count: {queryResult.Count}");
 
-            var records = await queryResult.GetNextSetAsync();
+            var documents = await queryResult.GetNextSetAsync();
 
-            if (records.Count > 0)
+            if (documents.Count > 0)
             {
-                logger.LogInformation($"Found change: {records[0]["DeviceId"]} - {records[0]["ChangeDate"]}");
+                logger.LogInformation($"Found change: {documents[0]["DeviceId"]} - {documents[0]["ChangeDate"]}");
 
-                return new Change
-                {
-                    DeviceId = records[0]["DeviceId"].AsString(),
-                    ChangeDate = DateTime.Parse(records[0]["ChangeDate"].AsString()),
-                    IsLight = records[0]["IsLight"].AsBoolean(),
-                };
+                return documents[0].ToChange();
             }
 
             return null;
         }
 
-        public async Task AddChange(Change change)
+        public async Task<List<Change>> GetChanges(string deviceId, DateTime from, DateTime till)
         {
-            var item = new Dictionary<string, AttributeValue>()
-            {
-                { "DeviceId", new AttributeValue { S = change.DeviceId } },
-                { "ChangeDate", new AttributeValue { S = change.ChangeDate.ToString("O") } },
-                { "IsLight", new AttributeValue { BOOL = change.IsLight }}
-            };
-
-            var document = Document.FromAttributeMap(item);
-
-            await changesTable.PutItemAsync(document);
+            return new List<Change>();
         }
     }
 }
