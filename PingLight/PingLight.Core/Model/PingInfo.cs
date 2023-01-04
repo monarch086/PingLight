@@ -1,6 +1,6 @@
-﻿namespace PingLight.AggregateChanges.Lambda
+﻿namespace PingLight.Core.Model
 {
-    internal class Status
+    public class PingInfo
     {
         public string Id { get; set; }
 

@@ -1,6 +1,7 @@
 using Amazon.Lambda.Core;
 using PingLight.AggregateChanges.Lambda.Config;
 using PingLight.Core;
+using PingLight.Core.Model;
 using System.Text.Json.Nodes;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -17,13 +18,13 @@ public class Function
         var config = await ConfigBuilder.Build(false, context.Logger);
         var repo = new DynamoDbRepository(context.Logger);
 
-        var statuses = await repo.GetStatuses();
+        var pings = await repo.GetPings();
 
-        foreach (var status in statuses)
+        foreach (var ping in pings)
         {
-            var change = await repo.GetLatestChange(status.Id);
-            var changed = change == null || isChanged(status.LastPingDate, change.IsLight);
-            if (changed) await statusChanged(repo, config, status, change);
+            var change = await repo.GetLatestChange(ping.Id);
+            var changed = change == null || isChanged(ping.LastPingDate, change.IsLight);
+            if (changed) await statusChanged(repo, config, ping, change);
         }
 
         context.Logger.LogInformation("Stream processing complete.");
@@ -37,7 +38,7 @@ public class Function
         return isLight != currentStatus;
     }
 
-    private async Task statusChanged(DynamoDbRepository repo, PingConfig config, Status status, Change? lastChange)
+    private async Task statusChanged(DynamoDbRepository repo, PingConfig config, PingInfo ping, Change? lastChange)
     {
         var isLight = lastChange != null ? !lastChange.IsLight : true;
         var timespan = lastChange != null ? DateTime.UtcNow - lastChange.ChangeDate : TimeSpan.Zero;
@@ -45,7 +46,7 @@ public class Function
         // Add change to DB
         await repo.AddChange(new Change 
         {
-            DeviceId = status.Id,
+            DeviceId = ping.Id,
             ChangeDate = DateTime.UtcNow,
             IsLight = isLight
         });

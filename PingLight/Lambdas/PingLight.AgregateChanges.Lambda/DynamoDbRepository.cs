@@ -2,33 +2,34 @@
 using Amazon.DynamoDBv2;
 using Amazon.Lambda.Core;
 using Amazon.DynamoDBv2.Model;
+using PingLight.Core.Model;
 
 namespace PingLight.AggregateChanges.Lambda
 {
     internal class DynamoDbRepository
     {
-        private static string statusTableName = "PingLight.Status";
+        private static string pingTableName = "PingLight.Status";
         private static string changesTableName = "PingLight.Changes";
 
         private readonly AmazonDynamoDBClient client;
-        private readonly Table statusTable;
+        private readonly Table pingTable;
         private readonly Table changesTable;
         private readonly ILambdaLogger logger;
 
         public DynamoDbRepository(ILambdaLogger logger)
         {
             client = new AmazonDynamoDBClient();
-            statusTable = Table.LoadTable(client, statusTableName);
+            pingTable = Table.LoadTable(client, pingTableName);
             changesTable = Table.LoadTable(client, changesTableName);
             this.logger = logger;
         }
 
-        public async Task<List<Status>> GetStatuses()
+        public async Task<List<PingInfo>> GetPings()
         {
-            var statuses = new List<Status>();
+            var pings = new List<PingInfo>();
 
             var scanFilter = new ScanFilter();
-            var scanResult = statusTable.Scan(scanFilter);
+            var scanResult = pingTable.Scan(scanFilter);
 
             logger.LogInformation($"Scan result count: {scanResult.Count}");
 
@@ -40,11 +41,11 @@ namespace PingLight.AggregateChanges.Lambda
                     var deviceId = document["Id"];
                     var lastPingDate = DateTime.Parse(document["LastPingDate"]);
 
-                    statuses.Add(new Status { Id = deviceId, LastPingDate = lastPingDate });
+                    pings.Add(new PingInfo { Id = deviceId, LastPingDate = lastPingDate });
                 }
             } while (!scanResult.IsDone);
 
-            return statuses;
+            return pings;
         }
 
         public async Task<Change?> GetLatestChange(string deviceId)
