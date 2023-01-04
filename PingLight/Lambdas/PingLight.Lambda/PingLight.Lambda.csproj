@@ -15,6 +15,6 @@
     <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.3.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\PingLight.Core\PingLight.Core.csproj" />
+    <ProjectReference Include="..\..\PingLight.Core\PingLight.Core.csproj" />
   </ItemGroup>
 </Project>

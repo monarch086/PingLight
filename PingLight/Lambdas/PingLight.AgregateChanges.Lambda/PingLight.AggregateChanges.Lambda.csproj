@@ -19,6 +19,6 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\PingLight.Core\PingLight.Core.csproj" />
+    <ProjectReference Include="..\..\PingLight.Core\PingLight.Core.csproj" />
   </ItemGroup>
 </Project>
