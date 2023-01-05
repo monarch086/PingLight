@@ -1,6 +1,6 @@
 using Amazon.Lambda.Core;
-using PingLight.AggregateChanges.Lambda.Config;
 using PingLight.Core;
+using PingLight.Core.Config;
 using PingLight.Core.Model;
 using System.Text.Json.Nodes;
 

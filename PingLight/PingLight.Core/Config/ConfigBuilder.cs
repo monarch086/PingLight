@@ -1,11 +1,10 @@
 ﻿using Amazon.Lambda.Core;
 using Amazon.SimpleSystemsManagement.Model;
 using Amazon.SimpleSystemsManagement;
-using Microsoft.Extensions.Configuration;
 
-namespace PingLight.AggregateChanges.Lambda.Config
+namespace PingLight.Core.Config
 {
-    internal class ConfigBuilder
+    public class ConfigBuilder
     {
         private static string PROD_SUFIX = ".prod";
         private static string TOKEN_PARAM_NAME = "PingLight.TelegramBot.Token";
