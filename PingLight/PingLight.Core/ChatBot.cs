@@ -5,6 +5,10 @@ namespace PingLight.Core
 {
     public class ChatBot
     {
+        private const string LIGHT_ICON = "✨";
+        private const string EXCLAMATION_ICON = "‼";
+        private const string STATS_ICON = "📊";
+
         private TelegramBotClient client;
 
         public ChatBot(string token)
@@ -19,12 +23,30 @@ namespace PingLight.Core
 
         public string GetLightOnMessage(TimeSpan timeSpan)
         {
-            return $"\U00002728 Є світло!\nСвітло було відсутнє протягом{getTimePart(timeSpan)}.";
+            return $"{LIGHT_ICON} Є світло!\nСвітло було відсутнє протягом{getTimePart(timeSpan)}.";
         }
 
         public string GetLightOffMessage(TimeSpan timeSpan)
         {
-            return $"\U0000203C Нема світла((\nСвітло було протягом{getTimePart(timeSpan)}.";
+            return $"{EXCLAMATION_ICON} Нема світла((\nСвітло було протягом{getTimePart(timeSpan)}.";
+        }
+
+        public string GetDailyStatsMessage(List<TimeSpan> blackouts)
+        {
+            var sb = new StringBuilder($"{STATS_ICON} Статистика:\n");
+
+            if (blackouts.Count == 0)
+            {
+                sb.Append("За минулу добу не зафіксовано відключень світла.");
+                return sb.ToString();
+            }
+
+            var total = blackouts.Aggregate((a, b) => a.Add(b));
+
+            sb.Append($"За минулу добу світло було відключене {blackouts.Count} разів ");
+            sb.Append($"на {total.Hours} годин {total.Minutes} хвилин.");
+
+            return sb.ToString();
         }
 
         private string getTimePart(TimeSpan timeSpan)
