@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Telegram.Bot;
+using Telegram.Bot.Types;
 
 namespace PingLight.Core
 {
@@ -19,6 +20,23 @@ namespace PingLight.Core
         public async Task Post(string message, string channelId)
         {
             var t = await client.SendTextMessageAsync(channelId, message);
+        }
+
+        public async Task PostImage(string fileName, string text, string channelId)
+        {
+            Message message;
+
+            var basePath = AppDomain.CurrentDomain.BaseDirectory;
+            var finalPath = Path.Combine(basePath, fileName);
+
+            using (Stream stream = System.IO.File.OpenRead(finalPath))
+            {
+                message = await client.SendPhotoAsync(
+                    chatId: channelId,
+                    photo: stream,
+                    caption: text
+                );
+            }
         }
 
         public string GetLightOnMessage(TimeSpan timeSpan)
