@@ -1,5 +1,6 @@
 using Amazon.Lambda.Core;
 using PingLight.Core;
+using PingLight.Core.Config;
 using PingLight.Core.Model;
 using System.Text.Json.Nodes;
 
@@ -10,8 +11,11 @@ namespace PingLight.DailyStats.Lambda;
 
 public class Function
 {
+    private const string CHANNEL_ID = "38627946";
+
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
     {
+        var config = await ConfigBuilder.Build(false, context.Logger);
         var repo = new DynamoDbRepository(context.Logger);
 
         var from = DateTime.Today.AddDays(-1);
@@ -22,9 +26,21 @@ public class Function
         var changes = await repo.GetChanges("12", from, till);
         var blackouts = CreateBlackoutTimespans(changes, context.Logger);
 
-        var total = blackouts.Aggregate((a, b) => a.Add(b));
+        // Post to TG
+        var bot = new ChatBot(config.Token);
+        var message = MessageBuilder.GetDailyStatsMessage(blackouts);
 
-        context.Logger.LogInformation($"Found {blackouts.Count} blackouts for total {total.Hours} h {total.Minutes} m.");
+        //var chart = ChartGenerator.GenerateUrl();
+        //await bot.Post(message + "\n" + chart, CHANNEL_ID);
+
+        var total = blackouts.combineTimespans();
+        var absentPercents = PercentCalculator.CalculateDailyPercents((int)total.TotalMinutes);
+        var presentPercents = 100 - absentPercents;
+
+        var chart = ChartGenerator.Generate(presentPercents, absentPercents);
+        await bot.PostImageBytes(chart, message, CHANNEL_ID);
+
+        context.Logger.LogInformation(message);
     }
 
     private List<TimeSpan> CreateBlackoutTimespans(List<Change> changes, ILambdaLogger logger)
