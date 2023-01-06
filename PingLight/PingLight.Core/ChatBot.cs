@@ -19,7 +19,7 @@ namespace PingLight.Core
 
         public async Task Post(string message, string channelId)
         {
-            var t = await client.SendTextMessageAsync(channelId, message);
+            var t = await client.SendTextMessageAsync(channelId, message, Telegram.Bot.Types.Enums.ParseMode.Html);
         }
 
         public async Task PostImage(string fileName, string text, string channelId)
@@ -31,11 +31,17 @@ namespace PingLight.Core
 
             using (Stream stream = System.IO.File.OpenRead(finalPath))
             {
-                message = await client.SendPhotoAsync(
-                    chatId: channelId,
-                    photo: stream,
-                    caption: text
-                );
+                message = await postImage(stream, text, channelId);
+            }
+        }
+
+        public async Task PostImageBytes(byte[] buffer, string text, string channelId)
+        {
+            Message message;
+
+            using (Stream stream = new MemoryStream(buffer))
+            {
+                message = await postImage(stream, text, channelId);
             }
         }
 
@@ -51,7 +57,7 @@ namespace PingLight.Core
 
         public string GetDailyStatsMessage(List<TimeSpan> blackouts)
         {
-            var sb = new StringBuilder($"{STATS_ICON} Статистика:\n");
+            var sb = new StringBuilder($"{STATS_ICON} Щоденна статистика:\n");
 
             if (blackouts.Count == 0)
             {
@@ -78,6 +84,15 @@ namespace PingLight.Core
             if (timeSpan.Minutes > 0) stringBuilder.Append($" {timeSpan.Minutes} хвилин");
 
             return stringBuilder.ToString();
+        }
+
+        private async Task<Message> postImage(Stream stream, string text, string channelId)
+        {
+            return await client.SendPhotoAsync(
+                chatId: channelId,
+                photo: stream,
+                caption: text
+            );
         }
     }
 }

@@ -10,6 +10,7 @@
     <PackageReference Include="Amazon.Extensions.Configuration.SystemsManager" Version="4.0.0" />
     <PackageReference Include="Amazon.Lambda.Core" Version="2.1.0" />
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.101.2" />
+    <PackageReference Include="ImageCharts" Version="5.2.0" />
     <PackageReference Include="Telegram.Bot" Version="18.0.0" />
   </ItemGroup>
 
