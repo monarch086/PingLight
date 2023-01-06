@@ -53,7 +53,7 @@ public class Function
 
         // Post to TG
         var bot = new ChatBot(config.Token);
-        var message = isLight ? bot.GetLightOnMessage(timespan) : bot.GetLightOffMessage(timespan);
+        var message = isLight ? MessageBuilder.GetLightOnMessage(timespan) : MessageBuilder.GetLightOffMessage(timespan);
 
         await bot.Post(message, ChannelId);
     }

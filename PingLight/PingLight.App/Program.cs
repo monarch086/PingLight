@@ -56,7 +56,7 @@ namespace PingLight.App
             currentState.IsLight = successPing;
             StateManager.SaveState(currentState);
 
-            var message = successPing ? bot.GetLightOnMessage(timeSpan) : bot.GetLightOffMessage(timeSpan);
+            var message = successPing ? MessageBuilder.GetLightOnMessage(timeSpan) : MessageBuilder.GetLightOffMessage(timeSpan);
 
             await bot.Post(message, channelId);
 
