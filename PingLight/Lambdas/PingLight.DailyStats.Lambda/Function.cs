@@ -1,6 +1,7 @@
 using Amazon.Lambda.Core;
 using PingLight.Core;
 using PingLight.Core.Config;
+using PingLight.Core.DeviceConfig;
 using PingLight.Core.Model;
 using System.Text.Json.Nodes;
 
@@ -11,36 +12,39 @@ namespace PingLight.DailyStats.Lambda;
 
 public class Function
 {
-    private const string CHANNEL_ID = "38627946";
-
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
     {
         var config = await ConfigBuilder.Build(false, context.Logger);
         var repo = new DynamoDbRepository(context.Logger);
+        var deviceRepo = new DeviceConfigRepo(context.Logger);
+
+        var devices = await deviceRepo.GetConfigs();
 
         var from = DateTime.Today.AddDays(-1);
         var till = DateTime.Today;
 
-        context.Logger.LogInformation($"Querying from {from.ToString("O")} till {till.ToString("O")}");
+        foreach (var device in devices)
+        {
+            context.Logger.LogInformation($"Querying for {device.DeviceId} from {from.ToString("O")} " +
+                $"till {till.ToString("O")}");
 
-        var changes = await repo.GetChanges("12", from, till);
-        var blackouts = CreateBlackoutTimespans(changes, context.Logger);
+            var changes = await repo.GetChanges(device.DeviceId, from, till);
 
-        // Post to TG
-        var bot = new ChatBot(config.Token);
-        var message = MessageBuilder.GetDailyStatsMessage(blackouts);
+            var blackouts = CreateBlackoutTimespans(changes, context.Logger);
 
-        //var chart = ChartGenerator.GenerateUrl();
-        //await bot.Post(message + "\n" + chart, CHANNEL_ID);
+            // Post to TG
+            var bot = new ChatBot(config.Token);
+            var message = MessageBuilder.GetDailyStatsMessage(blackouts);
 
-        var total = blackouts.combineTimespans();
-        var absentPercents = PercentCalculator.CalculateDailyPercents((int)total.TotalMinutes);
-        var presentPercents = 100 - absentPercents;
+            var total = blackouts.Any() ? blackouts.Combine() : TimeSpan.Zero;
+            var absentPercents = PercentCalculator.CalculateDailyPercents((int)total.TotalMinutes);
+            var presentPercents = 100 - absentPercents;
 
-        var chart = ChartGenerator.Generate(presentPercents, absentPercents);
-        await bot.PostImageBytes(chart, message, CHANNEL_ID);
+            var chart = ChartGenerator.Generate(presentPercents, absentPercents);
+            await bot.PostImageBytes(chart, message, device.ChatId);
 
-        context.Logger.LogInformation(message);
+            context.Logger.LogInformation(message);
+        }
     }
 
     private List<TimeSpan> CreateBlackoutTimespans(List<Change> changes, ILambdaLogger logger)

@@ -1,6 +1,7 @@
 using Amazon.Lambda.Core;
 using PingLight.Core;
 using PingLight.Core.Config;
+using PingLight.Core.DeviceConfig;
 using PingLight.Core.Model;
 using System.Text.Json.Nodes;
 
@@ -11,20 +12,21 @@ namespace PingLight.AggregateChanges.Lambda;
 
 public class Function
 {
-    private static string ChannelId = "38627946";
-
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
     {
         var config = await ConfigBuilder.Build(false, context.Logger);
         var repo = new DynamoDbRepository(context.Logger);
+        var deviceRepo = new DeviceConfigRepo(context.Logger);
 
+        var devices = await deviceRepo.GetConfigs();
         var pings = await repo.GetPings();
 
         foreach (var ping in pings)
         {
             var change = await repo.GetLatestChange(ping.Id);
             var changed = change == null || isChanged(ping.LastPingDate, change.IsLight);
-            if (changed) await statusChanged(repo, config, ping, change);
+            var device = devices.FirstOrDefault(d => d.DeviceId == ping.Id);
+            if (changed) await statusChanged(repo, config, ping, change, device);
         }
 
         context.Logger.LogInformation("Stream processing complete.");
@@ -38,7 +40,7 @@ public class Function
         return isLight != currentStatus;
     }
 
-    private async Task statusChanged(DynamoDbRepository repo, PingConfig config, PingInfo ping, Change? lastChange)
+    private async Task statusChanged(DynamoDbRepository repo, PingConfig config, PingInfo ping, Change? lastChange, Config? device)
     {
         var isLight = lastChange != null ? !lastChange.IsLight : true;
         var timespan = lastChange != null ? DateTime.UtcNow - lastChange.ChangeDate : TimeSpan.Zero;
@@ -52,9 +54,11 @@ public class Function
         });
 
         // Post to TG
-        var bot = new ChatBot(config.Token);
-        var message = isLight ? MessageBuilder.GetLightOnMessage(timespan) : MessageBuilder.GetLightOffMessage(timespan);
-
-        await bot.Post(message, ChannelId);
+        if (device != null)
+        {
+            var bot = new ChatBot(config.Token);
+            var message = isLight ? MessageBuilder.GetLightOnMessage(timespan) : MessageBuilder.GetLightOffMessage(timespan);
+            await bot.Post(message, device.ChatId);
+        }
     }
 }

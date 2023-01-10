@@ -28,10 +28,10 @@ namespace PingLight.Core
                 return sb.ToString();
             }
 
-            var total = blackouts.combineTimespans();
+            var total = blackouts.Combine();
 
-            sb.Append($"За минулу добу світло було відключене {blackouts.Count} разів ");
-            sb.Append($"на {total.Hours} годин {total.Minutes} хвилин.");
+            sb.Append($"За минулу добу світло було відключене {blackouts.Count.getTimes()} ");
+            sb.Append($"протягом {total.getHours()} {total.getMinutes()}.");
 
             return sb.ToString();
         }
