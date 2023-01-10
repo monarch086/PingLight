@@ -6,7 +6,7 @@
 
         public static int CalculateDailyPercents(int minutes)
         {
-            return minutes / MINS_IN_DAY * 100;
+            return minutes * 100 / MINS_IN_DAY;
         }
     }
 }
