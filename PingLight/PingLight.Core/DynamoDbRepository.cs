@@ -84,7 +84,32 @@ namespace PingLight.Core
 
         public async Task<List<Change>> GetChanges(string deviceId, DateTime from, DateTime till)
         {
-            return new List<Change>();
+            var changes = new List<Change>();
+
+            var filter = new QueryFilter("DeviceId", QueryOperator.Equal, deviceId);
+            filter.AddCondition("ChangeDate", QueryOperator.Between, from, till);
+
+            var config = new QueryOperationConfig()
+            {
+                Limit = 10,
+                Select = SelectValues.AllAttributes,
+                ConsistentRead = true,
+                Filter = filter
+            };
+
+            var queryResult = changesTable.Query(config);
+            logger.LogInformation($"Query result count: {queryResult.Count}");
+
+            do
+            {
+                var documents = await queryResult.GetNextSetAsync();
+                foreach (var document in documents)
+                {
+                    changes.Add(document.ToChange());
+                }
+            } while (!queryResult.IsDone);
+
+            return changes;
         }
     }
 }

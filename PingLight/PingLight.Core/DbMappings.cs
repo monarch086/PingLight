@@ -47,5 +47,15 @@ namespace PingLight.Core
                 LastPingDate = DateTime.Parse(document["LastPingDate"])
             };
         }
+
+        public static DeviceConfig.Config ToDeviceConfig(this Document document)
+        {
+            return new DeviceConfig.Config
+            {
+                DeviceId = document["DeviceId"].AsString(),
+                ChatId = document["ChatId"].AsString(),
+                Description = document["Description"].AsString()
+            };
+        }
     }
 }

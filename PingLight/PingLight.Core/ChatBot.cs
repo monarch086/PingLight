@@ -1,5 +1,5 @@
-﻿using System.Text;
-using Telegram.Bot;
+﻿using Telegram.Bot;
+using Telegram.Bot.Types;
 
 namespace PingLight.Core
 {
@@ -12,32 +12,41 @@ namespace PingLight.Core
             client = new TelegramBotClient(token);
         }
 
-        public async Task Post(string message, string channelId)
+        public async Task Post(string message, string chatId)
         {
-            var t = await client.SendTextMessageAsync(channelId, message);
+            var t = await client.SendTextMessageAsync(chatId, message, Telegram.Bot.Types.Enums.ParseMode.Html);
         }
 
-        public string GetLightOnMessage(TimeSpan timeSpan)
+        public async Task PostImage(string fileName, string text, string chatId)
         {
-            return $"\U00002728 Є світло!\nСвітло було відсутнє протягом{getTimePart(timeSpan)}.";
+            Message message;
+
+            var basePath = AppDomain.CurrentDomain.BaseDirectory;
+            var finalPath = Path.Combine(basePath, fileName);
+
+            using (Stream stream = System.IO.File.OpenRead(finalPath))
+            {
+                message = await postImage(stream, text, chatId);
+            }
         }
 
-        public string GetLightOffMessage(TimeSpan timeSpan)
+        public async Task PostImageBytes(byte[] buffer, string text, string chatId)
         {
-            return $"\U0000203C Нема світла((\nСвітло було протягом{getTimePart(timeSpan)}.";
+            Message message;
+
+            using (Stream stream = new MemoryStream(buffer))
+            {
+                message = await postImage(stream, text, chatId);
+            }
         }
 
-        private string getTimePart(TimeSpan timeSpan)
+        private async Task<Message> postImage(Stream stream, string text, string chatId)
         {
-            var stringBuilder = new StringBuilder();
-
-            if (timeSpan.Days > 0) stringBuilder.Append($" {timeSpan.Days} днів");
-
-            if (timeSpan.Hours > 0) stringBuilder.Append($" {timeSpan.Hours} годин");
-
-            if (timeSpan.Minutes > 0) stringBuilder.Append($" {timeSpan.Minutes} хвилин");
-
-            return stringBuilder.ToString();
+            return await client.SendPhotoAsync(
+                chatId: chatId,
+                photo: stream,
+                caption: text
+            );
         }
     }
 }
