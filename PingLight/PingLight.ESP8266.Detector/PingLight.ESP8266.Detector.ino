@@ -1,18 +1,17 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 
-const char* ssid = "Lamborghini";
-const char* password = "ghj82RTp";
+const char* ssid = "ssid";
+const char* password = "password";
 
-// const char* ssid = "Galaxy A72ED35";
-// const char* password = "ngxk5523";
-
-const char* host = "https://4f7ahkyqt26wng75ossxz4ndae0rvpsb.lambda-url.eu-central-1.on.aws";
+const char* host = "https://host.on.aws";
 const int httpsPort = 443;
 
-const String deviceId = "V61-45";
+const String deviceId = "deviceId";
 const String query = "/?Id=" + deviceId;
 const String url = host + query;
+
+const String body = "{\"Id\": " + deviceId + "}";
 
 // const char fingerprint[] PROGMEM = "CD 50 05 4F F8 6C E8 F7 6E DE 21 8E 80 93 2C 96 80 87 0A E3";
 
@@ -20,10 +19,11 @@ void setup() {
   Serial.begin(115200);
 
   Serial.println();
-  Serial.println("=== PingLightDetector v3 ===");
+  Serial.println("=== PingLightDetector ESP8266 ===");
   Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
+  Serial.println("MAC address: ");
+  Serial.println(WiFi.macAddress());
+  Serial.printf("Connecting to %s\n", ssid);
 
   WiFi.begin(ssid, password);
 }
@@ -63,7 +63,7 @@ void loop() {
 
   Serial.println(url);
 
-  // Serial.printf("Using fingerprint '%s'\n", fingerprint);
+  // For secure connection:
   // httpsClient.setFingerprint(fingerprint);
   httpsClient.setInsecure();
 
@@ -89,7 +89,7 @@ void loop() {
   http.begin(httpsClient, url);
   http.addHeader("Content-Type", "application/json");
 
-  int httpCode = http.POST("{\"hash\": \"34jh34uh3v\"}");
+  int httpCode = http.POST(body);
   if (httpCode > 0) {
     http.writeToStream(&Serial);
 
