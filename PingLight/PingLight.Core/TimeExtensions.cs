@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Text;
 
 namespace PingLight.Core
@@ -9,28 +10,28 @@ namespace PingLight.Core
         private static Dictionary<int[], string> DaysMap => new()
             {
                 { new int[] { 0 }, "днів" },
-                { items[2..14], "днів" },
+                { items[2..15], "днів" },
                 { new int[] { 1 }, "дня" }
             };
 
         private static Dictionary<int[], string> HoursMap => new()
             {
                 { new int[] { 0 }, "годин" },
-                { items[2..14], "годин" },
+                { items[2..15], "годин" },
                 { new int[] { 1 }, "години" }
             };
 
         private static Dictionary<int[], string> MinutesMap => new()
             {
                 { new int[] { 0 }, "хвилин" },
-                { items[2..14], "хвилин" },
+                { items[2..15], "хвилин" },
                 { new int[] { 1 }, "хвилини" }
             };
 
         private static Dictionary<int[], string> TimesMap => new()
             {
                 { new int[] { 0 }, "разів" },
-                { items[5..14], "разів" },
+                { items[5..15], "разів" },
                 { new int[] { 1 }, "раз" },
                 { items[2..5], "рази" }
             };
