@@ -1,6 +1,6 @@
 ﻿namespace PingLight.Core.Tests
 {
-    public class Tests
+    public class TimeExtensionsTests
     {
         [SetUp]
         public void Setup()

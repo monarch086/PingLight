@@ -2,7 +2,6 @@ using Amazon.Lambda.Core;
 using PingLight.Core;
 using PingLight.Core.Config;
 using PingLight.Core.DeviceConfig;
-using PingLight.Core.Model;
 using PingLight.Core.Persistence;
 using System.Text.Json.Nodes;
 
@@ -30,8 +29,7 @@ public class Function
                 $"till {till.ToString("O")}");
 
             var changes = await changesRepo.GetChanges(device.DeviceId, from, till);
-
-            var blackouts = CreateBlackoutTimespans(changes, context.Logger);
+            var blackouts = BlackoutCalculator.Calculate(changes);
 
             // Post to TG
             var bot = new ChatBot(config.Token);
@@ -46,35 +44,5 @@ public class Function
 
             context.Logger.LogInformation(message);
         }
-    }
-
-    private List<TimeSpan> CreateBlackoutTimespans(List<Change> changes, ILambdaLogger logger)
-    {
-        var blackouts = new List<TimeSpan>();
-
-        for (int i = 0; i < changes.Count; i++)
-        {
-            if (i == 0 && changes[i].IsLight)
-            {
-                blackouts.Add(changes[i].ChangeDate - changes[i].ChangeDate.Date);
-                logger.LogInformation($"Blackout: {changes[i].ChangeDate - changes[i].ChangeDate.Date}");
-            }
-
-            else if (i == changes.Count - 1 && !changes[i].IsLight)
-            {
-                var nextDay = changes[i].ChangeDate.Date.AddDays(1);
-                blackouts.Add(nextDay - changes[i].ChangeDate);
-                logger.LogInformation($"Blackout: {nextDay - changes[i].ChangeDate}");
-            }
-
-            else if (!changes[i].IsLight)
-            {
-                blackouts.Add(changes[i + 1].ChangeDate - changes[i].ChangeDate);
-                logger.LogInformation($"Blackout: {changes[i + 1].ChangeDate - changes[i].ChangeDate}");
-                //i++;
-            }
-        }
-
-        return blackouts;
     }
 }
