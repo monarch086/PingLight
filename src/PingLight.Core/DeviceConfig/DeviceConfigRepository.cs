@@ -1,10 +1,11 @@
 ﻿using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.Lambda.Core;
+using PingLight.Core.Persistence;
 
 namespace PingLight.Core.DeviceConfig
 {
-    public class DeviceConfigRepo
+    public class DeviceConfigRepository
     {
         private const string TABLE_NAME = "PingLight.DeviceConfigs";
 
@@ -12,7 +13,7 @@ namespace PingLight.Core.DeviceConfig
         private readonly Table configTable;
         private readonly ILambdaLogger logger;
 
-        public DeviceConfigRepo(ILambdaLogger logger)
+        public DeviceConfigRepository(ILambdaLogger logger)
         {
             client = new AmazonDynamoDBClient();
             configTable = Table.LoadTable(client, TABLE_NAME);
