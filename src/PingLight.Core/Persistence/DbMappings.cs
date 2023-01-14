@@ -2,7 +2,7 @@
 using Amazon.DynamoDBv2.Model;
 using PingLight.Core.Model;
 
-namespace PingLight.Core
+namespace PingLight.Core.Persistence
 {
     internal static class DbMappings
     {

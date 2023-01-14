@@ -3,6 +3,7 @@ using PingLight.Core;
 using PingLight.Core.Config;
 using PingLight.Core.DeviceConfig;
 using PingLight.Core.Model;
+using PingLight.Core.Persistence;
 using System.Text.Json.Nodes;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -15,10 +16,10 @@ public class Function
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
     {
         var config = await ConfigBuilder.Build(false, context.Logger);
-        var repo = new DynamoDbRepository(context.Logger);
-        var deviceRepo = new DeviceConfigRepo(context.Logger);
+        var changesRepo = new ChangesRepository(context.Logger);
+        var devicesRepo = new DeviceConfigRepository(context.Logger);
 
-        var devices = await deviceRepo.GetConfigs();
+        var devices = await devicesRepo.GetConfigs();
 
         var from = DateTime.Today.AddDays(-1);
         var till = DateTime.Today;
@@ -28,7 +29,7 @@ public class Function
             context.Logger.LogInformation($"Querying for {device.DeviceId} from {from.ToString("O")} " +
                 $"till {till.ToString("O")}");
 
-            var changes = await repo.GetChanges(device.DeviceId, from, till);
+            var changes = await changesRepo.GetChanges(device.DeviceId, from, till);
 
             var blackouts = CreateBlackoutTimespans(changes, context.Logger);
 

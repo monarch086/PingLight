@@ -3,6 +3,7 @@ using PingLight.Core;
 using PingLight.Core.Config;
 using PingLight.Core.DeviceConfig;
 using PingLight.Core.Model;
+using PingLight.Core.Persistence;
 using System.Text.Json.Nodes;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -15,18 +16,19 @@ public class Function
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
     {
         var config = await ConfigBuilder.Build(false, context.Logger);
-        var repo = new DynamoDbRepository(context.Logger);
-        var deviceRepo = new DeviceConfigRepo(context.Logger);
+        var pingsRepo = new PingsRepository(context.Logger);
+        var changesRepo = new ChangesRepository(context.Logger);
+        var deviceRepo = new DeviceConfigRepository(context.Logger);
 
         var devices = await deviceRepo.GetConfigs();
-        var pings = await repo.GetPings();
+        var pings = await pingsRepo.GetPings();
 
         foreach (var ping in pings)
         {
-            var change = await repo.GetLatestChange(ping.Id);
+            var change = await changesRepo.GetLatestChange(ping.Id);
             var changed = change == null || isChanged(ping.LastPingDate, change.IsLight);
             var device = devices.FirstOrDefault(d => d.DeviceId == ping.Id);
-            if (changed) await statusChanged(repo, config, ping, change, device);
+            if (changed) await statusChanged(changesRepo, config, ping, change, device);
         }
 
         context.Logger.LogInformation("Stream processing complete.");
@@ -40,13 +42,13 @@ public class Function
         return isLight != currentStatus;
     }
 
-    private async Task statusChanged(DynamoDbRepository repo, PingConfig config, PingInfo ping, Change? lastChange, Config? device)
+    private async Task statusChanged(ChangesRepository changesRepo, PingConfig config, PingInfo ping, Change? lastChange, Config? device)
     {
         var isLight = lastChange != null ? !lastChange.IsLight : true;
         var timespan = lastChange != null ? DateTime.UtcNow - lastChange.ChangeDate : TimeSpan.Zero;
 
         // Add change to DB
-        await repo.AddChange(new Change 
+        await changesRepo.AddChange(new Change 
         {
             DeviceId = ping.Id,
             ChangeDate = DateTime.UtcNow,
