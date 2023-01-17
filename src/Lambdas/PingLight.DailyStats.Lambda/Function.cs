@@ -14,9 +14,10 @@ public class Function
 {
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
     {
-        var config = await ConfigBuilder.Build(false, context.Logger);
+        var isProd = input.IsProduction();
+        var config = await ConfigBuilder.Build(isProd, context.Logger);
         var changesRepo = new ChangesRepository(context.Logger);
-        var devicesRepo = new DeviceConfigRepository(context.Logger);
+        var devicesRepo = new DeviceConfigRepository(isProd, context.Logger);
 
         var devices = await devicesRepo.GetConfigs();
 
@@ -38,6 +39,9 @@ public class Function
             var total = blackouts.Any() ? blackouts.Combine() : TimeSpan.Zero;
             var absentPercents = PercentCalculator.CalculateDailyPercents((int)total.TotalMinutes);
             var presentPercents = 100 - absentPercents;
+
+            context.Logger.LogInformation($"Total minutes: {total.TotalMinutes}, " + 
+                $"absentPercents = {absentPercents}, presentPercents = {presentPercents}.");
 
             var chart = ChartGenerator.Generate(presentPercents, absentPercents);
             await bot.PostImageBytes(chart, message, device.ChatId);
