@@ -15,10 +15,11 @@ public class Function
 {
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
     {
-        var config = await ConfigBuilder.Build(false, context.Logger);
+        var isProd = input.IsProduction();
+        var config = await ConfigBuilder.Build(isProd, context.Logger);
         var pingsRepo = new PingsRepository(context.Logger);
         var changesRepo = new ChangesRepository(context.Logger);
-        var deviceRepo = new DeviceConfigRepository(context.Logger);
+        var deviceRepo = new DeviceConfigRepository(isProd, context.Logger);
 
         var devices = await deviceRepo.GetConfigs();
         var pings = await pingsRepo.GetPings();
