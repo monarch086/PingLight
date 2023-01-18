@@ -4,7 +4,7 @@ namespace PingLight.Core
 {
     public class BlackoutCalculator
     {
-        public static List<TimeSpan> Calculate(List<Change> changes)
+        public static List<TimeSpan> Calculate(List<Change> changes, DateTime from, DateTime till)
         {
             var blackouts = new List<TimeSpan>();
 
@@ -13,14 +13,13 @@ namespace PingLight.Core
                 // if first change is light on
                 if (i == 0 && changes[i].IsLight)
                 {
-                    blackouts.Add(changes[i].ChangeDate - changes[i].ChangeDate.Date);
+                    blackouts.Add(changes[i].ChangeDate - from);
                 }
 
                 // if last change is light off
                 else if (i == changes.Count - 1 && !changes[i].IsLight)
                 {
-                    var nextDay = changes[i].ChangeDate.Date.AddDays(1);
-                    blackouts.Add(nextDay - changes[i].ChangeDate);
+                    blackouts.Add(till - changes[i].ChangeDate);
                 }
 
                 // just regular change

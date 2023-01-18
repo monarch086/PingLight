@@ -64,6 +64,11 @@ namespace PingLight.Core
             return getItems(timeSpan.Hours, HoursMap);
         }
 
+        public static string getTotalHours(this TimeSpan timeSpan)
+        {
+            return getItems((int)timeSpan.TotalHours, HoursMap);
+        }
+
         public static string getMinutes(this TimeSpan timeSpan)
         {
             return getItems(timeSpan.Minutes, MinutesMap);

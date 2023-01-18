@@ -31,7 +31,7 @@ namespace PingLight.Core
             var total = blackouts.Combine();
 
             sb.Append($"За минулу добу світло було відключене {blackouts.Count.getTimes()} ");
-            sb.Append($"протягом {total.getHours()} {total.getMinutes()}.");
+            sb.Append($"протягом {total.getTotalHours()} {total.getMinutes()}.");
 
             return sb.ToString();
         }
