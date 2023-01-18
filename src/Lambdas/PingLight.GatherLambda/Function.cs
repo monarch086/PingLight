@@ -10,6 +10,9 @@ namespace PingLight.Gather.Lambda;
 
 public class Function
 {
+    /// <summary>
+    /// A function that gets requests from detecting devices
+    /// </summary>
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
     {
         var inputData = input["queryStringParameters"].Deserialize<InputModel>();

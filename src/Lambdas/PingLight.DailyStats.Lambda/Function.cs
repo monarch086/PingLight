@@ -13,6 +13,9 @@ namespace PingLight.DailyStats.Lambda;
 
 public class Function
 {
+    /// <summary>
+    /// A function that calculates daily blackout statistics
+    /// </summary>
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
     {
         var isProd = input.IsProduction();

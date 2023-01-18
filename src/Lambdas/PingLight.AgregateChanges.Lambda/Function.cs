@@ -13,6 +13,9 @@ namespace PingLight.AggregateChanges.Lambda;
 
 public class Function
 {
+    /// <summary>
+    /// A function that finds out if there was a change in status and posts updates to TG
+    /// </summary>
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
     {
         var isProd = input.IsProduction();

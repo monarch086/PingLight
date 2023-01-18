@@ -8,13 +8,9 @@ namespace PingLight.Test;
 
 public class Function
 {
-    
     /// <summary>
     /// A simple function to test new functionality
     /// </summary>
-    /// <param name="input"></param>
-    /// <param name="context"></param>
-    /// <returns></returns>
     public void FunctionHandler(JsonObject input, ILambdaContext context)
     {
         // string env = Environment.GetEnvironmentVariable("environment");
