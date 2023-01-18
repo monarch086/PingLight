@@ -2,6 +2,7 @@ using Amazon.Lambda.Core;
 using PingLight.Core;
 using PingLight.Core.Config;
 using PingLight.Core.DeviceConfig;
+using PingLight.Core.Model;
 using PingLight.Core.Persistence;
 using System.Text.Json.Nodes;
 
@@ -16,6 +17,7 @@ public class Function
     {
         var isProd = input.IsProduction();
         var config = await ConfigBuilder.Build(isProd, context.Logger);
+        var bot = new ChatBot(config.Token);
         var changesRepo = new ChangesRepository(context.Logger);
         var devicesRepo = new DeviceConfigRepository(isProd, context.Logger);
 
@@ -30,23 +32,38 @@ public class Function
                 $"till {till.ToString("O")}");
 
             var changes = await changesRepo.GetChanges(device.DeviceId, from, till);
-            var blackouts = BlackoutCalculator.Calculate(changes);
+            if(!changes.Any())
+            {
+                await AppendChangeBasedOnPrevious(changes, device.DeviceId, from, changesRepo);
+            }
+
+            var blackouts = BlackoutCalculator.Calculate(changes, from, till);
 
             // Post to TG
-            var bot = new ChatBot(config.Token);
             var message = MessageBuilder.GetDailyStatsMessage(blackouts);
 
             var total = blackouts.Any() ? blackouts.Combine() : TimeSpan.Zero;
             var absentPercents = PercentCalculator.CalculateDailyPercents((int)total.TotalMinutes);
             var presentPercents = 100 - absentPercents;
 
-            context.Logger.LogInformation($"Total minutes: {total.TotalMinutes}, " + 
-                $"absentPercents = {absentPercents}, presentPercents = {presentPercents}.");
-
             var chart = ChartGenerator.Generate(presentPercents, absentPercents);
             await bot.PostImageBytes(chart, message, device.ChatId);
 
             context.Logger.LogInformation(message);
+        }
+    }
+
+    private async Task AppendChangeBasedOnPrevious(List<Change> changes, string deviceId, DateTime till, ChangesRepository repo)
+    {
+        var latestChange = await repo.GetLatestChange(deviceId, till);
+        if (latestChange != null && !latestChange.IsLight)
+        {
+            changes.Add(new Change
+            {
+                DeviceId = deviceId,
+                ChangeDate = till,
+                IsLight = false
+            });
         }
     }
 }

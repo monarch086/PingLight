@@ -25,8 +25,12 @@ namespace PingLight.Core.Persistence
             await changesTable.PutItemAsync(change.ToDocument());
         }
 
-        public async Task<Change?> GetLatestChange(string deviceId)
+        public async Task<Change?> GetLatestChange(string deviceId, DateTime? till = null)
         {
+            var filter = new QueryFilter("DeviceId", QueryOperator.Equal, deviceId);
+            if (till != null)
+                filter.AddCondition("ChangeDate", QueryOperator.LessThan, till);
+
             var config = new QueryOperationConfig()
             {
                 Limit = 1,
