@@ -21,6 +21,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PingLight.Core.Tests", "Tes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PingLight.Test", "Lambdas\PingLight.Test\PingLight.Test.csproj", "{964D2878-952F-4529-B2B9-78F69E2116CE}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PingLight.WeeklyStats.Lambda", "Lambdas\PingLight.WeeklyStats.Lambda\PingLight.WeeklyStats.Lambda.csproj", "{551EEEC5-49A3-4D1A-AEE8-39DE53B4F5C5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,10 @@ Global
 		{964D2878-952F-4529-B2B9-78F69E2116CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{964D2878-952F-4529-B2B9-78F69E2116CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{964D2878-952F-4529-B2B9-78F69E2116CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{551EEEC5-49A3-4D1A-AEE8-39DE53B4F5C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{551EEEC5-49A3-4D1A-AEE8-39DE53B4F5C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{551EEEC5-49A3-4D1A-AEE8-39DE53B4F5C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{551EEEC5-49A3-4D1A-AEE8-39DE53B4F5C5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -65,6 +71,7 @@ Global
 		{B809C458-354C-4F45-A17E-B1756D069F21} = {FC391FCC-55C3-4B68-9FFE-EDD46C03FF07}
 		{93F65C1B-7C64-4C47-9919-A03FE179F8E3} = {A321C28E-A124-4ECB-9C60-44D43F769A9D}
 		{964D2878-952F-4529-B2B9-78F69E2116CE} = {FC391FCC-55C3-4B68-9FFE-EDD46C03FF07}
+		{551EEEC5-49A3-4D1A-AEE8-39DE53B4F5C5} = {FC391FCC-55C3-4B68-9FFE-EDD46C03FF07}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0428F7FE-7083-4EA6-96E0-6E900B7AC90B}
