@@ -35,5 +35,24 @@ namespace PingLight.Core
 
             return sb.ToString();
         }
+
+        public static string GetWeeklyStatsMessage(List<TimeSpan> blackouts)
+        {
+            var sb = new StringBuilder($"{STATS_ICON} Тижнева статистика:\n");
+
+            if (blackouts.Count == 0)
+            {
+                sb.Append("За минулий тиждень не зафіксовано відключень світла.");
+                return sb.ToString();
+            }
+
+            var total = blackouts.Combine();
+
+            sb.Append($"За минулий тиждень світло було відключене {blackouts.Count.getTimes()} протягом");
+            if (total.getDays() != string.Empty) sb.Append($" {total.getDays()}");
+            sb.Append($" {total.getHours()} {total.getMinutes()}.");
+
+            return sb.ToString();
+        }
     }
 }

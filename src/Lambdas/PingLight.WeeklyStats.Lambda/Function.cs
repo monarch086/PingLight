@@ -9,12 +9,12 @@ using System.Text.Json.Nodes;
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
-namespace PingLight.DailyStats.Lambda;
+namespace PingLight.WeeklyStats.Lambda;
 
 public class Function
 {
     /// <summary>
-    /// A function that calculates daily blackout statistics
+    /// A function that calculates weekly blackout statistics
     /// </summary>
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
     {
@@ -26,16 +26,13 @@ public class Function
 
         var devices = await devicesRepo.GetConfigs();
 
-        var from = DateTime.Today.AddDays(-1);
+        var from = DateTime.Today.AddDays(-7);
         var till = DateTime.Today;
 
         foreach (var device in devices)
         {
-            context.Logger.LogInformation($"Querying for {device.DeviceId} from {from.ToString("O")} " +
-                $"till {till.ToString("O")}");
-
             var changes = await changesRepo.GetChanges(device.DeviceId, from, till);
-            if(!changes.Any())
+            if (!changes.Any())
             {
                 await AppendChangeBasedOnPrevious(changes, device.DeviceId, from, changesRepo);
             }
@@ -43,10 +40,10 @@ public class Function
             var blackouts = BlackoutCalculator.Calculate(changes, from, till);
 
             // Post to TG
-            var message = MessageBuilder.GetDailyStatsMessage(blackouts);
+            var message = MessageBuilder.GetWeeklyStatsMessage(blackouts);
 
             var total = blackouts.Any() ? blackouts.Combine() : TimeSpan.Zero;
-            var absentPercents = PercentCalculator.CalculateDailyPercents((int)total.TotalMinutes);
+            var absentPercents = PercentCalculator.CalculateWeeklyPercents((int)total.TotalMinutes);
             var presentPercents = 100 - absentPercents;
 
             var chart = ChartGenerator.Generate(presentPercents, absentPercents);
