@@ -35,7 +35,14 @@ namespace PingLight.Core.DeviceConfig
                 var documents = await scanResult.GetNextSetAsync();
                 foreach (var document in documents)
                 {
-                    configs.Add(document.ToDeviceConfig());
+                    try
+                    {
+                        configs.Add(document.ToDeviceConfig());
+                    }
+                    catch(Exception ex)
+                    {
+                        logger.LogError(ex.Message);
+                    }
                 }
             } while (!scanResult.IsDone);
 

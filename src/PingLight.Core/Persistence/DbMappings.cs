@@ -4,7 +4,7 @@ using PingLight.Core.Model;
 
 namespace PingLight.Core.Persistence
 {
-    internal static class DbMappings
+    public static class DbMappings
     {
         public static Document ToDocument(this Change change)
         {
@@ -54,7 +54,8 @@ namespace PingLight.Core.Persistence
             {
                 DeviceId = document["DeviceId"].AsString(),
                 ChatId = document["ChatId"].AsString(),
-                Description = document["Description"].AsString()
+                Description = document.ContainsKey("Description") ? document["Description"].AsString() : null,
+                TurnOffGroup = document.ContainsKey("TurnOffGroup") ? document["TurnOffGroup"].AsInt() : null
             };
         }
     }
