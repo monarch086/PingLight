@@ -16,7 +16,8 @@ public class Function
     /// A function that sends notifications about electricity turning off
     /// </summary>
     private TimeZoneInfo KyivZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Kiev");
-    private const int NOTIFY_BEFORE_HOURS = 3;
+    private const int MINUTES_TO_EVENT_TO_INCLUDE = 185;
+    private const int MINUTES_TO_EVENT_TO_SKIP = 150;
     private ScheduleLoader scheduleLoader = new ScheduleLoader();
 
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
@@ -41,7 +42,8 @@ public class Function
         var calendar = Calendar.Load(icsSchedule);
 
         var nextEvent = calendar.Events.FirstOrDefault(e => e.DtStart.AsUtc > DateTime.UtcNow
-                                                        && (e.DtStart.AsUtc - DateTime.UtcNow).TotalHours < NOTIFY_BEFORE_HOURS);
+                                                        && (e.DtStart.AsUtc - DateTime.UtcNow).TotalMinutes < MINUTES_TO_EVENT_TO_INCLUDE
+                                                        && (e.DtStart.AsUtc - DateTime.UtcNow).TotalMinutes > MINUTES_TO_EVENT_TO_SKIP);
 
         if (nextEvent != null)
         {
