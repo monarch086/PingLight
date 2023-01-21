@@ -8,6 +8,9 @@ namespace PingLight.Core
         private const string EXCLAMATION_ICON = "‼";
         private const string STATS_ICON = "📊";
 
+        private const string CALENDAR_ICON = "📆";
+        private const string TIME_FORMAT = @"H:mm";
+
         public static string GetLightOnMessage(TimeSpan timeSpan)
         {
             return $"{LIGHT_ICON} Є світло!\nСвітло було відсутнє протягом{timeSpan.getString()}.";
@@ -53,6 +56,17 @@ namespace PingLight.Core
             sb.Append($" {total.getHours()} {total.getMinutes()}.");
 
             return sb.ToString();
+        }
+
+        public static string GetTurnOffNotificationMessage(DateTime startTime, DateTime endTime, int groupNumber)
+        {
+            var message = new StringBuilder($"{CALENDAR_ICON}");
+            message.Append($"<b>Планове відключення: {startTime.ToString(TIME_FORMAT)} - {endTime.ToString(TIME_FORMAT)}</b>\r\n\r\n");
+            message.AppendLine("Можливі екстрені відключення за три години до планових.\r\n");
+            message.AppendLine($"Графік стабілізаційних відключень (Група №{groupNumber}):");
+            message.AppendLine("https://kyiv.yasno.com.ua/schedule-turn-off-electricity");
+
+            return message.ToString();
         }
     }
 }
