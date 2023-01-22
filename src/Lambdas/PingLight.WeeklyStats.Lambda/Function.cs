@@ -26,8 +26,8 @@ public class Function
 
         var devices = await devicesRepo.GetConfigs();
 
-        var from = DateTime.Today.AddDays(-7);
-        var till = DateTime.Today;
+        var from = DateTime.Today.AddDays(-7).FromKyivTime();
+        var till = DateTime.Today.FromKyivTime();
 
         foreach (var device in devices)
         {
