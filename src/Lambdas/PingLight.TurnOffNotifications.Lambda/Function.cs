@@ -15,7 +15,6 @@ public class Function
     /// <summary>
     /// A function that sends notifications about electricity turning off
     /// </summary>
-    private TimeZoneInfo KyivZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Kiev");
     private const int MINUTES_TO_EVENT_TO_INCLUDE = 185;
     private const int MINUTES_TO_EVENT_TO_SKIP = 150;
     private ScheduleLoader scheduleLoader = new ScheduleLoader();
@@ -47,8 +46,8 @@ public class Function
 
         if (nextEvent != null)
         {
-            var startTime = TimeZoneInfo.ConvertTimeFromUtc(nextEvent.DtStart.AsUtc, KyivZone);
-            var endTime = TimeZoneInfo.ConvertTimeFromUtc(nextEvent.DtEnd.AsUtc, KyivZone);
+            var startTime = nextEvent.DtStart.AsUtc.ToKyivTime();
+            var endTime = nextEvent.DtEnd.AsUtc.ToKyivTime();
             var message = MessageBuilder.GetTurnOffNotificationMessage(startTime, endTime, groupNumber);
 
             logger.LogInformation(message);
