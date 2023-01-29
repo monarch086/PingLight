@@ -40,8 +40,8 @@ public class Function
 
     private bool isChanged(DateTime lasPingDate, bool currentStatus)
     {
-        var minuteAgo = TimeSpan.FromMinutes(1);
-        var isLight = DateTime.UtcNow - lasPingDate <= minuteAgo;
+        var twoMinutesAgo = TimeSpan.FromMinutes(2);
+        var isLight = DateTime.UtcNow - lasPingDate <= twoMinutesAgo;
 
         return isLight != currentStatus;
     }
