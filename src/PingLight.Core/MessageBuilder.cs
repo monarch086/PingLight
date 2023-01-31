@@ -60,7 +60,7 @@ namespace PingLight.Core
 
         public static string GetTurnOffNotificationMessage(DateTime startTime, DateTime endTime, int groupNumber)
         {
-            var message = new StringBuilder($"{CALENDAR_ICON}");
+            var message = new StringBuilder($"{CALENDAR_ICON} ");
             message.Append($"<b>Планове відключення: {startTime.ToString(TIME_FORMAT)} - {endTime.ToString(TIME_FORMAT)}</b>\r\n\r\n");
             message.AppendLine("Можливі екстрені відключення за три години до планових.\r\n");
             message.AppendLine($"Графік стабілізаційних відключень (Група №{groupNumber}):");
