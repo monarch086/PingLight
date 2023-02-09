@@ -45,7 +45,8 @@ namespace PingLight.Core
             return await client.SendPhotoAsync(
                 chatId: chatId,
                 photo: stream,
-                caption: text
+                caption: text,
+                parseMode: Telegram.Bot.Types.Enums.ParseMode.Html
             );
         }
     }

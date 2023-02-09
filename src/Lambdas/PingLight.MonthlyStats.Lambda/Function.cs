@@ -42,7 +42,7 @@ public class Function
             var lights = blackouts.ToLightPerDay();
 
             // Post to TG
-            var message = MessageBuilder.GetMonthlyStatsMessage();
+            var message = MessageBuilder.GetMonthlyStatsMessage(blackouts);
 
             var chart = BarChartGenerator.Generate(lights, from.ToKyivTime(), till.ToKyivTime());
             await bot.PostImageBytes(chart, message, device.ChatId);
