@@ -9,15 +9,15 @@ namespace PingLight.Core.Charts
         private const string BAR_CHART_TYPE = "bvs";
         private const int MINS_IN_DAY = 1440;
 
-        public static byte[] Generate(List<TimeSpan> blackouts, DateTime from, DateTime till)
+        public static byte[] Generate(List<TimeSpan> dailyLightSpans, DateTime from, DateTime till)
         {
-            return generateBarChart(blackouts, from, till)
+            return generateBarChart(dailyLightSpans, from, till)
                 .toBuffer();
         }
 
-        private static ImageCharts generateBarChart(List<TimeSpan> dailyBlackouts, DateTime from, DateTime till)
+        private static ImageCharts generateBarChart(List<TimeSpan> dailyLightSpans, DateTime from, DateTime till)
         {
-            var data = dailyBlackouts.Select(b => b.TotalMinutes);
+            var data = dailyLightSpans.Select(b => b.TotalMinutes);
 
             return new ImageCharts()
                 .cht(BAR_CHART_TYPE)
@@ -31,18 +31,6 @@ namespace PingLight.Core.Charts
                 .chxl($"{getXLabels(from, till)}{getYLabels()}") //axis labels
                 .chxs("0,s"); //skip some labels on X axis
         }
-
-        //private static string getXLabels(List<TimeSpan> blackouts)
-        //{
-        //    var sb = new StringBuilder("0:|");
-
-        //    for (int i = 1; i <= blackouts.Count; i++)
-        //    {
-        //        sb.Append($"{i}|");
-        //    }
-
-        //    return sb.ToString();
-        //}
 
         private static string getXLabels(DateTime from, DateTime till)
         {
