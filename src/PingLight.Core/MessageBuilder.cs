@@ -58,6 +58,11 @@ namespace PingLight.Core
             return sb.ToString();
         }
 
+        public static string GetMonthlyStatsMessage()
+        {
+            return $"{STATS_ICON} Місячна статистика.";
+        }
+
         public static string GetTurnOffNotificationMessage(DateTime startTime, DateTime endTime, int groupNumber)
         {
             var message = new StringBuilder($"{CALENDAR_ICON} ");

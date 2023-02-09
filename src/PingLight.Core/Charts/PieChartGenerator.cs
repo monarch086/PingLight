@@ -1,8 +1,8 @@
 ﻿using ImageChartsLib;
 
-namespace PingLight.Core
+namespace PingLight.Core.Charts
 {
-    public static class ChartGenerator
+    public static class PieChartGenerator
     {
         private const string RED = "ps0-0,lg,45,ffeb3b,0.2,f44336,1";
         private const string GREEN = "ps0-1,lg,45,8bc34a,0.2,009688,1";
@@ -12,12 +12,6 @@ namespace PingLight.Core
         {
             return generatePieChart(presentPercents, absentPercents)
                 .toBuffer();
-        }
-
-        public static string GenerateUrl(int presentPercents, int absentPercents)
-        {
-            return generatePieChart(presentPercents, absentPercents)
-                .toURL();
         }
 
         private static ImageCharts generatePieChart(int presentPercents, int absentPercents)
