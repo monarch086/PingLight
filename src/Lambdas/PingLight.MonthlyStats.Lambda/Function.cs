@@ -10,16 +10,16 @@ using System.Text.Json.Nodes;
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
-namespace PingLight.WeeklyStats.Lambda;
+namespace PingLight.MonthlyStats.Lambda;
 
 public class Function
 {
     /// <summary>
-    /// A function that calculates weekly blackout statistics
+    /// A function that calculates monthly blackout statistics
     /// </summary>
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
     {
-        var isProd = input.IsProduction();
+        var isProd = false;
         var config = await ConfigBuilder.Build(isProd, context.Logger);
         var bot = new ChatBot(config.Token);
         var changesRepo = new ChangesRepository(context.Logger);
@@ -27,7 +27,7 @@ public class Function
 
         var devices = await devicesRepo.GetConfigs();
 
-        var from = DateTime.Today.AddDays(-7).FromKyivTime();
+        var from = DateTime.Today.AddMonths(-1).FromKyivTime();
         var till = DateTime.Today.FromKyivTime();
 
         foreach (var device in devices)
@@ -38,16 +38,13 @@ public class Function
                 await AppendChangeBasedOnPrevious(changes, device.DeviceId, from, changesRepo);
             }
 
-            var blackouts = BlackoutCalculator.Calculate(changes, from, till);
+            var blackouts = BlackoutCalculator.CalculatePerDay(changes, from, till);
+            var lights = blackouts.ToLightPerDay();
 
             // Post to TG
-            var message = MessageBuilder.GetWeeklyStatsMessage(blackouts);
+            var message = MessageBuilder.GetMonthlyStatsMessage();
 
-            var total = blackouts.Any() ? blackouts.Combine() : TimeSpan.Zero;
-            var absentPercents = PercentCalculator.CalculateWeeklyPercents((int)total.TotalMinutes);
-            var presentPercents = 100 - absentPercents;
-
-            var chart = PieChartGenerator.Generate(presentPercents, absentPercents);
+            var chart = BarChartGenerator.Generate(lights, from.ToKyivTime(), till.ToKyivTime());
             await bot.PostImageBytes(chart, message, device.ChatId);
 
             context.Logger.LogInformation(message);
