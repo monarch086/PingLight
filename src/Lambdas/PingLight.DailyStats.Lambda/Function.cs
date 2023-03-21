@@ -1,5 +1,6 @@
 using Amazon.Lambda.Core;
 using PingLight.Core;
+using PingLight.Core.Charts;
 using PingLight.Core.Config;
 using PingLight.Core.DeviceConfig;
 using PingLight.Core.Model;
@@ -49,7 +50,7 @@ public class Function
             var absentPercents = PercentCalculator.CalculateDailyPercents((int)total.TotalMinutes);
             var presentPercents = 100 - absentPercents;
 
-            var chart = ChartGenerator.Generate(presentPercents, absentPercents);
+            var chart = PieChartGenerator.Generate(presentPercents, absentPercents);
             await bot.PostImageBytes(chart, message, device.ChatId);
 
             context.Logger.LogInformation(message);

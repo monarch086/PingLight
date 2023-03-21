@@ -23,7 +23,7 @@ namespace PingLight.Core
 
         public static string GetDailyStatsMessage(List<TimeSpan> blackouts)
         {
-            var sb = new StringBuilder($"{STATS_ICON} Щоденна статистика:\n");
+            var sb = new StringBuilder($"{STATS_ICON} <b>Щоденна статистика:</b>\n");
 
             if (blackouts.Count == 0)
             {
@@ -41,7 +41,7 @@ namespace PingLight.Core
 
         public static string GetWeeklyStatsMessage(List<TimeSpan> blackouts)
         {
-            var sb = new StringBuilder($"{STATS_ICON} Тижнева статистика:\n");
+            var sb = new StringBuilder($"{STATS_ICON} <b>Тижнева статистика:</b>\n");
 
             if (blackouts.Count == 0)
             {
@@ -52,6 +52,19 @@ namespace PingLight.Core
             var total = blackouts.Combine();
 
             sb.Append($"За минулий тиждень світло було відключене {blackouts.Count.getTimes()} протягом");
+            if (total.getDays() != string.Empty) sb.Append($" {total.getDays()}");
+            sb.Append($" {total.getHours()} {total.getMinutes()}.");
+
+            return sb.ToString();
+        }
+
+        public static string GetMonthlyStatsMessage(List<TimeSpan> blackouts)
+        {
+            var sb = new StringBuilder($"{STATS_ICON} <b>Місячна статистика:</b>\n");
+
+            var total = blackouts.Combine();
+
+            sb.Append($"За минулий місяць світло було відключене сумарно протягом");
             if (total.getDays() != string.Empty) sb.Append($" {total.getDays()}");
             sb.Append($" {total.getHours()} {total.getMinutes()}.");
 
