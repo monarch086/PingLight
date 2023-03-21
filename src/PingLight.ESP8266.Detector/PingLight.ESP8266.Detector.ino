@@ -79,13 +79,13 @@ void loop() {
   }
   Serial.println();
   if (r == 30) {
-    Serial.println("Connection failed");
+    Serial.println("HTTPS connection failed");
     return;
   } else {
-    Serial.println("Connected to web");
+    Serial.println("HTTPS connection is successful");
   }
 
-  Serial.print("[HTTPS] begin...\n");
+  Serial.print("[HTTP] begin...\n");
   http.begin(httpsClient, url);
   http.addHeader("Content-Type", "application/json");
 
@@ -94,20 +94,22 @@ void loop() {
     http.writeToStream(&Serial);
 
     // HTTP header has been send and Server response header has been handled
-    Serial.printf("[HTTPS] ... code: %d\n", httpCode);
+    Serial.printf("[HTTP] ... code: %d\n", httpCode);
 
     if (httpCode >= 200 and httpCode <= 299) {
       String payload = http.getString();
       Serial.printf("Payload: %s\n", payload);
     }
   } else {
-    Serial.printf("[HTTPS] ... failed, error: %s\n", http.errorToString(httpCode).c_str());
+    Serial.printf("[HTTP] ... failed, error: %s\n", http.errorToString(httpCode).c_str());
     String payload = http.getString();
     Serial.printf("Payload: %s\n", payload);
   }
 
-  delay(30000);  //30 sec
-
-  Serial.print("[HTTPS] end...\n");
+  Serial.print("[HTTP] end...\n");
   http.end();
+
+  Serial.print("Sleep for 30 sec...\n");
+  delay(30000);
+  // ESP.deepSleep(30e6);
 }
