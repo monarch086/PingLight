@@ -19,7 +19,7 @@ public class Function
     /// </summary>
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
     {
-        var isProd = false;
+        var isProd = input.IsProduction();
         var config = await ConfigBuilder.Build(isProd, context.Logger);
         var bot = new ChatBot(config.Token);
         var changesRepo = new ChangesRepository(context.Logger);
