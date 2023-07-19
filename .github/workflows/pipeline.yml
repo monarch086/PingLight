@@ -56,3 +56,11 @@ jobs:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Tests
+        uses: zyborg/dotnet-tests-report@v1
+        with:
+          project_path: src/Tests/PingLight.Core.Tests
+          report_name: my_project_tests
+          report_title: My Project Tests
+          github_token: ${{ secrets.GITHUB_TOKEN }}
