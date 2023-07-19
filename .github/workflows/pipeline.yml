@@ -4,14 +4,14 @@
 ## Super Linter GitHub Actions ##
 #################################
 #################################
-name: Lint Code Base
+name: Verify Code Base
 
 #############################
 # Start the job on all push #
 #############################
 on:
-  push:
-    branches-ignore: [main]
+  #push:
+    #branches-ignore: [main]
   pull_request:
     branches: [main]
 
@@ -21,7 +21,7 @@ on:
 jobs:
   build:
     # Name the Job
-    name: Lint Code Base
+    name: Build & Verify Code Base
     # Set the agent to run on
     runs-on: ubuntu-latest
 
@@ -58,7 +58,7 @@ jobs:
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run Tests
+      - name: Run Unit Tests
         uses: zyborg/dotnet-tests-report@v1
         with:
           project_path: src/Tests/PingLight.Core.Tests
@@ -67,15 +67,15 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           set_check_status_from_test_outcome: true
 
-      - name: Run unit tests with report
-        uses: zyborg/dotnet-tests-report@v1
-        with:
-          project_path: src/Tests/PingLight.Core.Tests
-          report_name: my_project_tests_report
-          report_title: My Project Tests Report
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          gist_name: my_project_tests_report.md
-          gist_badge_label: 'Core Tests: %Counters_passed%/%Counters_total%'
-          gist_token: ${{ secrets.GIST_TOKEN }}
-          set_check_status_from_test_outcome: true
+      # - name: Run unit tests with report
+      #   uses: zyborg/dotnet-tests-report@v1
+      #   with:
+      #     project_path: src/Tests/PingLight.Core.Tests
+      #     report_name: my_project_tests_report
+      #     report_title: My Project Tests Report
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     gist_name: my_project_tests_report.md
+      #     gist_badge_label: 'Core Tests: %Counters_passed%/%Counters_total%'
+      #     gist_token: ${{ secrets.GIST_TOKEN }}
+      #     set_check_status_from_test_outcome: true
 
