@@ -1,0 +1,38 @@
+# https://www.serverless.com/framework/docs-providers-aws-guide-functions
+service: pinglight
+
+provider:
+  name: aws
+  runtime: dotnet6
+  region: eu-central-1
+  memorySize: 256
+  versionFunctions: false
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:DescribeTable
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - 'arn:aws:dynamodb:eu-central-1:469321902251:table/PingLight.*'
+        - Effect: "Allow"
+          Action:
+           - "ssm:GetParameter"
+          Resource: "arn:aws:ssm:eu-central-1:469321902251:parameter/PingLight.*"
+
+package:
+  individually: true
+
+functions:
+  test:
+    handler: PingLight.Test::PingLight.Test.Function::FunctionHandler
+    package:
+      artifact: PingLight.Test/bin/Release/net6.0/deploy-package.zip
+    name: pinglight-${sls:stage}-test
+    timeout: 10
