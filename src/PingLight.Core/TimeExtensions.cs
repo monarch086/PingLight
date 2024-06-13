@@ -34,7 +34,7 @@ namespace PingLight.Core
                 { items[2..5], "рази" }
             };
 
-        private static TimeZoneInfo KyivZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Kiev");
+        private static TimeZoneInfo KyivZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Kyiv");
 
         public static string getString(this TimeSpan timeSpan)
         {
