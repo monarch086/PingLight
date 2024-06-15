@@ -20,14 +20,21 @@ provider:
             - dynamodb:UpdateItem
             - dynamodb:DeleteItem
           Resource:
-            - 'arn:aws:dynamodb:eu-central-1:469321902251:table/PingLight.*'
+            - 'arn:aws:dynamodb:eu-central-1:469321902251:table/PingLight.${sls:stage}.*'
         - Effect: "Allow"
           Action:
            - "ssm:GetParameter"
-          Resource: "arn:aws:ssm:eu-central-1:469321902251:parameter/PingLight.*"
+          Resource: "arn:aws:ssm:eu-central-1:469321902251:parameter/PingLight.${sls:stage}.*"
 
 package:
   individually: true
+
+custom:
+  environments:
+    dev:
+      environment: development
+    prod:
+      environment: production
 
 functions:
   test:
@@ -35,4 +42,13 @@ functions:
     package:
       artifact: PingLight.Test/bin/Release/net6.0/deploy-package.zip
     name: pinglight-${sls:stage}-test
+    environment:
+      STAGE: ${opt:stage, self:provider.stage}
+      CUSTOM_ENV: ${self:custom.environments.${opt:stage, self:provider.stage}.environment}
     timeout: 10
+    url:
+      cors: true
+    events:
+     - http:
+         path: /test
+         method: GET
