@@ -18,4 +18,22 @@ dotnet lambda package --configuration Release --framework net6.0 --output-packag
 Write-Output ">>> Finished packaging PingLight.AggregateChanges.Lambda";
 Set-Location ..
 
+Set-Location ./PingLight.DailyStats.Lambda
+dotnet restore
+dotnet lambda package --configuration Release --framework net6.0 --output-package bin/Release/net6.0/deploy-package.zip
+Write-Output ">>> Finished packaging PingLight.DailyStats.Lambda";
+Set-Location ..
+
+Set-Location ./PingLight.WeeklyStats.Lambda
+dotnet restore
+dotnet lambda package --configuration Release --framework net6.0 --output-package bin/Release/net6.0/deploy-package.zip
+Write-Output ">>> Finished packaging PingLight.WeeklyStats.Lambda";
+Set-Location ..
+
+Set-Location ./PingLight.MonthlyStats.Lambda
+dotnet restore
+dotnet lambda package --configuration Release --framework net6.0 --output-package bin/Release/net6.0/deploy-package.zip
+Write-Output ">>> Finished packaging PingLight.MonthlyStats.Lambda";
+Set-Location ..
+
 Write-Output ">>> >>> >>> Finished all services.";

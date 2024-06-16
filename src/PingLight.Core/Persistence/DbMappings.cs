@@ -55,7 +55,10 @@ namespace PingLight.Core.Persistence
                 DeviceId = document["DeviceId"].AsString(),
                 ChatId = document["ChatId"].AsString(),
                 Description = document.ContainsKey("Description") ? document["Description"].AsString() : null,
-                TurnOffGroup = document.ContainsKey("TurnOffGroup") ? document["TurnOffGroup"].AsInt() : null
+                TurnOffGroup = document.ContainsKey("TurnOffGroup") ? document["TurnOffGroup"].AsInt() : null,
+                IsDailyStatsEnabled = document.ContainsKey("IsDailyStatsEnabled") ? document["IsDailyStatsEnabled"].AsBoolean() : false,
+                IsWeeklyStatsEnabled = document.ContainsKey("IsWeeklyStatsEnabled") ? document["IsWeeklyStatsEnabled"].AsBoolean() : false,
+                IsMonthlyStatsEnabled = document.ContainsKey("IsMonthlyStatsEnabled") ? document["IsMonthlyStatsEnabled"].AsBoolean() : false,
             };
         }
     }

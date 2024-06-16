@@ -32,6 +32,8 @@ public class Function
 
         foreach (var device in devices)
         {
+            if (!device.IsMonthlyStatsEnabled) continue;
+
             var changes = await changesRepo.GetChanges(device.DeviceId, from, till);
             if (!changes.Any())
             {

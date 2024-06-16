@@ -9,5 +9,11 @@
         public string? Description { get; set; }
 
         public int? TurnOffGroup { get; set; }
+
+        public bool IsDailyStatsEnabled { get; set; }
+
+        public bool IsWeeklyStatsEnabled { get; set; }
+
+        public bool IsMonthlyStatsEnabled { get; set; }
     }
 }

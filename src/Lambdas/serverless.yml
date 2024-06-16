@@ -81,3 +81,45 @@ functions:
       - schedule:
           rate: rate(1 minute)
           enabled: true
+
+  daily-stats:
+    handler: PingLight.DailyStats.Lambda::PingLight.DailyStats.Lambda.Function::FunctionHandler
+    package:
+      artifact: PingLight.DailyStats.Lambda/bin/Release/net6.0/deploy-package.zip
+    name: pinglight-${sls:stage}-daily-stats
+    environment:
+      STAGE: ${opt:stage, self:provider.stage}
+    timeout: 15
+    memorySize: 256
+    events:
+      - schedule:
+          rate: cron(0 7 * * ? *)
+          enabled: true
+
+  weekly-stats:
+    handler: PingLight.WeeklyStats.Lambda::PingLight.WeeklyStats.Lambda.Function::FunctionHandler
+    package:
+      artifact: PingLight.WeeklyStats.Lambda/bin/Release/net6.0/deploy-package.zip
+    name: pinglight-${sls:stage}-weekly-stats
+    environment:
+      STAGE: ${opt:stage, self:provider.stage}
+    timeout: 15
+    memorySize: 256
+    events:
+      - schedule:
+          rate: cron(0 7 ? * MON *)
+          enabled: true
+
+  monthly-stats:
+    handler: PingLight.MonthlyStats.Lambda::PingLight.MonthlyStats.Lambda.Function::FunctionHandler
+    package:
+      artifact: PingLight.MonthlyStats.Lambda/bin/Release/net6.0/deploy-package.zip
+    name: pinglight-${sls:stage}-monthly-stats
+    environment:
+      STAGE: ${opt:stage, self:provider.stage}
+    timeout: 20
+    memorySize: 512
+    events:
+      - schedule:
+          rate: cron(0 9 1 * ? *)
+          enabled: true

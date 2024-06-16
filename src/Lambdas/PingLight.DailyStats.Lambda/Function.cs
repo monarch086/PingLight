@@ -7,7 +7,6 @@ using PingLight.Core.Model;
 using PingLight.Core.Persistence;
 using System.Text.Json.Nodes;
 
-// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
 namespace PingLight.DailyStats.Lambda;
@@ -32,6 +31,8 @@ public class Function
 
         foreach (var device in devices)
         {
+            if (!device.IsDailyStatsEnabled) continue;
+
             context.Logger.LogInformation($"Querying for {device.DeviceId} from {from.ToString("O")} " +
                 $"till {till.ToString("O")}");
 
