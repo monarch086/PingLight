@@ -36,4 +36,10 @@ dotnet lambda package --configuration Release --framework net6.0 --output-packag
 Write-Output ">>> Finished packaging PingLight.MonthlyStats.Lambda";
 Set-Location ..
 
+Set-Location ./PingLight.TurnOffNotifications.Lambda
+dotnet restore
+dotnet lambda package --configuration Release --framework net6.0 --output-package bin/Release/net6.0/deploy-package.zip
+Write-Output ">>> Finished packaging PingLight.TurnOffNotifications.Lambda";
+Set-Location ..
+
 Write-Output ">>> >>> >>> Finished all services.";
