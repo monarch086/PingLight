@@ -12,9 +12,11 @@ namespace PingLight.Core
             client = new TelegramBotClient(token);
         }
 
-        public async Task Post(string message, string chatId)
+        public async Task<bool> Post(string message, string chatId)
         {
-            var t = await client.SendTextMessageAsync(chatId, message, Telegram.Bot.Types.Enums.ParseMode.Html);
+            var result = await client.SendTextMessageAsync(chatId, message, Telegram.Bot.Types.Enums.ParseMode.Html);
+
+            return result != null;
         }
 
         public async Task PostImage(string fileName, string text, string chatId)

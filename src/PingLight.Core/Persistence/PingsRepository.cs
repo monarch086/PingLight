@@ -20,7 +20,7 @@ namespace PingLight.Core.Persistence
             this.logger = logger;
         }
 
-        public PingsRepository(ILambdaLogger logger, string stage)
+        public PingsRepository(string stage, ILambdaLogger logger)
         {
             var tableName = $"PingLight.{stage}.Status";
             client = new AmazonDynamoDBClient();

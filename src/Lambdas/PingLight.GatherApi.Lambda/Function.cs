@@ -19,7 +19,7 @@ public class Function
             if (inputData == null) { return new BadRequestResponse("Failed to deserialize input model."); }
 
             var stage = Environment.GetEnvironmentVariable("STAGE");
-            var pingsRepository = new PingsRepository(context.Logger, stage);
+            var pingsRepository = new PingsRepository(stage, context.Logger);
 
             await pingsRepository.AddPing(inputData.Id);
 

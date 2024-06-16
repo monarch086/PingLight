@@ -19,11 +19,11 @@ public class Function
     /// </summary>
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
     {
-        var isProd = input.IsProduction();
-        var config = await ConfigBuilder.Build(isProd, context.Logger);
+        var stage = Environment.GetEnvironmentVariable("STAGE");
+        var config = await ConfigBuilder.Build(stage, context.Logger);
         var bot = new ChatBot(config.Token);
-        var changesRepo = new ChangesRepository(context.Logger);
-        var devicesRepo = new DeviceConfigRepository(isProd, context.Logger);
+        var changesRepo = new ChangesRepository(stage, context.Logger);
+        var devicesRepo = new DeviceConfigRepository(stage, context.Logger);
 
         var devices = await devicesRepo.GetConfigs();
 

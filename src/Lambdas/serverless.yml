@@ -24,7 +24,7 @@ provider:
         - Effect: "Allow"
           Action:
            - "ssm:GetParameter"
-          Resource: "arn:aws:ssm:eu-central-1:469321902251:parameter/PingLight.${sls:stage}.*"
+          Resource: "arn:aws:ssm:eu-central-1:469321902251:parameter/PingLight.TelegramBot.Token"
 
 package:
   individually: true
@@ -67,3 +67,17 @@ functions:
      - http:
          path: /pings
          method: POST
+
+  aggregate-changes:
+    handler: PingLight.AggregateChanges.Lambda::PingLight.AggregateChanges.Lambda.Function::FunctionHandler
+    package:
+      artifact: PingLight.AgregateChanges.Lambda/bin/Release/net6.0/deploy-package.zip
+    name: pinglight-${sls:stage}-aggregate-changes
+    environment:
+      STAGE: ${opt:stage, self:provider.stage}
+    timeout: 30
+    memorySize: 320
+    events:
+      - schedule:
+          rate: rate(1 minute)
+          enabled: true
