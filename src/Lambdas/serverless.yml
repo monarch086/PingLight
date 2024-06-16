@@ -52,3 +52,18 @@ functions:
      - http:
          path: /test
          method: GET
+
+  gather-api:
+    handler: PingLight.GatherApi.Lambda::PingLight.GatherApi.Lambda.Function::FunctionHandler
+    package:
+      artifact: PingLight.GatherApi.Lambda/bin/Release/net6.0/deploy-package.zip
+    name: pinglight-${sls:stage}-gather-api
+    environment:
+      STAGE: ${opt:stage, self:provider.stage}
+    timeout: 10
+    url:
+      cors: true
+    events:
+     - http:
+         path: /pings
+         method: POST
