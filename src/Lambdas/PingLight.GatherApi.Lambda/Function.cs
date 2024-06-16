@@ -11,21 +11,23 @@ namespace PingLight.GatherApi.Lambda;
 
 public class Function
 {
-    public Function()
-    {
-    }
-
     public async Task<APIGatewayProxyResponse> FunctionHandler(JsonObject input, ILambdaContext context)
     {
-        var stage = Environment.GetEnvironmentVariable("STAGE");
+        try
+        {
+            var inputData = input["queryStringParameters"].Deserialize<InputModel>();
+            if (inputData == null) { return new BadRequestResponse("Failed to deserialize input model."); }
 
-        var inputData = input["queryStringParameters"].Deserialize<InputModel>();
-        if (inputData == null) { return new BadRequestResponse("Failed to deserialize input model."); }
+            var stage = Environment.GetEnvironmentVariable("STAGE");
+            var pingsRepository = new PingsRepository(context.Logger, stage);
 
-        var pingsRepo = new PingsRepository(context.Logger, stage);
+            await pingsRepository.AddPing(inputData.Id);
 
-        await pingsRepo.AddPing(inputData.Id);
-
-        return new SuccessResponse("Operation is successful.");
+            return new SuccessResponse("Ping saved successfully.");
+        }
+        catch (Exception ex)
+        {
+            return new FailResponse(ex.ToString());
+        }
     }
 }

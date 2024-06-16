@@ -1,5 +1,7 @@
 using Amazon.Lambda.Annotations;
+using Amazon.Lambda.Core;
 using Microsoft.Extensions.DependencyInjection;
+using PingLight.Core.Persistence;
 
 namespace PingLight.GatherApi.Lambda;
 
@@ -31,5 +33,11 @@ public class Startup
         //// Example of using the AWSSDK.Extensions.NETCore.Setup NuGet package to add
         //// the Amazon S3 service client to the dependency injection container.
         //services.AddAWSService<Amazon.S3.IAmazonS3>();
+
+        //var serviceProvider = new ServiceCollection()
+        //    .BuildServiceProvider();
+        //var logger = serviceProvider.GetRequiredService<ILambdaLogger>();
+        //var stage = Environment.GetEnvironmentVariable("STAGE");
+        //services.AddScoped<PingsRepository>(_ => new PingsRepository(logger, stage));
     }
 }
