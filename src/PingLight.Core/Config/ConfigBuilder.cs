@@ -6,7 +6,8 @@ namespace PingLight.Core.Config
 {
     public class ConfigBuilder
     {
-        private static string TOKEN_PARAM_NAME = "PingLight.TelegramBot.Token";
+        private static string APP_NAME = "PingLight";
+        private static string TOKEN_PARAM_NAME = "TelegramBot.Token";
 
         public static async Task<PingConfig> Build(string stage, ILambdaLogger logger)
         {
@@ -18,7 +19,7 @@ namespace PingLight.Core.Config
 
                 var request = new GetParameterRequest()
                 {
-                    Name = $"{TOKEN_PARAM_NAME}:{stage}"
+                    Name = $"/{APP_NAME}/{stage}/{TOKEN_PARAM_NAME}"
                 };
                 var result = await client.GetParameterAsync(request);
                 config.Token = result.Parameter.Value;

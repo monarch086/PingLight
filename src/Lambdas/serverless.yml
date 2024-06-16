@@ -24,7 +24,7 @@ provider:
         - Effect: "Allow"
           Action:
            - "ssm:GetParameter"
-          Resource: "arn:aws:ssm:eu-central-1:469321902251:parameter/PingLight.TelegramBot.Token"
+          Resource: "arn:aws:ssm:eu-central-1:469321902251:parameter/PingLight/${sls:stage}/*"
 
 package:
   individually: true
