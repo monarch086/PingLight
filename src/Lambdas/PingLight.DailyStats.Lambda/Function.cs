@@ -31,7 +31,7 @@ public class Function
 
         foreach (var device in devices)
         {
-            if (!device.IsDailyStatsEnabled) continue;
+            if (!device.IsDailyStatsEnabled || !device.IsActive) continue;
 
             context.Logger.LogInformation($"Querying for {device.DeviceId} from {from.ToString("O")} " +
                 $"till {till.ToString("O")}");

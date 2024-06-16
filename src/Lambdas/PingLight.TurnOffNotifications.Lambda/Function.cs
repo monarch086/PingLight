@@ -29,6 +29,8 @@ public class Function
 
         foreach (var device in devices)
         {
+            if (!device.TurnOffGroup.HasValue || !device.IsActive) continue;
+
             await processDeviceAsync(device, config, context.Logger);
         }
     }

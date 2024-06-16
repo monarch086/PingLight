@@ -6,7 +6,6 @@ using PingLight.Core.Model;
 using PingLight.Core.Persistence;
 using System.Text.Json.Nodes;
 
-// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
 namespace PingLight.AggregateChanges.Lambda;
@@ -66,7 +65,7 @@ public class Function
         });
 
         // Post to TG
-        if (device != null)
+        if (device != null && device.IsActive)
         {
             var bot = new ChatBot(config.Token);
             var message = isLight ? MessageBuilder.GetLightOnMessage(timespan) : MessageBuilder.GetLightOffMessage(timespan);

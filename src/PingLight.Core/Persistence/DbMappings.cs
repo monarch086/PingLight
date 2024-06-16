@@ -60,6 +60,7 @@ namespace PingLight.Core.Persistence
                 IsWeeklyStatsEnabled = document.ContainsKey("IsWeeklyStatsEnabled") ? document["IsWeeklyStatsEnabled"].AsBoolean() : false,
                 IsMonthlyStatsEnabled = document.ContainsKey("IsMonthlyStatsEnabled") ? document["IsMonthlyStatsEnabled"].AsBoolean() : false,
                 NotificationDelaySec = document.ContainsKey("NotificationDelaySec") ? document["NotificationDelaySec"].AsInt() : 120,
+                IsActive = document.ContainsKey("IsActive") ? document["IsActive"].AsBoolean() : false,
             };
         }
     }

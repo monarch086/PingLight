@@ -17,5 +17,7 @@
         public bool IsMonthlyStatsEnabled { get; set; }
 
         public int NotificationDelaySec { get; set; }
+
+        public bool IsActive { get; set; }
     }
 }

@@ -32,7 +32,7 @@ public class Function
 
         foreach (var device in devices)
         {
-            if (!device.IsMonthlyStatsEnabled) continue;
+            if (!device.IsMonthlyStatsEnabled || !device.IsActive) continue;
 
             var changes = await changesRepo.GetChanges(device.DeviceId, from, till);
             if (!changes.Any())
