@@ -4,10 +4,10 @@
 const char* ssid = "ssid";
 const char* password = "password";
 
-const char* host = "https://host.on.aws";
+const char* host = "https://host.on.aws/dev/pings";
 const int httpsPort = 443;
 
-const String deviceId = "deviceId";
+const String deviceId = "test";
 const String query = "/?Id=" + deviceId;
 const String url = host + query;
 
@@ -70,20 +70,7 @@ void loop() {
   httpsClient.setTimeout(15000);  // 15 Seconds
   delay(1000);
 
-  Serial.print("HTTPS Connecting");
-  int r = 0;  //retry counter
-  while ((!httpsClient.connect(host, httpsPort)) && (r < 30)) {
-    delay(1000);
-    Serial.print(".");
-    r++;
-  }
-  Serial.println();
-  if (r == 30) {
-    Serial.println("HTTPS connection failed");
-    return;
-  } else {
-    Serial.println("HTTPS connection is successful");
-  }
+  httpsClient.connect(host, httpsPort);
 
   Serial.print("[HTTP] begin...\n");
   http.begin(httpsClient, url);
