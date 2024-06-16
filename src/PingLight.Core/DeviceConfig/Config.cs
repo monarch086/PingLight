@@ -15,5 +15,7 @@
         public bool IsWeeklyStatsEnabled { get; set; }
 
         public bool IsMonthlyStatsEnabled { get; set; }
+
+        public int NotificationDelaySec { get; set; }
     }
 }

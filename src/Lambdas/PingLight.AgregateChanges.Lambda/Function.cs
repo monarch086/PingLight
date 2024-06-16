@@ -27,22 +27,27 @@ public class Function
         var devices = await deviceRepo.GetConfigs();
         var pings = await pingsRepo.GetPings();
 
-        foreach (var ping in pings)
+        foreach (var device in devices)
         {
-            var change = await changesRepo.GetLatestChange(ping.Id);
-            var changed = change == null || isChanged(ping.LastPingDate, change.IsLight);
-            var device = devices.FirstOrDefault(d => d.DeviceId == ping.Id);
+            var change = await changesRepo.GetLatestChange(device.DeviceId);
+            var ping = pings.FirstOrDefault(p => device.DeviceId == p.Id);
+            if (ping == null)
+            {
+                context.Logger.LogInformation($"No ping found for device {device.DeviceId}.");
+                continue;
+            }
 
+            var changed = change == null || isChanged(ping.LastPingDate, change.IsLight, device.NotificationDelaySec);
             if (changed) await statusChanged(context.Logger, changesRepo, config, ping, change, device);
         }
 
         context.Logger.LogInformation("Pings processing complete.");
     }
 
-    private bool isChanged(DateTime lasPingDate, bool currentStatus)
+    private bool isChanged(DateTime lasPingDate, bool currentStatus, int delaySec)
     {
-        var twoMinutesAgo = TimeSpan.FromMinutes(2);
-        var isLight = DateTime.UtcNow - lasPingDate <= twoMinutesAgo;
+        var delay = TimeSpan.FromSeconds(delaySec);
+        var isLight = DateTime.UtcNow - lasPingDate <= delay;
 
         return isLight != currentStatus;
     }
