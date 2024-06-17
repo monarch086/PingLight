@@ -71,31 +71,34 @@ void loop() {
   delay(1000);
 
   httpsClient.connect(host, httpsPort);
+  delay(100);
 
   Serial.print("[HTTP] begin...\n");
   http.begin(httpsClient, url);
   http.addHeader("Content-Type", "application/json");
 
   int httpCode = http.POST(body);
-  if (httpCode > 0) {
+  Serial.printf("[HTTP] ... code: %d\n", httpCode);
+
+  int delayMs = 0;
+
+  if (httpCode >= 200 and httpCode <= 299) {
     http.writeToStream(&Serial);
+    String payload = http.getString();
+    Serial.printf("Payload: %s\n", payload);
 
-    // HTTP header has been send and Server response header has been handled
-    Serial.printf("[HTTP] ... code: %d\n", httpCode);
-
-    if (httpCode >= 200 and httpCode <= 299) {
-      String payload = http.getString();
-      Serial.printf("Payload: %s\n", payload);
-    }
+    Serial.print("Sleep for 30 sec...\n");
+    delayMs = 30000;
   } else {
     Serial.printf("[HTTP] ... failed, error: %s\n", http.errorToString(httpCode).c_str());
     String payload = http.getString();
     Serial.printf("Payload: %s\n", payload);
+
+    Serial.print("Sleep for 5 sec...\n");
+    delayMs = 5000;
   }
 
   Serial.print("[HTTP] end...\n");
   http.end();
-
-  Serial.print("Sleep for 30 sec...\n");
-  delay(30000);
+  delay(delayMs);
 }
