@@ -4,7 +4,7 @@
 const char* ssid = "ssid";
 const char* password = "password";
 
-const char* host = "https://host.on.aws/dev/pings";
+const char* host = "https://dev.api.pinglight.xyz/pings";
 const int httpsPort = 443;
 
 const String deviceId = "test";
@@ -84,10 +84,7 @@ void loop() {
 
   if (httpCode >= 200 and httpCode <= 299) {
     http.writeToStream(&Serial);
-    String payload = http.getString();
-    Serial.printf("Payload: %s\n", payload);
-
-    Serial.print("Sleep for 30 sec...\n");
+    Serial.print("\nSleep for 30 sec...\n");
     delayMs = 30000;
   } else {
     Serial.printf("[HTTP] ... failed, error: %s\n", http.errorToString(httpCode).c_str());
