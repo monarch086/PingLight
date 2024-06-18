@@ -47,8 +47,13 @@ public class Function
         var scanResponse = await DynamoDbClient.ScanAsync(scanRequest);
         context.Logger.LogInformation($"Found {scanResponse.Count} records.");
 
+        var counter = 0;
+
         foreach (var item in scanResponse.Items)
         {
+            if (counter % 100 == 0)
+                context.Logger.LogInformation($"Processed: {counter} records.");
+
             var putItemRequest = new PutItemRequest
             {
                 TableName = DestinationTableName,
@@ -56,6 +61,8 @@ public class Function
             };
 
             await DynamoDbClient.PutItemAsync(putItemRequest);
+
+            counter++;
         }
 
         context.Logger.LogInformation("Data copy completed successfully.");
