@@ -26,7 +26,7 @@ public class Function
         {
             var scanRequest = new ScanRequest
             {
-                TableName = DestinationTableName
+                TableName = $"PingLight.{stage}.Changes"
             };
 
             var scanResponse = await DynamoDbClient.ScanAsync(scanRequest);
