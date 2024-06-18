@@ -20,6 +20,13 @@ namespace PingLight.Core.Persistence
             this.logger = logger;
         }
 
+        public ChangesRepository(string stage, ILambdaLogger logger)
+        {
+            client = new AmazonDynamoDBClient();
+            changesTable = Table.LoadTable(client, $"PingLight.{stage}.Changes");
+            this.logger = logger;
+        }
+
         public async Task AddChange(Change change)
         {
             await changesTable.PutItemAsync(change.ToDocument());

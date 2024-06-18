@@ -4,10 +4,10 @@
 const char* ssid = "ssid";
 const char* password = "password";
 
-const char* host = "https://host.on.aws";
+const char* host = "https://dev.api.pinglight.xyz/pings";
 const int httpsPort = 443;
 
-const String deviceId = "deviceId";
+const String deviceId = "test";
 const String query = "/?Id=" + deviceId;
 const String url = host + query;
 
@@ -70,45 +70,32 @@ void loop() {
   httpsClient.setTimeout(15000);  // 15 Seconds
   delay(1000);
 
-  Serial.print("HTTPS Connecting");
-  int r = 0;  //retry counter
-  while ((!httpsClient.connect(host, httpsPort)) && (r < 30)) {
-    delay(1000);
-    Serial.print(".");
-    r++;
-  }
-  Serial.println();
-  if (r == 30) {
-    Serial.println("HTTPS connection failed");
-    return;
-  } else {
-    Serial.println("HTTPS connection is successful");
-  }
+  httpsClient.connect(host, httpsPort);
+  delay(100);
 
   Serial.print("[HTTP] begin...\n");
   http.begin(httpsClient, url);
   http.addHeader("Content-Type", "application/json");
 
   int httpCode = http.POST(body);
-  if (httpCode > 0) {
+  Serial.printf("[HTTP] ... code: %d\n", httpCode);
+
+  int delayMs = 0;
+
+  if (httpCode >= 200 and httpCode <= 299) {
     http.writeToStream(&Serial);
-
-    // HTTP header has been send and Server response header has been handled
-    Serial.printf("[HTTP] ... code: %d\n", httpCode);
-
-    if (httpCode >= 200 and httpCode <= 299) {
-      String payload = http.getString();
-      Serial.printf("Payload: %s\n", payload);
-    }
+    Serial.print("\nSleep for 30 sec...\n");
+    delayMs = 30000;
   } else {
     Serial.printf("[HTTP] ... failed, error: %s\n", http.errorToString(httpCode).c_str());
     String payload = http.getString();
     Serial.printf("Payload: %s\n", payload);
+
+    Serial.print("Sleep for 5 sec...\n");
+    delayMs = 5000;
   }
 
   Serial.print("[HTTP] end...\n");
   http.end();
-
-  Serial.print("Sleep for 30 sec...\n");
-  delay(30000);
+  delay(delayMs);
 }

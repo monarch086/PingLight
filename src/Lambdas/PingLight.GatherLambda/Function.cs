@@ -21,5 +21,9 @@ public class Function
         var pingsRepo = new PingsRepository(context.Logger);
 
         await pingsRepo.AddPing(inputData.Id);
+
+        var pingsRepoNew = new PingsRepository("prod", context.Logger);
+
+        await pingsRepoNew.AddPing(inputData.Id);
     }
 }

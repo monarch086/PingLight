@@ -75,9 +75,8 @@ namespace PingLight.Core
         {
             var message = new StringBuilder($"{CALENDAR_ICON} ");
             message.Append($"<b>Планове відключення: {startTime.ToString(TIME_FORMAT)} - {endTime.ToString(TIME_FORMAT)}</b>\r\n\r\n");
-            message.AppendLine("Можливі екстрені відключення за три години до планових.\r\n");
-            message.AppendLine($"Графік стабілізаційних відключень (Група №{groupNumber}):");
-            message.AppendLine("https://kyiv.yasno.com.ua/schedule-turn-off-electricity");
+            message.AppendLine($"Графік стабілізаційних відключень:");
+            message.AppendLine("https://www.dtek-kem.com.ua/ua/shutdowns");
 
             return message.ToString();
         }

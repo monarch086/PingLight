@@ -21,14 +21,16 @@ public class Function
 
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
     {
-        var isProd = input.IsProduction();
-        var config = await ConfigBuilder.Build(isProd, context.Logger);
+        var stage = Environment.GetEnvironmentVariable("STAGE");
+        var config = await ConfigBuilder.Build(stage, context.Logger);
 
-        var devicesRepo = new DeviceConfigRepository(isProd, context.Logger);
+        var devicesRepo = new DeviceConfigRepository(stage, context.Logger);
         var devices = (await devicesRepo.GetConfigs()).Where(d => d.TurnOffGroup.HasValue);
 
         foreach (var device in devices)
         {
+            if (!device.TurnOffGroup.HasValue || !device.IsActive) continue;
+
             await processDeviceAsync(device, config, context.Logger);
         }
     }
@@ -41,8 +43,8 @@ public class Function
         var calendar = Calendar.Load(icsSchedule);
 
         var nextEvent = calendar.Events.FirstOrDefault(e => e.DtStart.AsUtc > DateTime.UtcNow
-                                                        && (e.DtStart.AsUtc - DateTime.UtcNow).TotalMinutes < MINUTES_TO_EVENT_TO_INCLUDE
-                                                        && (e.DtStart.AsUtc - DateTime.UtcNow).TotalMinutes > MINUTES_TO_EVENT_TO_SKIP);
+                                                        && (e.DtStart.AsUtc - DateTime.UtcNow).TotalMinutes < (device.TurnOffPeriodMinutes + 10)
+                                                        && (e.DtStart.AsUtc - DateTime.UtcNow).TotalMinutes > (device.TurnOffPeriodMinutes - 10));
 
         if (nextEvent != null)
         {

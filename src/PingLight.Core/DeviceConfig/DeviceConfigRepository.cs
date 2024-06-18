@@ -8,16 +8,22 @@ namespace PingLight.Core.DeviceConfig
     public class DeviceConfigRepository
     {
         private const string TABLE_NAME = "PingLight.DeviceConfigs";
-        private const string TEST_TABLE_NAME = "PingLight.DeviceConfigs.Test";
 
         private readonly AmazonDynamoDBClient client;
         private readonly Table configTable;
         private readonly ILambdaLogger logger;
 
-        public DeviceConfigRepository(bool isProd, ILambdaLogger logger)
+        public DeviceConfigRepository(ILambdaLogger logger)
         {
             client = new AmazonDynamoDBClient();
-            configTable = Table.LoadTable(client, isProd ? TABLE_NAME : TEST_TABLE_NAME);
+            configTable = Table.LoadTable(client, TABLE_NAME);
+            this.logger = logger;
+        }
+
+        public DeviceConfigRepository(string stage, ILambdaLogger logger)
+        {
+            client = new AmazonDynamoDBClient();
+            configTable = Table.LoadTable(client, $"PingLight.{stage}.DeviceConfigs");
             this.logger = logger;
         }
 

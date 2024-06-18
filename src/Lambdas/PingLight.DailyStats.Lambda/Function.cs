@@ -7,7 +7,6 @@ using PingLight.Core.Model;
 using PingLight.Core.Persistence;
 using System.Text.Json.Nodes;
 
-// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
 namespace PingLight.DailyStats.Lambda;
@@ -19,11 +18,11 @@ public class Function
     /// </summary>
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
     {
-        var isProd = input.IsProduction();
-        var config = await ConfigBuilder.Build(isProd, context.Logger);
+        var stage = Environment.GetEnvironmentVariable("STAGE");
+        var config = await ConfigBuilder.Build(stage, context.Logger);
         var bot = new ChatBot(config.Token);
-        var changesRepo = new ChangesRepository(context.Logger);
-        var devicesRepo = new DeviceConfigRepository(isProd, context.Logger);
+        var changesRepo = new ChangesRepository(stage, context.Logger);
+        var devicesRepo = new DeviceConfigRepository(stage, context.Logger);
 
         var devices = await devicesRepo.GetConfigs();
 
@@ -32,6 +31,8 @@ public class Function
 
         foreach (var device in devices)
         {
+            if (!device.IsDailyStatsEnabled || !device.IsActive) continue;
+
             context.Logger.LogInformation($"Querying for {device.DeviceId} from {from.ToString("O")} " +
                 $"till {till.ToString("O")}");
 

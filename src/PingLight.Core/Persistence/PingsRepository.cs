@@ -20,6 +20,14 @@ namespace PingLight.Core.Persistence
             this.logger = logger;
         }
 
+        public PingsRepository(string stage, ILambdaLogger logger)
+        {
+            var tableName = $"PingLight.{stage}.Status";
+            client = new AmazonDynamoDBClient();
+            pingTable = Table.LoadTable(client, tableName);
+            this.logger = logger;
+        }
+
         public async Task AddPing(string deviceId)
         {
             var item = new PingInfo { Id = deviceId, LastPingDate = DateTime.UtcNow };
