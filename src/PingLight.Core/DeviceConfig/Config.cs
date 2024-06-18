@@ -10,6 +10,8 @@
 
         public int? TurnOffGroup { get; set; }
 
+        public int TurnOffPeriodMinutes { get; set; }
+
         public bool IsDailyStatsEnabled { get; set; }
 
         public bool IsWeeklyStatsEnabled { get; set; }

@@ -43,8 +43,8 @@ public class Function
         var calendar = Calendar.Load(icsSchedule);
 
         var nextEvent = calendar.Events.FirstOrDefault(e => e.DtStart.AsUtc > DateTime.UtcNow
-                                                        && (e.DtStart.AsUtc - DateTime.UtcNow).TotalMinutes < MINUTES_TO_EVENT_TO_INCLUDE
-                                                        && (e.DtStart.AsUtc - DateTime.UtcNow).TotalMinutes > MINUTES_TO_EVENT_TO_SKIP);
+                                                        && (e.DtStart.AsUtc - DateTime.UtcNow).TotalMinutes < (device.TurnOffPeriodMinutes + 10)
+                                                        && (e.DtStart.AsUtc - DateTime.UtcNow).TotalMinutes > (device.TurnOffPeriodMinutes - 10));
 
         if (nextEvent != null)
         {

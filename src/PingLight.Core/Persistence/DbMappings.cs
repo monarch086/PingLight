@@ -56,6 +56,7 @@ namespace PingLight.Core.Persistence
                 ChatId = document["ChatId"].AsString(),
                 Description = document.ContainsKey("Description") ? document["Description"].AsString() : null,
                 TurnOffGroup = document.ContainsKey("TurnOffGroup") ? document["TurnOffGroup"].AsInt() : null,
+                TurnOffPeriodMinutes = document.ContainsKey("TurnOffPeriodMinutes") ? document["TurnOffPeriodMinutes"].AsInt() : 60,
                 IsDailyStatsEnabled = document.ContainsKey("IsDailyStatsEnabled") ? document["IsDailyStatsEnabled"].AsBoolean() : false,
                 IsWeeklyStatsEnabled = document.ContainsKey("IsWeeklyStatsEnabled") ? document["IsWeeklyStatsEnabled"].AsBoolean() : false,
                 IsMonthlyStatsEnabled = document.ContainsKey("IsMonthlyStatsEnabled") ? document["IsMonthlyStatsEnabled"].AsBoolean() : false,
