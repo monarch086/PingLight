@@ -20,14 +20,21 @@ public class Function
         var stage = Environment.GetEnvironmentVariable("STAGE");
         var customEnv = Environment.GetEnvironmentVariable("CUSTOM_ENV");
 
-        //var message = $"Hello from {customEnv} environment (stage: {stage})";
-        //context.Logger.LogInformation(message);
+        var message = $"Hello from {customEnv} environment (stage: {stage})";
 
         try
         {
-            await CopyTableAsync(context);
+            var scanRequest = new ScanRequest
+            {
+                TableName = DestinationTableName
+            };
 
-            return new SuccessResponse("Data copy completed successfully.");
+            var scanResponse = await DynamoDbClient.ScanAsync(scanRequest);
+            message += $"\nFound {scanResponse.Count} records.";
+
+            //await CopyTableAsync(context);
+
+            return new SuccessResponse(message);
         }
         catch (Exception ex)
         {
