@@ -7,7 +7,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "dev:ssr": "ng run pinglight:serve-ssr",
+    "dev:ssr": "ng run pinglight:serve-ssr --port 4201",
     "serve:ssr": "node dist/pinglight/server/main.js",
     "build:ssr": "ng build && ng run pinglight:server",
     "prerender": "ng run pinglight:prerender"
