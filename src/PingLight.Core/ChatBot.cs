@@ -1,5 +1,6 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace PingLight.Core
 {
@@ -14,7 +15,7 @@ namespace PingLight.Core
 
         public async Task<bool> Post(string message, string chatId)
         {
-            var result = await client.SendTextMessageAsync(chatId, message, Telegram.Bot.Types.Enums.ParseMode.Html);
+            var result = await client.SendTextMessageAsync(chatId, message, messageThreadId: null, ParseMode.Html);
 
             return result != null;
         }
@@ -46,9 +47,9 @@ namespace PingLight.Core
         {
             return await client.SendPhotoAsync(
                 chatId: chatId,
-                photo: stream,
+                photo: InputFile.FromStream(stream),
                 caption: text,
-                parseMode: Telegram.Bot.Types.Enums.ParseMode.Html
+                parseMode: ParseMode.Html
             );
         }
     }
