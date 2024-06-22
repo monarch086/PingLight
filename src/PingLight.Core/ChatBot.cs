@@ -27,20 +27,18 @@ namespace PingLight.Core
             var basePath = AppDomain.CurrentDomain.BaseDirectory;
             var finalPath = Path.Combine(basePath, fileName);
 
-            using (Stream stream = System.IO.File.OpenRead(finalPath))
-            {
-                message = await postImage(stream, text, chatId);
-            }
+            using var stream = System.IO.File.OpenRead(finalPath);
+
+            message = await postImage(stream, text, chatId);
         }
 
         public async Task PostImageBytes(byte[] buffer, string text, string chatId)
         {
             Message message;
 
-            using (Stream stream = new MemoryStream(buffer))
-            {
-                message = await postImage(stream, text, chatId);
-            }
+            using var stream = new MemoryStream(buffer);
+
+            message = await postImage(stream, text, chatId);
         }
 
         private async Task<Message> postImage(Stream stream, string text, string chatId)
