@@ -1,5 +1,6 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace PingLight.Core
 {
@@ -14,7 +15,7 @@ namespace PingLight.Core
 
         public async Task<bool> Post(string message, string chatId)
         {
-            var result = await client.SendTextMessageAsync(chatId, message, Telegram.Bot.Types.Enums.ParseMode.Html);
+            var result = await client.SendTextMessageAsync(chatId, message, messageThreadId: null, ParseMode.Html);
 
             return result != null;
         }
@@ -26,29 +27,27 @@ namespace PingLight.Core
             var basePath = AppDomain.CurrentDomain.BaseDirectory;
             var finalPath = Path.Combine(basePath, fileName);
 
-            using (Stream stream = System.IO.File.OpenRead(finalPath))
-            {
-                message = await postImage(stream, text, chatId);
-            }
+            using var stream = System.IO.File.OpenRead(finalPath);
+
+            message = await postImage(stream, text, chatId);
         }
 
         public async Task PostImageBytes(byte[] buffer, string text, string chatId)
         {
             Message message;
 
-            using (Stream stream = new MemoryStream(buffer))
-            {
-                message = await postImage(stream, text, chatId);
-            }
+            using var stream = new MemoryStream(buffer);
+
+            message = await postImage(stream, text, chatId);
         }
 
         private async Task<Message> postImage(Stream stream, string text, string chatId)
         {
             return await client.SendPhotoAsync(
                 chatId: chatId,
-                photo: stream,
+                photo: InputFile.FromStream(stream),
                 caption: text,
-                parseMode: Telegram.Bot.Types.Enums.ParseMode.Html
+                parseMode: ParseMode.Html
             );
         }
     }

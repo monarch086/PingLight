@@ -15,10 +15,12 @@ public class Function
     private static readonly string SourceTableName = "PingLight.Changes";
     private static readonly string DestinationTableName = "PingLight.prod.Changes";
 
+    private static readonly string InitialStage = "initial";
+
     public async Task<APIGatewayProxyResponse> FunctionHandler(JsonObject input, ILambdaContext context)
     {
-        var stage = Environment.GetEnvironmentVariable("STAGE");
-        var customEnv = Environment.GetEnvironmentVariable("CUSTOM_ENV");
+        var stage = Environment.GetEnvironmentVariable("STAGE") ?? InitialStage;
+        var customEnv = Environment.GetEnvironmentVariable("CUSTOM_ENV") ?? InitialStage;
 
         var message = $"Hello from {customEnv} environment (stage: {stage})";
 
@@ -26,7 +28,7 @@ public class Function
         {
             var scanRequest = new ScanRequest
             {
-                TableName = $"PingLight.{stage}.Changes"
+                TableName = stage == InitialStage ? $"PingLight.Changes" : $"PingLight.{stage}.Changes"
             };
 
             var scanResponse = await DynamoDbClient.ScanAsync(scanRequest);
