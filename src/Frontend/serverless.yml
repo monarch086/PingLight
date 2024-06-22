@@ -1,0 +1,52 @@
+service: pinglight-front
+
+plugins:
+  - serverless-apigw-binary
+  - serverless-offline
+  - serverless-api-compression
+  - serverless-associate-waf
+  - serverless-api-gateway-throttling
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  memorySize: 192
+  timeout: 10
+  region: eu-central-1
+  apiGateway:
+    shouldStartNameWithService: true
+
+package:
+  excludeDevDependencies: true
+  exclude:
+    - ./**
+    - '!node_modules/@vendia/**'
+  include:
+    - "node_modules/aws-serverless-express/**"
+    - "node_modules/binary-case/**"
+    - "node_modules/type-is/**"
+    - "node_modules/media-typer/**"
+    - "node_modules/mime-types/**"
+    - "node_modules/mime-db/**"
+    - "node_modules/@angular/ssr"
+    - "node_modules/@codegenie/**"
+    - "dist/**"
+    - "lambda.js"
+
+custom:
+  serverless-offline:
+    noPrependStageInUrl: false
+  contentCompression: 1024
+  apigwBinary:
+    types:
+      - '*/*'
+  apiGatewayThrottling:
+    maxRequestsPerSecond: 100
+    maxConcurrentRequests: 10
+
+functions:
+  server:
+    handler: lambda.universal
+    events:
+      - http: ANY /{proxy+}
+      - http: ANY /
