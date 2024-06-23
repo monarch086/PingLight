@@ -169,3 +169,18 @@ functions:
      - http:
          path: /token/validate
          method: GET
+
+  get-devices:
+    handler: PingLight.Devices.Lambda::PingLight.Devices.Lambda.Function::GetDevicesAsync
+    package:
+      artifact: PingLight.Devices.Lambda/bin/Release/net8.0/deploy-package.zip
+    name: pinglight-${sls:stage}-get-devices
+    environment:
+      STAGE: ${opt:stage, self:provider.stage}
+    timeout: 10
+    url:
+      cors: true
+    events:
+     - http:
+         path: /devices
+         method: GET
