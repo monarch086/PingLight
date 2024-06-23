@@ -139,3 +139,33 @@ functions:
       - schedule:
           rate: cron(0 4-20 * * ? *)
           enabled: true
+
+  auth-generate:
+    handler: PingLight.Auth.Lambda::PingLight.Auth.Lambda.Function::GenerateTokenAsync
+    package:
+      artifact: PingLight.Auth.Lambda/bin/Release/net8.0/deploy-package.zip
+    name: pinglight-${sls:stage}-auth-generate
+    environment:
+      STAGE: ${opt:stage, self:provider.stage}
+    timeout: 10
+    url:
+      cors: true
+    events:
+     - http:
+         path: /token/generate
+         method: POST
+
+  auth-validate:
+    handler: PingLight.Auth.Lambda::PingLight.Auth.Lambda.Function::ValidateTokenAsync
+    package:
+      artifact: PingLight.Auth.Lambda/bin/Release/net8.0/deploy-package.zip
+    name: pinglight-${sls:stage}-auth-validate
+    environment:
+      STAGE: ${opt:stage, self:provider.stage}
+    timeout: 10
+    url:
+      cors: true
+    events:
+     - http:
+         path: /token/validate
+         method: GET

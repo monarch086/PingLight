@@ -29,6 +29,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PingLight.MonthlyStats.Lamb
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PingLight.GatherApi.Lambda", "Lambdas\PingLight.GatherApi.Lambda\PingLight.GatherApi.Lambda.csproj", "{98821474-6F0D-4BAD-AA52-9CBB634EFA9C}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PingLight.Auth.Lambda", "Lambdas\PingLight.Auth.Lambda\PingLight.Auth.Lambda.csproj", "{2D8DF344-7C57-4F37-B3FB-A9D49E257EFD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -79,6 +81,10 @@ Global
 		{98821474-6F0D-4BAD-AA52-9CBB634EFA9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{98821474-6F0D-4BAD-AA52-9CBB634EFA9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{98821474-6F0D-4BAD-AA52-9CBB634EFA9C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2D8DF344-7C57-4F37-B3FB-A9D49E257EFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D8DF344-7C57-4F37-B3FB-A9D49E257EFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D8DF344-7C57-4F37-B3FB-A9D49E257EFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D8DF344-7C57-4F37-B3FB-A9D49E257EFD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -93,6 +99,7 @@ Global
 		{1FEE538B-CBC7-48D3-AB77-093E20173AC1} = {FC391FCC-55C3-4B68-9FFE-EDD46C03FF07}
 		{859EEC7C-F7A2-4F07-9E91-0B1F076FDE69} = {FC391FCC-55C3-4B68-9FFE-EDD46C03FF07}
 		{98821474-6F0D-4BAD-AA52-9CBB634EFA9C} = {FC391FCC-55C3-4B68-9FFE-EDD46C03FF07}
+		{2D8DF344-7C57-4F37-B3FB-A9D49E257EFD} = {FC391FCC-55C3-4B68-9FFE-EDD46C03FF07}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0428F7FE-7083-4EA6-96E0-6E900B7AC90B}
