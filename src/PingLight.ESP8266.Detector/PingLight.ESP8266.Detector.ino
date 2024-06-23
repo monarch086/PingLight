@@ -8,7 +8,7 @@ const char* host = "https://host.on.aws";
 const int httpsPort = 443;
 
 const String deviceId = "deviceId";
-const String query = "/?Id=" + deviceId;
+const String query = "?Id=" + deviceId;
 const String url = host + query;
 
 const String body = "{\"Id\": " + deviceId + "}";
