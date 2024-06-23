@@ -6,6 +6,7 @@ using Amazon.Lambda.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using PingLight.Core.Auth;
 using PingLight.Core.HttpResponses;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
@@ -56,9 +57,16 @@ public class Function
         }
     }
 
-    public async Task<APIGatewayProxyResponse> ValidateTokenAsync(APIGatewayProxyRequest request, ILambdaContext context)
+    public APIGatewayCustomAuthorizerResponse ValidateToken(APIGatewayCustomAuthorizerRequest request, ILambdaContext context)
     {
-        var token = request.Headers["Authorization"];
+        //foreach (var header in request.Headers)
+        //{
+        //    context.Logger.Log($"{header.Key}: {header.Value}");
+        //}
+
+        context.Logger.Log($"request: {JsonConvert.SerializeObject(request)}");
+
+        var token = request.Headers["authorization"];
 
         var validationParameters = new TokenValidationParameters
         {
@@ -68,7 +76,7 @@ public class Function
             ValidateIssuerSigningKey = true,
             ValidIssuer = _configuration["Jwt:Issuer"],
             ValidAudience = _configuration["Jwt:Issuer"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"])),
         };
 
         try
@@ -81,15 +89,23 @@ public class Function
                          claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var tokenType = claimsPrincipal.FindFirst("type")?.Value;
 
-            return new SuccessResponse($"Token is valid for userId: {userId}, tokenType: {tokenType}.");
+            var policy = AuthPolicyGenerator.GeneratePolicy(userId, "Allow", request.HttpMethod);
+            context.Logger.Log($"SuccessResponse: {JsonConvert.SerializeObject(policy)}.");
+
+            //return new SuccessResponse($"Token is valid for userId: {userId}, tokenType: {tokenType}.");
+            return policy;
         }
-        catch (SecurityTokenException)
-        {
-            return new UnauthorizedResponse("Invalid token");
-        }
+        //catch (SecurityTokenException se)
+        //{
+        //    context.Logger.Log($"UnauthorizedResponse: {se.ToString()}");
+        //    //return new UnauthorizedResponse("Invalid token");
+        //    return AuthPolicyGenerator.GeneratePolicy("user", "Deny", request.MethodArn);
+        //}
         catch (Exception ex)
         {
-            return new FailResponse($"Internal server error: {ex.Message}.");
+            context.Logger.Log($"FailResponse: {ex.ToString()}");
+            //return new FailResponse($"Internal server error: {ex.Message}.");
+            return AuthPolicyGenerator.GeneratePolicy("user", "Deny", request.HttpMethod);
         }
     }
 
