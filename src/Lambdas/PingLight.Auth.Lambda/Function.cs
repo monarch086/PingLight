@@ -6,7 +6,6 @@ using Amazon.Lambda.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
-using PingLight.Core.Auth;
 using PingLight.Core.HttpResponses;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
@@ -57,16 +56,18 @@ public class Function
         }
     }
 
-    public APIGatewayCustomAuthorizerResponse ValidateToken(APIGatewayCustomAuthorizerRequest request, ILambdaContext context)
+    public APIGatewayCustomAuthorizerV2SimpleResponse ValidateToken(APIGatewayCustomAuthorizerRequest request, ILambdaContext context)
     {
-        //foreach (var header in request.Headers)
-        //{
-        //    context.Logger.Log($"{header.Key}: {header.Value}");
-        //}
-
         context.Logger.Log($"request: {JsonConvert.SerializeObject(request)}");
 
-        var token = request.Headers["authorization"];
+        if (!request.Headers.TryGetValue("authorization", out var token) || string.IsNullOrEmpty(token))
+        {
+            context.Logger.LogLine("Authorization token is missing");
+            return new APIGatewayCustomAuthorizerV2SimpleResponse
+            {
+                IsAuthorized = false
+            };
+        }
 
         var validationParameters = new TokenValidationParameters
         {
@@ -89,23 +90,26 @@ public class Function
                          claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var tokenType = claimsPrincipal.FindFirst("type")?.Value;
 
-            var policy = AuthPolicyGenerator.GeneratePolicy(userId, "Allow", request.HttpMethod);
-            context.Logger.Log($"SuccessResponse: {JsonConvert.SerializeObject(policy)}.");
+            var response = new APIGatewayCustomAuthorizerV2SimpleResponse
+            {
+                IsAuthorized = true,
+                Context = new Dictionary<string, object>
+                    {
+                        { "userId", userId }
+                    }
+            };
 
-            //return new SuccessResponse($"Token is valid for userId: {userId}, tokenType: {tokenType}.");
-            return policy;
+            context.Logger.Log($"Success validation: {JsonConvert.SerializeObject(response)}.");
+            return response;
         }
-        //catch (SecurityTokenException se)
-        //{
-        //    context.Logger.Log($"UnauthorizedResponse: {se.ToString()}");
-        //    //return new UnauthorizedResponse("Invalid token");
-        //    return AuthPolicyGenerator.GeneratePolicy("user", "Deny", request.MethodArn);
-        //}
         catch (Exception ex)
         {
-            context.Logger.Log($"FailResponse: {ex.ToString()}");
-            //return new FailResponse($"Internal server error: {ex.Message}.");
-            return AuthPolicyGenerator.GeneratePolicy("user", "Deny", request.HttpMethod);
+            context.Logger.Log($"Failed validation: {ex.ToString()}");
+
+            return new APIGatewayCustomAuthorizerV2SimpleResponse
+            {
+                IsAuthorized = false
+            };
         }
     }
 

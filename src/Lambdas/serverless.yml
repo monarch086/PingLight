@@ -31,7 +31,10 @@ provider:
       pingLightAuthorizer:
         type: request
         functionName: auth-validate
+        resultTtlInSeconds: 300
         enableSimpleResponses: true
+        identitySource:
+          - $request.header.Authorization
 
 package:
   individually: true
