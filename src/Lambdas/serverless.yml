@@ -1,4 +1,3 @@
-# "org" ensures this Service is used with the correct Serverless Framework Access Key.
 org: barsuk
 # https://www.serverless.com/framework/docs-providers-aws-guide-functions
 service: pinglight
@@ -27,6 +26,12 @@ provider:
           Action:
            - "ssm:GetParameter"
           Resource: "arn:aws:ssm:eu-central-1:469321902251:parameter/PingLight/${sls:stage}/*"
+  httpApi:
+    authorizers:
+      pingLightAuthorizer:
+        type: request
+        functionName: auth-validate
+        enableSimpleResponses: true
 
 package:
   individually: true
@@ -51,7 +56,7 @@ functions:
     url:
       cors: true
     events:
-     - http:
+     - httpApi:
          path: /test
          method: GET
 
@@ -66,7 +71,7 @@ functions:
     url:
       cors: true
     events:
-     - http:
+     - httpApi:
          path: /pings
          method: POST
 
@@ -151,12 +156,12 @@ functions:
     url:
       cors: true
     events:
-     - http:
+     - httpApi:
          path: /token/generate
          method: POST
 
   auth-validate:
-    handler: PingLight.Auth.Lambda::PingLight.Auth.Lambda.Function::ValidateTokenAsync
+    handler: PingLight.Auth.Lambda::PingLight.Auth.Lambda.Function::ValidateToken
     package:
       artifact: PingLight.Auth.Lambda/bin/Release/net8.0/deploy-package.zip
     name: pinglight-${sls:stage}-auth-validate
@@ -166,7 +171,7 @@ functions:
     url:
       cors: true
     events:
-     - http:
+     - httpApi:
          path: /token/validate
          method: GET
 
@@ -181,6 +186,8 @@ functions:
     url:
       cors: true
     events:
-     - http:
+     - httpApi:
          path: /devices
          method: GET
+         authorizer:
+          name: pingLightAuthorizer
