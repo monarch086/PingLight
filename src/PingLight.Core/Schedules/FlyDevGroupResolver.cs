@@ -11,7 +11,7 @@ namespace PingLight.Core.Schedules
         {
             for (int i = 1; i <= 5; i++)
             {
-                if (string.IsNullOrEmpty(configuration[$"{CONFIG_SECTION}:{i}"]))
+                if (!string.IsNullOrEmpty(configuration[$"{CONFIG_SECTION}:{i}"]))
                 {
                     groupsMap.Add(i.ToString(), configuration[$"{CONFIG_SECTION}:{i}"]);
                 }

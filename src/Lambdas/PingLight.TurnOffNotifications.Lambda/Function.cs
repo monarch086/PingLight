@@ -52,13 +52,13 @@ public class Function
     private async Task processDeviceAsync(Config device, PingConfig config, ScheduleLoader scheduleLoader, CustomScheduleLoader customScheduleLoader, ILambdaLogger logger)
     {
         var groupNumber = device.TurnOffGroup;
-        logger.LogInformation($"groupNumber: {groupNumber}");
 
         var icsSchedule = device.UseCustomCalendar
             ? await customScheduleLoader.GetOrLoadScheduleAsync(groupNumber)
             : await scheduleLoader.GetOrLoadScheduleAsync(groupNumber);
 
         var calendar = Calendar.Load(icsSchedule);
+        logger.LogInformation($"Events count: {calendar.Events.Count()}, groupNumber: {groupNumber}.");
 
         var nextEvent = calendar.Events.FirstOrDefault(e => e.DtStart.AsUtc > DateTime.UtcNow
                                                         && (e.DtStart.AsUtc - DateTime.UtcNow).TotalMinutes < (device.TurnOffPeriodMinutes + 5)
