@@ -33,6 +33,8 @@ namespace PingLight.Core.Persistence
 
         public async Task<string?> GetAsync(string groupKey, string configKey)
         {
+            logger.LogInformation($"ConfigsRepository: getting {groupKey}-{configKey}");
+
             var filter = new QueryFilter("GroupKey", QueryOperator.Equal, groupKey);
             filter.AddCondition("ConfigKey", QueryOperator.Equal, configKey);
 
@@ -51,7 +53,7 @@ namespace PingLight.Core.Persistence
 
             if (documents.Count > 0)
             {
-                documents[0]["ConfigValue"].AsString();
+                return documents[0]["ConfigValue"].AsString();
             }
 
             return null;
