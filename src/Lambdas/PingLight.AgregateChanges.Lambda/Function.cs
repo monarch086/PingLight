@@ -4,6 +4,7 @@ using PingLight.Core.Config;
 using PingLight.Core.DeviceConfig;
 using PingLight.Core.Model;
 using PingLight.Core.Persistence;
+using PingLight.Core.SsmConfig;
 using System.Text.Json.Nodes;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
@@ -18,7 +19,7 @@ public class Function
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
     {
         var stage = Environment.GetEnvironmentVariable("STAGE");
-        var config = await ConfigBuilder.Build(stage, context.Logger);
+        var config = await SsmConfigBuilder.Build(stage, context.Logger);
         var pingsRepo = new PingsRepository(stage, context.Logger);
         var changesRepo = new ChangesRepository(stage, context.Logger);
         var deviceRepo = new DeviceConfigRepository(stage, context.Logger);

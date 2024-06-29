@@ -3,6 +3,7 @@ using Ical.Net;
 using PingLight.Core;
 using PingLight.Core.Config;
 using PingLight.Core.DeviceConfig;
+using PingLight.Core.SsmConfig;
 using System.Text.Json.Nodes;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -22,7 +23,7 @@ public class Function
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
     {
         var stage = Environment.GetEnvironmentVariable("STAGE");
-        var config = await ConfigBuilder.Build(stage, context.Logger);
+        var config = await SsmConfigBuilder.Build(stage, context.Logger);
 
         var devicesRepo = new DeviceConfigRepository(stage, context.Logger);
         var devices = (await devicesRepo.GetConfigs()).Where(d => d.TurnOffGroup.HasValue);
