@@ -55,13 +55,14 @@ namespace PingLight.Core.Persistence
                 DeviceId = document["DeviceId"].AsString(),
                 ChatId = document["ChatId"].AsString(),
                 Description = document.ContainsKey("Description") ? document["Description"].AsString() : null,
-                TurnOffGroup = document.ContainsKey("TurnOffGroup") ? document["TurnOffGroup"].AsInt() : null,
+                TurnOffGroup = document.ContainsKey("TurnOffGroup") ? document["TurnOffGroup"].AsString() : null,
                 TurnOffPeriodMinutes = document.ContainsKey("TurnOffPeriodMinutes") ? document["TurnOffPeriodMinutes"].AsInt() : 60,
                 IsDailyStatsEnabled = document.ContainsKey("IsDailyStatsEnabled") ? document["IsDailyStatsEnabled"].AsBoolean() : false,
                 IsWeeklyStatsEnabled = document.ContainsKey("IsWeeklyStatsEnabled") ? document["IsWeeklyStatsEnabled"].AsBoolean() : false,
                 IsMonthlyStatsEnabled = document.ContainsKey("IsMonthlyStatsEnabled") ? document["IsMonthlyStatsEnabled"].AsBoolean() : false,
                 NotificationDelaySec = document.ContainsKey("NotificationDelaySec") ? document["NotificationDelaySec"].AsInt() : 120,
                 IsActive = document.ContainsKey("IsActive") ? document["IsActive"].AsBoolean() : false,
+                UseCustomCalendar = document.ContainsKey("UseCustomCalendar") ? document["UseCustomCalendar"].AsBoolean() : false,
             };
         }
     }

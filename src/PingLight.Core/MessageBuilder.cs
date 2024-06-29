@@ -71,7 +71,7 @@ namespace PingLight.Core
             return sb.ToString();
         }
 
-        public static string GetTurnOffNotificationMessage(DateTime startTime, DateTime endTime, int groupNumber)
+        public static string GetTurnOffNotificationMessage(DateTime startTime, DateTime endTime, string groupNumber)
         {
             var message = new StringBuilder($"{CALENDAR_ICON} ");
             message.Append($"<b>Планове відключення: {startTime.ToString(TIME_FORMAT)} - {endTime.ToString(TIME_FORMAT)}</b>\r\n\r\n");

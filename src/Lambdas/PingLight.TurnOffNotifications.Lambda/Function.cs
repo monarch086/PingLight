@@ -1,36 +1,52 @@
 ﻿using Amazon.Lambda.Core;
 using Ical.Net;
+using Microsoft.Extensions.Configuration;
 using PingLight.Core;
 using PingLight.Core.Config;
 using PingLight.Core.DeviceConfig;
+using PingLight.Core.Persistence;
+using PingLight.Core.Schedules;
 using PingLight.Core.SsmConfig;
 using System.Text.Json.Nodes;
 
-// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
 namespace PingLight.TurnOffNotifications.Lambda;
 
 public class Function
 {
-    /// <summary>
-    /// A function that sends notifications about electricity turning off
-    /// </summary>
-    private const int MINUTES_TO_EVENT_TO_INCLUDE = 185;
-    private const int MINUTES_TO_EVENT_TO_SKIP = 150;
-    private ScheduleLoader scheduleLoader = new ScheduleLoader();
+    private ScheduleLoader scheduleLoader;
+    private CustomScheduleLoader customScheduleLoader;
+
+    private readonly FlyDevGroupResolver groupResolver;
+
+    public Function()
+    {
+        var stage = Environment.GetEnvironmentVariable("STAGE");
+
+        var builder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+
+        var configuration = builder.Build();
+        groupResolver = new FlyDevGroupResolver(configuration);
+    }
 
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
     {
         var stage = Environment.GetEnvironmentVariable("STAGE");
         var config = await SsmConfigBuilder.Build(stage, context.Logger);
+        
+        var configsRepository = new ConfigsRepository(stage, context.Logger);
+        scheduleLoader = new ScheduleLoader(groupResolver, context.Logger);
+        customScheduleLoader = new CustomScheduleLoader(configsRepository, context.Logger);
 
         var devicesRepo = new DeviceConfigRepository(stage, context.Logger);
-        var devices = (await devicesRepo.GetConfigs()).Where(d => d.TurnOffGroup.HasValue);
+        var devices = (await devicesRepo.GetConfigs()).Where(d => !string.IsNullOrEmpty(d.TurnOffGroup));
 
         foreach (var device in devices)
         {
-            if (!device.TurnOffGroup.HasValue || !device.IsActive) continue;
+            if (!device.IsActive) continue;
 
             await processDeviceAsync(device, config, context.Logger);
         }
@@ -38,8 +54,10 @@ public class Function
 
     private async Task processDeviceAsync(Config device, PingConfig config, ILambdaLogger logger)
     {
-        var groupNumber = device.TurnOffGroup.Value;
-        var icsSchedule = await scheduleLoader.GetOrLoadScheduleAsync(groupNumber, logger);
+        var groupNumber = device.TurnOffGroup;
+        var icsSchedule = device.UseCustomCalendar
+            ? await customScheduleLoader.GetOrLoadScheduleAsync(groupNumber)
+            : await scheduleLoader.GetOrLoadScheduleAsync(groupNumber);
 
         var calendar = Calendar.Load(icsSchedule);
 
