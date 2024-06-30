@@ -59,18 +59,18 @@ public class Function
 
         var calendar = Calendar.Load(icsSchedule);
 
-        var searchStart = DateTime.UtcNow.AddMinutes(device.TurnOffPeriodMinutes - 5);
-        var searchEnd = DateTime.UtcNow.AddMinutes(device.TurnOffPeriodMinutes + 5);
+        var searchStart = DateTime.UtcNow.AddMinutes(device.TurnOffPeriodMinutes - 5).ToKyivTime();
+        var searchEnd = DateTime.UtcNow.AddMinutes(device.TurnOffPeriodMinutes + 5).ToKyivTime();
 
         var occurrences = calendar.GetOccurrences(searchStart, searchEnd);
 
-        var nextEvent = occurrences.FirstOrDefault(o => (o.Period.StartTime.AsUtc - DateTime.UtcNow).TotalMinutes < (device.TurnOffPeriodMinutes + 5) &&
+        var nextOccurrence = occurrences.FirstOrDefault(o => (o.Period.StartTime.AsUtc - DateTime.UtcNow).TotalMinutes < (device.TurnOffPeriodMinutes + 5) &&
                                                         (o.Period.StartTime.AsUtc - DateTime.UtcNow).TotalMinutes > (device.TurnOffPeriodMinutes - 5));
 
-        if (nextEvent != null)
+        if (nextOccurrence != null)
         {
-            var startTime = nextEvent.Period.StartTime.AsUtc.ToKyivTime();
-            var endTime = nextEvent.Period.EndTime.AsUtc.ToKyivTime();
+            var startTime = nextOccurrence.Period.StartTime.AsUtc.ToKyivTime();
+            var endTime = nextOccurrence.Period.EndTime.AsUtc.ToKyivTime();
             var message = MessageBuilder.GetTurnOffNotificationMessage(startTime, endTime);
 
             logger.LogInformation(message);
