@@ -7,10 +7,10 @@ namespace PingLight.Core.Schedules
         private const string CALENDAR_HOST = "https://shutdown-calendar.fly.dev";
         private readonly Dictionary<string, string> scheduleMap = new Dictionary<string, string>();
         private readonly HttpClient client = new HttpClient();
-        private readonly FlyDevGroupResolver groupResolver;
+        private readonly IGroupResolver groupResolver;
         private readonly ILambdaLogger logger;
 
-        public ScheduleLoader(FlyDevGroupResolver groupResolver, ILambdaLogger logger)
+        public ScheduleLoader(IGroupResolver groupResolver, ILambdaLogger logger)
         {
             this.logger = logger;
             this.groupResolver = groupResolver;
@@ -30,7 +30,7 @@ namespace PingLight.Core.Schedules
                 return string.Empty;
             }
 
-            var sourceUrl = $"{CALENDAR_HOST}/calendar/{groupNumber}.ics";
+            var sourceUrl = $"{CALENDAR_HOST}/calendar/{resolvedGroup}.ics";
 
             var response = await client.GetAsync(sourceUrl);
 
