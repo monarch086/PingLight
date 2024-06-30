@@ -43,7 +43,7 @@ public class Function
 
         foreach (var device in devices)
         {
-            if (!device.IsActive) continue;
+            if (!device.IsActive || string.IsNullOrEmpty(device.TurnOffGroup)) continue;
 
             await processDeviceAsync(device, config, scheduleLoader, customScheduleLoader, context.Logger);
         }
@@ -58,17 +58,20 @@ public class Function
             : await scheduleLoader.GetOrLoadScheduleAsync(groupNumber);
 
         var calendar = Calendar.Load(icsSchedule);
-        logger.LogInformation($"Events count: {calendar.Events.Count()}, groupNumber: {groupNumber}.");
 
-        var nextEvent = calendar.Events.FirstOrDefault(e => e.DtStart.AsUtc > DateTime.UtcNow
-                                                        && (e.DtStart.AsUtc - DateTime.UtcNow).TotalMinutes < (device.TurnOffPeriodMinutes + 5)
-                                                        && (e.DtStart.AsUtc - DateTime.UtcNow).TotalMinutes > (device.TurnOffPeriodMinutes - 5));
+        var searchStart = DateTime.UtcNow.AddMinutes(device.TurnOffPeriodMinutes - 5);
+        var searchEnd = DateTime.UtcNow.AddMinutes(device.TurnOffPeriodMinutes + 5);
+
+        var occurrences = calendar.GetOccurrences(searchStart, searchEnd);
+
+        var nextEvent = occurrences.FirstOrDefault(o => (o.Period.StartTime.AsUtc - DateTime.UtcNow).TotalMinutes < (device.TurnOffPeriodMinutes + 5) &&
+                                                        (o.Period.StartTime.AsUtc - DateTime.UtcNow).TotalMinutes > (device.TurnOffPeriodMinutes - 5));
 
         if (nextEvent != null)
         {
-            var startTime = nextEvent.DtStart.AsUtc.ToKyivTime();
-            var endTime = nextEvent.DtEnd.AsUtc.ToKyivTime();
-            var message = MessageBuilder.GetTurnOffNotificationMessage(startTime, endTime, groupNumber);
+            var startTime = nextEvent.Period.StartTime.AsUtc.ToKyivTime();
+            var endTime = nextEvent.Period.EndTime.AsUtc.ToKyivTime();
+            var message = MessageBuilder.GetTurnOffNotificationMessage(startTime, endTime);
 
             logger.LogInformation(message);
 
