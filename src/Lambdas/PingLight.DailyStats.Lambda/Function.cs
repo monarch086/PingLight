@@ -1,10 +1,10 @@
 using Amazon.Lambda.Core;
 using PingLight.Core;
 using PingLight.Core.Charts;
-using PingLight.Core.Config;
 using PingLight.Core.DeviceConfig;
 using PingLight.Core.Model;
 using PingLight.Core.Persistence;
+using PingLight.Core.SsmConfig;
 using System.Text.Json.Nodes;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
@@ -19,7 +19,7 @@ public class Function
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
     {
         var stage = Environment.GetEnvironmentVariable("STAGE");
-        var config = await ConfigBuilder.Build(stage, context.Logger);
+        var config = await SsmConfigBuilder.Build(stage, context.Logger);
         var bot = new ChatBot(config.Token);
         var changesRepo = new ChangesRepository(stage, context.Logger);
         var devicesRepo = new DeviceConfigRepository(stage, context.Logger);

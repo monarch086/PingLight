@@ -133,9 +133,9 @@ functions:
     name: pinglight-${sls:stage}-turn-off-notifications
     environment:
       STAGE: ${opt:stage, self:provider.stage}
-    timeout: 15
-    memorySize: 192
+    timeout: 30
+    memorySize: 256
     events:
       - schedule:
-          rate: cron(0 4-20 * * ? *)
+          rate: cron(0/10 4-20 * * ? *)
           enabled: true

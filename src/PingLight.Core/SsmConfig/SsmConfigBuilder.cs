@@ -1,10 +1,11 @@
 ﻿using Amazon.Lambda.Core;
 using Amazon.SimpleSystemsManagement.Model;
 using Amazon.SimpleSystemsManagement;
+using PingLight.Core.Config;
 
-namespace PingLight.Core.Config
+namespace PingLight.Core.SsmConfig
 {
-    public class ConfigBuilder
+    public class SsmConfigBuilder
     {
         private static string APP_NAME = "PingLight";
         private static string TOKEN_PARAM_NAME = "TelegramBot.Token";

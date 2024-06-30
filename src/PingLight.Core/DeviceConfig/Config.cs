@@ -8,7 +8,7 @@
 
         public string? Description { get; set; }
 
-        public int? TurnOffGroup { get; set; }
+        public string? TurnOffGroup { get; set; }
 
         public int TurnOffPeriodMinutes { get; set; }
 
@@ -21,5 +21,7 @@
         public int NotificationDelaySec { get; set; }
 
         public bool IsActive { get; set; }
+
+        public bool UseCustomCalendar { get; set; }
     }
 }
