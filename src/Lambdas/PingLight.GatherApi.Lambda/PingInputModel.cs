@@ -1,6 +1,6 @@
 ﻿namespace PingLight.GatherApi.Lambda;
 
-internal class InputModel
+internal class PingInputModel
 {
     public string Id { get; set; }
 }
