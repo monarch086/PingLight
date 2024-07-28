@@ -1,6 +1,5 @@
 ﻿using Amazon.Lambda.Core;
 using Ical.Net;
-using Microsoft.Extensions.Configuration;
 using PingLight.Core;
 using PingLight.Core.Config;
 using PingLight.Core.DeviceConfig;
@@ -16,17 +15,10 @@ namespace PingLight.TurnOffNotifications.Lambda;
 public class Function
 {
     private readonly string stage;
-    private readonly IConfiguration configuration;
 
     public Function()
     {
-        stage = Environment.GetEnvironmentVariable("STAGE");
-
-        var builder = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-
-        configuration = builder.Build();
+        stage = Environment.GetEnvironmentVariable("STAGE") ?? string.Empty;
     }
 
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
