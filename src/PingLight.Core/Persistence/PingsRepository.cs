@@ -58,15 +58,13 @@ namespace PingLight.Core.Persistence
 
         public async Task<PingInfo?> GetPing(string deviceId)
         {
-            var filter = new QueryFilter("DeviceId", QueryOperator.Equal, deviceId);
-
             var config = new QueryOperationConfig()
             {
                 Limit = 1,
                 Select = SelectValues.AllAttributes,
                 BackwardSearch = true,
                 ConsistentRead = true,
-                Filter = new QueryFilter("DeviceId", QueryOperator.Equal, deviceId)
+                Filter = new QueryFilter("Id", QueryOperator.Equal, deviceId)
             };
 
             var queryResult = pingTable.Query(config);

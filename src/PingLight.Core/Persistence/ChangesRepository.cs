@@ -44,7 +44,7 @@ namespace PingLight.Core.Persistence
                 Select = SelectValues.AllAttributes,
                 BackwardSearch = true,
                 ConsistentRead = true,
-                Filter = new QueryFilter("DeviceId", QueryOperator.Equal, deviceId)
+                Filter = filter
             };
 
             var queryResult = changesTable.Query(config);
