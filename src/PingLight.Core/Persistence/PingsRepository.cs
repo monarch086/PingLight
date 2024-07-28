@@ -73,8 +73,6 @@ namespace PingLight.Core.Persistence
 
             if (documents.Count > 0)
             {
-                logger.LogInformation($"Found ping: {documents[0]["DeviceId"]}.");
-
                 return documents[0].ToPingInfo();
             }
 
