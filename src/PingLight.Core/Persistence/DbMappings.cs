@@ -62,7 +62,6 @@ namespace PingLight.Core.Persistence
                 IsMonthlyStatsEnabled = document.ContainsKey("IsMonthlyStatsEnabled") ? document["IsMonthlyStatsEnabled"].AsBoolean() : false,
                 NotificationDelaySec = document.ContainsKey("NotificationDelaySec") ? document["NotificationDelaySec"].AsInt() : 120,
                 IsActive = document.ContainsKey("IsActive") ? document["IsActive"].AsBoolean() : false,
-                UseCustomCalendar = document.ContainsKey("UseCustomCalendar") ? document["UseCustomCalendar"].AsBoolean() : false,
             };
         }
     }

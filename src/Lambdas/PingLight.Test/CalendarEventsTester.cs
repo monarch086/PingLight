@@ -14,12 +14,7 @@ namespace PingLight.Test
             var configsRepository = new ConfigsRepository(stage, context.Logger);
             var customScheduleLoader = new CustomScheduleLoader(configsRepository, context.Logger);
 
-            var groupResolver = new TestGroupResolver();
-            var scheduleLoader = new ScheduleLoader(groupResolver, context.Logger);
-
-            var isCustom = bool.Parse(input.IsCustom);
-
-            var icsSchedule = await (isCustom ? customScheduleLoader.GetOrLoadScheduleAsync(input.Group) : scheduleLoader.GetOrLoadScheduleAsync(input.Group));
+            var icsSchedule = await customScheduleLoader.GetOrLoadScheduleAsync(input.Group);
             var sb = new StringBuilder();
 
             var calendar = Calendar.Load(icsSchedule);
