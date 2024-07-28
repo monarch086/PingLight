@@ -56,7 +56,7 @@ functions:
          method: GET
 
   gather-api:
-    handler: PingLight.GatherApi.Lambda::PingLight.GatherApi.Lambda.Function::FunctionHandler
+    handler: PingLight.GatherApi.Lambda::PingLight.GatherApi.Lambda.Function::AddPingAsync
     package:
       artifact: PingLight.GatherApi.Lambda/bin/Release/net8.0/deploy-package.zip
     name: pinglight-${sls:stage}-gather-api
@@ -68,6 +68,21 @@ functions:
     events:
      - http:
          path: /pings
+         method: POST
+
+  gather-changes-api:
+    handler: PingLight.GatherApi.Lambda::PingLight.GatherApi.Lambda.Function::AddChangeAsync
+    package:
+      artifact: PingLight.GatherApi.Lambda/bin/Release/net8.0/deploy-package.zip
+    name: pinglight-${sls:stage}-gather-changes-api
+    environment:
+      STAGE: ${opt:stage, self:provider.stage}
+    timeout: 20
+    url:
+      cors: true
+    events:
+     - http:
+         path: /changes
          method: POST
 
   aggregate-changes:
