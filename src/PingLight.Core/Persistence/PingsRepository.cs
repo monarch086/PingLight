@@ -42,7 +42,7 @@ namespace PingLight.Core.Persistence
             var scanFilter = new ScanFilter();
             var scanResult = pingTable.Scan(scanFilter);
 
-            logger.LogInformation($"Scan result count: {scanResult.Count}");
+            // logger.LogInformation($"Scan result count: {scanResult.Count}");
 
             do
             {
@@ -54,6 +54,33 @@ namespace PingLight.Core.Persistence
             } while (!scanResult.IsDone);
 
             return pings;
+        }
+
+        public async Task<PingInfo?> GetPing(string deviceId)
+        {
+            var filter = new QueryFilter("DeviceId", QueryOperator.Equal, deviceId);
+
+            var config = new QueryOperationConfig()
+            {
+                Limit = 1,
+                Select = SelectValues.AllAttributes,
+                BackwardSearch = true,
+                ConsistentRead = true,
+                Filter = new QueryFilter("DeviceId", QueryOperator.Equal, deviceId)
+            };
+
+            var queryResult = pingTable.Query(config);
+
+            var documents = await queryResult.GetNextSetAsync();
+
+            if (documents.Count > 0)
+            {
+                logger.LogInformation($"Found ping: {documents[0]["DeviceId"]}.");
+
+                return documents[0].ToPingInfo();
+            }
+
+            return null;
         }
     }
 }

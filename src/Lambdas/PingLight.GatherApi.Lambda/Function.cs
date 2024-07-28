@@ -44,6 +44,7 @@ public class Function
 
             var stage = Environment.GetEnvironmentVariable("STAGE");
             var changesRepo = new ChangesRepository(stage, context.Logger);
+            var pingsRepository = new PingsRepository(stage, context.Logger);
 
             var deviceRepo = new DeviceConfigRepository(stage, context.Logger);
             var devices = await deviceRepo.GetConfigs();
@@ -52,6 +53,12 @@ public class Function
             if (device == null)
             {
                 return new BadRequestResponse($"Device with id = {inputData.Id} not found.");
+            }
+
+            var ping = await pingsRepository.GetPing(inputData.Id);
+            if (ping != null)
+            {
+                return new BadRequestResponse($"For device with id = {inputData.Id} ping mode is enabled.");
             }
 
             var lastChange = await changesRepo.GetLatestChange(inputData.Id);
