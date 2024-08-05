@@ -106,7 +106,7 @@ functions:
     name: pinglight-${sls:stage}-daily-stats
     environment:
       STAGE: ${opt:stage, self:provider.stage}
-    timeout: 15
+    timeout: 30
     memorySize: 256
     events:
       - schedule:
@@ -120,7 +120,7 @@ functions:
     name: pinglight-${sls:stage}-weekly-stats
     environment:
       STAGE: ${opt:stage, self:provider.stage}
-    timeout: 15
+    timeout: 30
     memorySize: 256
     events:
       - schedule:
@@ -134,7 +134,7 @@ functions:
     name: pinglight-${sls:stage}-monthly-stats
     environment:
       STAGE: ${opt:stage, self:provider.stage}
-    timeout: 20
+    timeout: 30
     memorySize: 512
     events:
       - schedule:
