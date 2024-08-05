@@ -21,7 +21,5 @@
         public int NotificationDelaySec { get; set; }
 
         public bool IsActive { get; set; }
-
-        public bool UseCustomCalendar { get; set; }
     }
 }

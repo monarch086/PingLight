@@ -1,6 +1,5 @@
 ﻿using Amazon.Lambda.Core;
 using Ical.Net;
-using Microsoft.Extensions.Configuration;
 using PingLight.Core;
 using PingLight.Core.Config;
 using PingLight.Core.DeviceConfig;
@@ -16,25 +15,16 @@ namespace PingLight.TurnOffNotifications.Lambda;
 public class Function
 {
     private readonly string stage;
-    private readonly IConfiguration configuration;
 
     public Function()
     {
-        stage = Environment.GetEnvironmentVariable("STAGE");
-
-        var builder = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-
-        configuration = builder.Build();
+        stage = Environment.GetEnvironmentVariable("STAGE") ?? string.Empty;
     }
 
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
     {
         var configsRepository = new ConfigsRepository(stage, context.Logger);
-        var groupResolver = new FlyDevGroupResolver(configuration);
-        var scheduleLoader = new ScheduleLoader(groupResolver, context.Logger);
-        var customScheduleLoader = new CustomScheduleLoader(configsRepository, context.Logger);
+        var scheduleLoader = new CustomScheduleLoader(configsRepository, context.Logger);
 
         var config = await SsmConfigBuilder.Build(stage, context.Logger);
 
@@ -45,17 +35,15 @@ public class Function
         {
             if (!device.IsActive || string.IsNullOrEmpty(device.TurnOffGroup)) continue;
 
-            await processDeviceAsync(device, config, scheduleLoader, customScheduleLoader, context.Logger);
+            await processDeviceAsync(device, config, scheduleLoader, context.Logger);
         }
     }
 
-    private async Task processDeviceAsync(Config device, PingConfig config, ScheduleLoader scheduleLoader, CustomScheduleLoader customScheduleLoader, ILambdaLogger logger)
+    private async Task processDeviceAsync(Config device, PingConfig config, CustomScheduleLoader scheduleLoader, ILambdaLogger logger)
     {
         var groupNumber = device.TurnOffGroup;
 
-        var icsSchedule = device.UseCustomCalendar
-            ? await customScheduleLoader.GetOrLoadScheduleAsync(groupNumber)
-            : await scheduleLoader.GetOrLoadScheduleAsync(groupNumber);
+        var icsSchedule = await scheduleLoader.GetOrLoadScheduleAsync(groupNumber);
 
         var calendar = Calendar.Load(icsSchedule);
 
