@@ -8,7 +8,7 @@
 
         public string? Description { get; set; }
 
-        public int? TurnOffGroup { get; set; }
+        public string? TurnOffGroup { get; set; }
 
         public int TurnOffPeriodMinutes { get; set; }
 

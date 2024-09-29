@@ -3,54 +3,63 @@ using Ical.Net;
 using PingLight.Core;
 using PingLight.Core.Config;
 using PingLight.Core.DeviceConfig;
+using PingLight.Core.Persistence;
+using PingLight.Core.Schedules;
+using PingLight.Core.SsmConfig;
 using System.Text.Json.Nodes;
 
-// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
 namespace PingLight.TurnOffNotifications.Lambda;
 
 public class Function
 {
-    /// <summary>
-    /// A function that sends notifications about electricity turning off
-    /// </summary>
-    private const int MINUTES_TO_EVENT_TO_INCLUDE = 185;
-    private const int MINUTES_TO_EVENT_TO_SKIP = 150;
-    private ScheduleLoader scheduleLoader = new ScheduleLoader();
+    private readonly string stage;
+
+    public Function()
+    {
+        stage = Environment.GetEnvironmentVariable("STAGE") ?? string.Empty;
+    }
 
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
     {
-        var stage = Environment.GetEnvironmentVariable("STAGE");
-        var config = await ConfigBuilder.Build(stage, context.Logger);
+        var configsRepository = new ConfigsRepository(stage, context.Logger);
+        var scheduleLoader = new CustomScheduleLoader(configsRepository, context.Logger);
+
+        var config = await SsmConfigBuilder.Build(stage, context.Logger);
 
         var devicesRepo = new DeviceConfigRepository(stage, context.Logger);
-        var devices = (await devicesRepo.GetConfigs()).Where(d => d.TurnOffGroup.HasValue);
+        var devices = (await devicesRepo.GetConfigs()).Where(d => !string.IsNullOrEmpty(d.TurnOffGroup));
 
         foreach (var device in devices)
         {
-            if (!device.TurnOffGroup.HasValue || !device.IsActive) continue;
+            if (!device.IsActive || string.IsNullOrEmpty(device.TurnOffGroup)) continue;
 
-            await processDeviceAsync(device, config, context.Logger);
+            await processDeviceAsync(device, config, scheduleLoader, context.Logger);
         }
     }
 
-    private async Task processDeviceAsync(Config device, PingConfig config, ILambdaLogger logger)
+    private async Task processDeviceAsync(Config device, PingConfig config, CustomScheduleLoader scheduleLoader, ILambdaLogger logger)
     {
-        var groupNumber = device.TurnOffGroup.Value;
-        var icsSchedule = await scheduleLoader.GetOrLoadScheduleAsync(groupNumber, logger);
+        var groupNumber = device.TurnOffGroup;
+
+        var icsSchedule = await scheduleLoader.GetOrLoadScheduleAsync(groupNumber);
 
         var calendar = Calendar.Load(icsSchedule);
 
-        var nextEvent = calendar.Events.FirstOrDefault(e => e.DtStart.AsUtc > DateTime.UtcNow
-                                                        && (e.DtStart.AsUtc - DateTime.UtcNow).TotalMinutes < (device.TurnOffPeriodMinutes + 10)
-                                                        && (e.DtStart.AsUtc - DateTime.UtcNow).TotalMinutes > (device.TurnOffPeriodMinutes - 10));
+        var searchStart = DateTime.UtcNow.AddMinutes(device.TurnOffPeriodMinutes - 5).ToKyivTime();
+        var searchEnd = DateTime.UtcNow.AddMinutes(device.TurnOffPeriodMinutes + 5).ToKyivTime();
 
-        if (nextEvent != null)
+        var occurrences = calendar.GetOccurrences(searchStart, searchEnd);
+
+        var nextOccurrence = occurrences.FirstOrDefault(o => (o.Period.StartTime.AsUtc - DateTime.UtcNow).TotalMinutes < (device.TurnOffPeriodMinutes + 5) &&
+                                                        (o.Period.StartTime.AsUtc - DateTime.UtcNow).TotalMinutes > (device.TurnOffPeriodMinutes - 5));
+
+        if (nextOccurrence != null)
         {
-            var startTime = nextEvent.DtStart.AsUtc.ToKyivTime();
-            var endTime = nextEvent.DtEnd.AsUtc.ToKyivTime();
-            var message = MessageBuilder.GetTurnOffNotificationMessage(startTime, endTime, groupNumber);
+            var startTime = nextOccurrence.Period.StartTime.AsUtc.ToKyivTime();
+            var endTime = nextOccurrence.Period.EndTime.AsUtc.ToKyivTime();
+            var message = MessageBuilder.GetTurnOffNotificationMessage(startTime, endTime);
 
             logger.LogInformation(message);
 

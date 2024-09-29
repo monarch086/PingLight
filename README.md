@@ -15,6 +15,12 @@ cd .\src\Lambdas\
 serverless deploy --stage [dev/prod] [--force]
 ```
 
+## Install serverless dependencies
+
+```powershell
+serverless plugin install -n serverless-api-gateway-throttling
+```
+
 ## Author
 
 Any ideas of improvements please send to <sbarsuk88@gmail.com>

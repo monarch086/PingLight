@@ -58,7 +58,7 @@ functions:
          method: GET
 
   gather-api:
-    handler: PingLight.GatherApi.Lambda::PingLight.GatherApi.Lambda.Function::FunctionHandler
+    handler: PingLight.GatherApi.Lambda::PingLight.GatherApi.Lambda.Function::AddPingAsync
     package:
       artifact: PingLight.GatherApi.Lambda/bin/Release/net8.0/deploy-package.zip
     name: pinglight-${sls:stage}-gather-api
@@ -71,8 +71,21 @@ functions:
      - http:
          path: /pings
          method: POST
-    tags:
-      type: core
+
+  gather-changes-api:
+    handler: PingLight.GatherApi.Lambda::PingLight.GatherApi.Lambda.Function::AddChangeAsync
+    package:
+      artifact: PingLight.GatherApi.Lambda/bin/Release/net8.0/deploy-package.zip
+    name: pinglight-${sls:stage}-gather-changes-api
+    environment:
+      STAGE: ${opt:stage, self:provider.stage}
+    timeout: 20
+    url:
+      cors: true
+    events:
+     - http:
+         path: /changes
+         method: POST
 
   aggregate-changes:
     handler: PingLight.AggregateChanges.Lambda::PingLight.AggregateChanges.Lambda.Function::FunctionHandler
@@ -87,8 +100,6 @@ functions:
       - schedule:
           rate: rate(1 minute)
           enabled: true
-    tags:
-      type: core
 
   daily-stats:
     handler: PingLight.DailyStats.Lambda::PingLight.DailyStats.Lambda.Function::FunctionHandler
@@ -97,14 +108,12 @@ functions:
     name: pinglight-${sls:stage}-daily-stats
     environment:
       STAGE: ${opt:stage, self:provider.stage}
-    timeout: 15
+    timeout: 30
     memorySize: 256
     events:
       - schedule:
           rate: cron(0 7 * * ? *)
           enabled: true
-    tags:
-      type: core
 
   weekly-stats:
     handler: PingLight.WeeklyStats.Lambda::PingLight.WeeklyStats.Lambda.Function::FunctionHandler
@@ -113,14 +122,12 @@ functions:
     name: pinglight-${sls:stage}-weekly-stats
     environment:
       STAGE: ${opt:stage, self:provider.stage}
-    timeout: 15
+    timeout: 30
     memorySize: 256
     events:
       - schedule:
           rate: cron(0 7 ? * MON *)
           enabled: true
-    tags:
-      type: core
 
   monthly-stats:
     handler: PingLight.MonthlyStats.Lambda::PingLight.MonthlyStats.Lambda.Function::FunctionHandler
@@ -129,14 +136,12 @@ functions:
     name: pinglight-${sls:stage}-monthly-stats
     environment:
       STAGE: ${opt:stage, self:provider.stage}
-    timeout: 20
+    timeout: 30
     memorySize: 512
     events:
       - schedule:
           rate: cron(0 9 1 * ? *)
           enabled: true
-    tags:
-      type: core
 
   turn-off-notifications:
     handler: PingLight.TurnOffNotifications.Lambda::PingLight.TurnOffNotifications.Lambda.Function::FunctionHandler
@@ -145,11 +150,9 @@ functions:
     name: pinglight-${sls:stage}-turn-off-notifications
     environment:
       STAGE: ${opt:stage, self:provider.stage}
-    timeout: 15
-    memorySize: 192
+    timeout: 30
+    memorySize: 256
     events:
       - schedule:
-          rate: cron(0 4-20 * * ? *)
+          rate: cron(0/10 4-19 * * ? *)
           enabled: true
-    tags:
-      type: core
