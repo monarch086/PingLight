@@ -42,16 +42,4 @@ dotnet lambda package --configuration Release --framework net8.0 --output-packag
 Write-Output ">>> Finished packaging PingLight.TurnOffNotifications.Lambda";
 Set-Location ..
 
-Set-Location ./PingLight.Auth.Lambda
-dotnet restore
-dotnet lambda package --configuration Release --framework net8.0 --output-package bin/Release/net8.0/deploy-package.zip
-Write-Output ">>> Finished packaging PingLight.Auth.Lambda";
-Set-Location ..
-
-Set-Location ./PingLight.Devices.Lambda
-dotnet restore
-dotnet lambda package --configuration Release --framework net8.0 --output-package bin/Release/net8.0/deploy-package.zip
-Write-Output ">>> Finished packaging PingLight.Devices.Lambda";
-Set-Location ..
-
 Write-Output ">>> >>> >>> Finished all services.";

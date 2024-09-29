@@ -29,15 +29,6 @@ provider:
           Action:
            - "ssm:GetParameter"
           Resource: "arn:aws:ssm:eu-central-1:469321902251:parameter/PingLight/${sls:stage}/*"
-  httpApi:
-    authorizers:
-      pingLightAuthorizer:
-        type: request
-        functionName: auth-validate
-        resultTtlInSeconds: 300
-        enableSimpleResponses: true
-        identitySource:
-          - $request.header.Authorization
 
 package:
   individually: true
@@ -62,7 +53,7 @@ functions:
     url:
       cors: true
     events:
-     - httpApi:
+     - http:
          path: /test
          method: GET
 
@@ -77,7 +68,7 @@ functions:
     url:
       cors: true
     events:
-     - httpApi:
+     - http:
          path: /pings
          method: POST
     tags:
@@ -162,56 +153,3 @@ functions:
           enabled: true
     tags:
       type: core
-
-  auth-generate:
-    handler: PingLight.Auth.Lambda::PingLight.Auth.Lambda.Function::GenerateTokenAsync
-    package:
-      artifact: PingLight.Auth.Lambda/bin/Release/net8.0/deploy-package.zip
-    name: pinglight-${sls:stage}-auth-generate
-    environment:
-      STAGE: ${opt:stage, self:provider.stage}
-    timeout: 10
-    url:
-      cors: true
-    events:
-     - httpApi:
-         path: /token/generate
-         method: POST
-    tags:
-      type: front
-
-  auth-validate:
-    handler: PingLight.Auth.Lambda::PingLight.Auth.Lambda.Function::ValidateToken
-    package:
-      artifact: PingLight.Auth.Lambda/bin/Release/net8.0/deploy-package.zip
-    name: pinglight-${sls:stage}-auth-validate
-    environment:
-      STAGE: ${opt:stage, self:provider.stage}
-    timeout: 10
-    url:
-      cors: true
-    events:
-     - httpApi:
-         path: /token/validate
-         method: GET
-    tags:
-      type: front
-
-  get-devices:
-    handler: PingLight.Devices.Lambda::PingLight.Devices.Lambda.Function::GetDevicesAsync
-    package:
-      artifact: PingLight.Devices.Lambda/bin/Release/net8.0/deploy-package.zip
-    name: pinglight-${sls:stage}-get-devices
-    environment:
-      STAGE: ${opt:stage, self:provider.stage}
-    timeout: 10
-    url:
-      cors: true
-    events:
-     - httpApi:
-         path: /devices
-         method: GET
-         authorizer:
-          name: pingLightAuthorizer
-    tags:
-      type: front
