@@ -1,6 +1,9 @@
 ﻿# PingLight.WebApi Commands
 
 ```sh
+# Build image:
+docker build -t pinglight-webapi .
+
 # Start database
 docker compose up -d
 
