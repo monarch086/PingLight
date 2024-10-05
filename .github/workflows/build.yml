@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - main
-      - add-webapi
 jobs:
   Build:
     name: Build
