@@ -4,11 +4,11 @@ locals {
   family                  = "postgres15"
   vpc_cidr                = "10.20.0.0/16"
   environment             = "dev"
-  storage_type            = "gp3"
+  storage_type            = "gp2"
   engine_version          = "15.2"
   instance_class          = "db.t3.micro"
-  replica_enable          = true
-  replica_count           = 1
+  replica_enable          = false
+  replica_count           = 0
   current_identity        = data.aws_caller_identity.current.arn
   custom_user_password    = ""
   allowed_security_groups = ["sg-0a680afd35"]
@@ -27,7 +27,7 @@ module "kms" {
 
   deletion_window_in_days = 7
   description             = "Complete key example showing various configurations available"
-  enable_key_rotation     = true
+  enable_key_rotation     = false
   is_enabled              = true
   key_usage               = "ENCRYPT_DECRYPT"
   multi_region            = true
@@ -85,7 +85,7 @@ module "rds-pg" {
   name                             = local.name
   db_name                          = "postgres"
   family                           = local.family
-  multi_az                         = "true"
+  multi_az                         = false
   vpc_id                           = module.vpc.vpc_id
   subnet_ids                       = module.vpc.database_subnets ## db subnets
   environment                      = local.environment
@@ -97,7 +97,7 @@ module "rds-pg" {
   instance_class                   = local.instance_class
   master_username                  = "pguser"
   allocated_storage                = "20"
-  max_allocated_storage            = 120
+  max_allocated_storage            = 30
   publicly_accessible              = false
   skip_final_snapshot              = true
   backup_window                    = "03:00-06:00"
@@ -105,7 +105,7 @@ module "rds-pg" {
   final_snapshot_identifier_prefix = "final"
   major_engine_version             = local.engine_version
   deletion_protection              = true
-  cloudwatch_metric_alarms_enabled = true
+  cloudwatch_metric_alarms_enabled = false
   alarm_cpu_threshold_percent      = 70
   disk_free_storage_space          = "10000000" # in bytes
   slack_notification_enabled       = false
