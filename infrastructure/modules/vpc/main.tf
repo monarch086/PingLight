@@ -19,4 +19,3 @@ resource "aws_subnet" "public" {
     { Name = "${var.environment}-public-subnet-${count.index}" }
   )
 }
-

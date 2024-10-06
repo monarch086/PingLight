@@ -12,8 +12,8 @@ variable "multi_az" {
 variable "storage_type" {}
 variable "master_username" {}
 variable "custom_user_password" {}
+variable "vpc_id" {}
 variable "subnet_ids" {}
-variable "allowed_security_groups" {}
 variable "additional_tags" {
   type = map(string)
   default = {}

@@ -7,9 +7,6 @@ variable "vpc_cidr" {
 variable "availability_zones" {
   default = ["eu-central-1a", "eu-central-1b"]
 }
-variable "allowed_security_groups" {
-  default = ["sg-0a680afd35"]
-}
 variable "additional_tags" {
   type = map(string)
   default = {
