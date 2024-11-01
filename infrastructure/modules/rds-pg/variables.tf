@@ -11,7 +11,7 @@ variable "multi_az" {
 }
 variable "storage_type" {}
 variable "master_username" {}
-variable "custom_user_password" {}
+variable "master_userpassword" {}
 variable "vpc_id" {}
 variable "subnet_ids" {}
 variable "additional_tags" {

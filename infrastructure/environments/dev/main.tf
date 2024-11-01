@@ -51,10 +51,10 @@ module "rds-pg" {
   storage_type          = "standard"
   allocated_storage     = 20
   max_allocated_storage = 30
-  publicly_accessible   = false
+  publicly_accessible   = true
   subnet_ids            = module.vpc.public_subnet_id
   vpc_id                = module.vpc.vpc_id
-  master_username       = "pguser"
-  custom_user_password  = "password"
+  master_username       = "admin"
+  master_userpassword   = var.rds_master_user_password
   additional_tags       = var.additional_tags
 }

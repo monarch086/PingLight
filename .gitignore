@@ -13,7 +13,7 @@
 ## Serverless framework
 .serverless/
 
-## Terraform
+## Terraform module directory
 **/.terraform/*
 
 # .tfstate files

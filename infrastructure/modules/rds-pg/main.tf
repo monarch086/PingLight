@@ -6,7 +6,7 @@ resource "aws_db_instance" "this" {
   instance_class         = var.instance_class
   db_name                = var.db_name
   username               = var.master_username
-  password               = var.custom_user_password
+  password               = var.master_userpassword
   publicly_accessible    = var.publicly_accessible
   multi_az               = var.multi_az
   storage_type           = var.storage_type
