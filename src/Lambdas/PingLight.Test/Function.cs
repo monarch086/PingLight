@@ -34,11 +34,11 @@ public class Function
             var scanResponse = await DynamoDbClient.ScanAsync(scanRequest);
             message += $"\nFound {scanResponse.Count} records.";
 
-            ////////await CopyTableAsync(context);
+            //await CopyTableAsync(context);
 
-            var eventTester = new CalendarEventsTester();
+            //var eventTester = new CalendarEventsTester();
 
-            message += await eventTester.LoadCalendarEventsAsync(context, stage, inputData);
+            //message += await eventTester.LoadCalendarEventsAsync(context, stage, inputData);
 
             return new SuccessResponse(message);
         }
