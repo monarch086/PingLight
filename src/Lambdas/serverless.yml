@@ -42,7 +42,7 @@ functions:
   test:
     handler: PingLight.Test::PingLight.Test.Function::FunctionHandler
     package:
-      artifact: PingLight.Test/bin/Release/net8.0/deploy-package.zip
+      artifact: PingLight.Test/bin/Release/net8.0/deploy-package-test.zip
     name: pinglight-${sls:stage}-test
     environment:
       STAGE: ${opt:stage, self:provider.stage}
@@ -58,7 +58,7 @@ functions:
   gather-api:
     handler: PingLight.GatherApi.Lambda::PingLight.GatherApi.Lambda.Function::AddPingAsync
     package:
-      artifact: PingLight.GatherApi.Lambda/bin/Release/net8.0/deploy-package.zip
+      artifact: PingLight.GatherApi.Lambda/bin/Release/net8.0/deploy-package-gather-api.zip
     name: pinglight-${sls:stage}-gather-api
     environment:
       STAGE: ${opt:stage, self:provider.stage}
@@ -73,7 +73,7 @@ functions:
   gather-changes-api:
     handler: PingLight.GatherApi.Lambda::PingLight.GatherApi.Lambda.Function::AddChangeAsync
     package:
-      artifact: PingLight.GatherApi.Lambda/bin/Release/net8.0/deploy-package.zip
+      artifact: PingLight.GatherApi.Lambda/bin/Release/net8.0/deploy-package-gather-api.zip
     name: pinglight-${sls:stage}-gather-changes-api
     environment:
       STAGE: ${opt:stage, self:provider.stage}
@@ -88,7 +88,7 @@ functions:
   aggregate-changes:
     handler: PingLight.AggregateChanges.Lambda::PingLight.AggregateChanges.Lambda.Function::FunctionHandler
     package:
-      artifact: PingLight.AgregateChanges.Lambda/bin/Release/net8.0/deploy-package.zip
+      artifact: PingLight.AgregateChanges.Lambda/bin/Release/net8.0/deploy-package-aggregate-changes.zip
     name: pinglight-${sls:stage}-aggregate-changes
     environment:
       STAGE: ${opt:stage, self:provider.stage}
@@ -102,7 +102,7 @@ functions:
   daily-stats:
     handler: PingLight.DailyStats.Lambda::PingLight.DailyStats.Lambda.Function::FunctionHandler
     package:
-      artifact: PingLight.DailyStats.Lambda/bin/Release/net8.0/deploy-package.zip
+      artifact: PingLight.DailyStats.Lambda/bin/Release/net8.0/deploy-package-daily-stats.zip
     name: pinglight-${sls:stage}-daily-stats
     environment:
       STAGE: ${opt:stage, self:provider.stage}
@@ -116,7 +116,7 @@ functions:
   weekly-stats:
     handler: PingLight.WeeklyStats.Lambda::PingLight.WeeklyStats.Lambda.Function::FunctionHandler
     package:
-      artifact: PingLight.WeeklyStats.Lambda/bin/Release/net8.0/deploy-package.zip
+      artifact: PingLight.WeeklyStats.Lambda/bin/Release/net8.0/deploy-package-weekly-stats.zip
     name: pinglight-${sls:stage}-weekly-stats
     environment:
       STAGE: ${opt:stage, self:provider.stage}
@@ -130,7 +130,7 @@ functions:
   monthly-stats:
     handler: PingLight.MonthlyStats.Lambda::PingLight.MonthlyStats.Lambda.Function::FunctionHandler
     package:
-      artifact: PingLight.MonthlyStats.Lambda/bin/Release/net8.0/deploy-package.zip
+      artifact: PingLight.MonthlyStats.Lambda/bin/Release/net8.0/deploy-package-monthly-stats.zip
     name: pinglight-${sls:stage}-monthly-stats
     environment:
       STAGE: ${opt:stage, self:provider.stage}
@@ -144,7 +144,7 @@ functions:
   turn-off-notifications:
     handler: PingLight.TurnOffNotifications.Lambda::PingLight.TurnOffNotifications.Lambda.Function::FunctionHandler
     package:
-      artifact: PingLight.TurnOffNotifications.Lambda/bin/Release/net8.0/deploy-package.zip
+      artifact: PingLight.TurnOffNotifications.Lambda/bin/Release/net8.0/deploy-package-turn-off-notifications.zip
     name: pinglight-${sls:stage}-turn-off-notifications
     environment:
       STAGE: ${opt:stage, self:provider.stage}

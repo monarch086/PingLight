@@ -13,6 +13,9 @@ App for pinging some host and posting info to Telegram channel. Can be useful fo
 cd .\src\Lambdas\
 .\build.ps1
 serverless deploy --stage [dev/prod] [--force]
+
+# deploy particular function
+serverless deploy function --function test --stage dev --force
 ```
 
 ## Install serverless dependencies
