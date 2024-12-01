@@ -18,9 +18,7 @@ public class Function
         var inputData = input["queryStringParameters"].Deserialize<InputModel>();
         if (inputData == null) { return; }
 
-        var pingsRepo = new PingsRepository(context.Logger);
-
-        await pingsRepo.AddPing(inputData.Id);
+        context.Logger.LogInformation($"Received ping from: {inputData.Id}");
 
         var pingsRepoNew = new PingsRepository("prod", context.Logger);
 

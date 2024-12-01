@@ -7,18 +7,9 @@ namespace PingLight.Core.Persistence
 {
     public class PingsRepository
     {
-        private static string pingTableName = "PingLight.Status";
-
         private readonly AmazonDynamoDBClient client;
         private readonly Table pingTable;
         private readonly ILambdaLogger logger;
-
-        public PingsRepository(ILambdaLogger logger)
-        {
-            client = new AmazonDynamoDBClient();
-            pingTable = Table.LoadTable(client, pingTableName);
-            this.logger = logger;
-        }
 
         public PingsRepository(string stage, ILambdaLogger logger)
         {
@@ -41,8 +32,6 @@ namespace PingLight.Core.Persistence
 
             var scanFilter = new ScanFilter();
             var scanResult = pingTable.Scan(scanFilter);
-
-            // logger.LogInformation($"Scan result count: {scanResult.Count}");
 
             do
             {
