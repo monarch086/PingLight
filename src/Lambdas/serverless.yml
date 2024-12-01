@@ -9,6 +9,9 @@ provider:
   region: eu-central-1
   memorySize: 256
   versionFunctions: false
+  tags:
+    name: pinglight
+    stage: ${sls:stage}
   iam:
     role:
       statements:
