@@ -14,7 +14,7 @@ namespace PingLight.AggregateChanges.Lambda;
 public class Function
 {
     /// <summary>
-    /// A function that finds out if there was a change in status and posts updates to TG
+    /// A function that finds out if there was a change in status and posts updates to channels
     /// </summary>
     public async Task FunctionHandler(JsonObject input, ILambdaContext context)
     {
@@ -37,14 +37,14 @@ public class Function
                 continue;
             }
 
-            var changed = change == null || isChanged(ping.LastPingDate, change.IsLight, device.NotificationDelaySec);
-            if (changed) await statusChanged(context.Logger, changesRepo, config, ping, change, device);
+            var changed = change == null || IsChanged(ping.LastPingDate, change.IsLight, device.NotificationDelaySec);
+            if (changed) await HandleStatusChangedAsync(context.Logger, changesRepo, config, ping, change, device);
         }
 
         context.Logger.LogInformation("Pings processing complete.");
     }
 
-    private bool isChanged(DateTime lasPingDate, bool currentStatus, int delaySec)
+    private bool IsChanged(DateTime lasPingDate, bool currentStatus, int delaySec)
     {
         var delay = TimeSpan.FromSeconds(delaySec);
         var isLight = DateTime.UtcNow - lasPingDate <= delay;
@@ -52,12 +52,11 @@ public class Function
         return isLight != currentStatus;
     }
 
-    private async Task statusChanged(ILambdaLogger logger, ChangesRepository changesRepo, PingConfig config, PingInfo ping, Change? lastChange, Config? device)
+    private async Task HandleStatusChangedAsync(ILambdaLogger logger, ChangesRepository changesRepo, PingConfig config, PingInfo ping, Change? lastChange, Config? device)
     {
         var isLight = lastChange != null ? !lastChange.IsLight : true;
         var timespan = lastChange != null ? DateTime.UtcNow - lastChange.ChangeDate : TimeSpan.Zero;
 
-        // Add change to DB
         await changesRepo.AddChange(new Change 
         {
             DeviceId = ping.Id,
@@ -65,13 +64,18 @@ public class Function
             IsLight = isLight
         });
 
-        // Post to TG
         if (device != null && device.IsActive)
         {
             var bot = new ChatBot(config.Token);
             var message = isLight ? MessageBuilder.GetLightOnMessage(timespan) : MessageBuilder.GetLightOffMessage(timespan);
             var success = await bot.Post(message, device.ChatId);
-            logger.LogInformation($"Posting success: {success}");
+            logger.LogInformation($"Posting success to Telegram: {success}");
+
+            if (!string.IsNullOrEmpty(device.WhatsAppChatId))
+            {
+                var whatsAppClient = new WhatsAppClient(config.WhatsAppToken, logger);
+                await whatsAppClient.PostAsync(message, device.WhatsAppChatId);
+            }
         }
     }
 }

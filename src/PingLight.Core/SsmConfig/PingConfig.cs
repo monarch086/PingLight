@@ -3,5 +3,7 @@
     public class PingConfig
     {
         public string Token { get; set; }
+
+        public string WhatsAppToken { get; set; }
     }
 }

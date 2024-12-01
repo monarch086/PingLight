@@ -54,6 +54,7 @@ namespace PingLight.Core.Persistence
             {
                 DeviceId = document["DeviceId"].AsString(),
                 ChatId = document["ChatId"].AsString(),
+                WhatsAppChatId = document.ContainsKey("WhatsAppChatId") ? document["WhatsAppChatId"].AsString() : null,
                 Description = document.ContainsKey("Description") ? document["Description"].AsString() : null,
                 TurnOffGroup = document.ContainsKey("TurnOffGroup") ? document["TurnOffGroup"].AsString() : null,
                 TurnOffPeriodMinutes = document.ContainsKey("TurnOffPeriodMinutes") ? document["TurnOffPeriodMinutes"].AsInt() : 60,

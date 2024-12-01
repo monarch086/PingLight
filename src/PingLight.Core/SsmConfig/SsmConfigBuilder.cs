@@ -9,6 +9,7 @@ namespace PingLight.Core.SsmConfig
     {
         private static string APP_NAME = "PingLight";
         private static string TOKEN_PARAM_NAME = "TelegramBot.Token";
+        private static string WHATSAPP_TOKEN_PARAM_NAME = "WhatsApp.Token";
 
         public static async Task<PingConfig> Build(string stage, ILambdaLogger logger)
         {
@@ -24,6 +25,10 @@ namespace PingLight.Core.SsmConfig
                 };
                 var result = await client.GetParameterAsync(request);
                 config.Token = result.Parameter.Value;
+
+                request.Name = $"/{APP_NAME}/{stage}/{WHATSAPP_TOKEN_PARAM_NAME}";
+                result = await client.GetParameterAsync(request);
+                config.WhatsAppToken = result.Parameter.Value;
 
                 return config;
             }

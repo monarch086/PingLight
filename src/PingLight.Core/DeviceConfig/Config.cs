@@ -6,6 +6,8 @@
 
         public string ChatId { get; set; }
 
+        public string? WhatsAppChatId { get; set; }
+
         public string? Description { get; set; }
 
         public string? TurnOffGroup { get; set; }
