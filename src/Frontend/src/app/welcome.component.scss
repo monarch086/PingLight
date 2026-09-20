@@ -1,0 +1,65 @@
+@use 'page-styles';
+.welcome {
+  display:grid;
+  grid-template-columns:1.25fr 1fr;
+  gap:70px;
+  align-items:center;
+  padding:38px 0 65px
+}
+.welcome h1 {
+  font-size:64px;
+  letter-spacing:-3px
+}
+.welcome h1 span {
+  color:#698a70
+}
+.lede {
+  font-size:18px;
+  margin:28px 0
+}
+.signin-note {
+  font-size:11px;
+  margin-top:18px
+}
+.welcome-card {
+  padding:40px;
+  background:#e7eee5;
+  transform:rotate(2deg)
+}
+.welcome-card h2 {
+  font-size:34px;
+  line-height:1.2
+}
+.orb {
+  height:130px;
+  display:grid;
+  place-items:center;
+  margin-bottom:30px
+}
+.orb span {
+  display:grid;
+  place-items:center;
+  width:110px;
+  height:110px;
+  border-radius:50%;
+  background:#d2dfc8;
+  box-shadow:0 0 0 18px #dce6d5;
+  font-size:70px;
+  color:#426649
+}
+ul {
+  list-style:none;
+  padding:12px 0 0
+}
+li {
+  padding:14px 0;
+  border-top:1px solid #cbd8cb;
+  font-size:14px
+}
+li span {
+  color:#799477;
+  font-size:11px;
+  margin-right:18px
+}
+@media(max-width:850px) { .welcome { gap:30px } .welcome h1 { font-size:48px } .welcome-card { padding:25px } }
+@media(max-width:600px) { .welcome { grid-template-columns:1fr; padding-top:10px } .welcome h1 { font-size:47px } .welcome-card { transform:none } }

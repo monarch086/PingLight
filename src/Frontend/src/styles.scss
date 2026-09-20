@@ -63,3 +63,22 @@ button span {
 .access-user-heading small,.grant small { display:block; color:var(--muted); font-weight:400; margin-top:.2rem }
 .grant-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:.75rem; margin-top:1rem }
 .check.grant { align-items:flex-start; border:1px solid var(--line); border-radius:12px; padding:.8rem }
+// Shared navigation styling.
+.page-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 30px;
+
+  a {
+    padding: 10px 16px;
+    border-radius: 10px;
+    color: #204b3c;
+    text-decoration: none;
+
+    &.active {
+      background: #204b3c;
+      color: white;
+    }
+  }
+}

@@ -1,10 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { FormsModule } from '@angular/forms';
+import { By } from '@angular/platform-browser';
+import { DevicesPageComponent } from './devices-page.component';
+import { UsersPageComponent } from './users-page.component';
+import { WelcomeComponent } from './welcome.component';
+import { WorkspaceSession } from './workspace-session.service';
 import { BehaviorSubject } from 'rxjs';
 import { AppComponent } from './app.component';
 import { AuthService } from './auth.service';
 import { DevicesService, Device } from './devices.service';
 import { UsersService } from './users.service';
+import { Router, RouterModule } from '@angular/router';
+import { routes } from './app-routing.module';
 
 const device: Device = {
   deviceId: 'home', chatId: 'chat-a', isActive: true,
@@ -29,19 +35,34 @@ describe('Management dashboard', () => {
     usersApi.list.and.resolveTo({ items: [] });
     usersApi.setGrant.and.resolveTo();
     await TestBed.configureTestingModule({
-      imports: [FormsModule], declarations: [AppComponent],
+      imports: [WelcomeComponent, RouterModule.forRoot(routes)], declarations: [AppComponent],
       providers: [{ provide: AuthService, useValue: auth }, { provide: DevicesService, useValue: api },
         { provide: UsersService, useValue: usersApi }]
     }).compileComponents();
     fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     await fixture.whenStable();
+    await TestBed.inject(Router).navigateByUrl('/devices');
   });
+
+  async function settle(): Promise<void> {
+    await fixture.whenStable();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+  }
+
+  function devicesPage(): DevicesPageComponent {
+    return fixture.debugElement.query(By.directive(DevicesPageComponent)).componentInstance;
+  }
+
+  function usersPage(): UsersPageComponent {
+    return fixture.debugElement.query(By.directive(UsersPageComponent)).componentInstance;
+  }
 
   async function signIn(): Promise<void> {
     auth.user$.next({ profile: { email: 'person@example.test' } });
-    await fixture.whenStable();
-    fixture.detectChanges();
+    await settle();
   }
 
   it('shows sign-in without requesting private data for anonymous visitors', () => {
@@ -54,16 +75,18 @@ describe('Management dashboard', () => {
   it('loads assigned devices after sign-in and clears them on sign-out', async () => {
     await signIn();
     expect(fixture.nativeElement.textContent).toContain('Home');
-    fixture.componentInstance.edit(fixture.componentInstance.devices[0]);
+    const component = devicesPage();
+    component.edit(component.devices[0]);
     auth.user$.next(null);
     fixture.detectChanges();
-    expect(fixture.componentInstance.devices).toEqual([]);
-    expect(fixture.componentInstance.draft).toBeUndefined();
+    expect(component.devices).toEqual([]);
+    expect(component.draft).toBeUndefined();
+    expect(fixture.debugElement.query(By.directive(DevicesPageComponent))).toBeNull();
   });
 
   it('edits a copy and leaves saved settings intact after a failed save', async () => {
     await signIn();
-    const component = fixture.componentInstance;
+    const component = devicesPage();
     component.edit(component.devices[0]);
     component.draft!.description = 'Changed';
     api.save.and.rejectWith(new Error('Network unavailable'));
@@ -75,7 +98,7 @@ describe('Management dashboard', () => {
 
   it('saves only editable settings and confirms success', async () => {
     await signIn();
-    const component = fixture.componentInstance;
+    const component = devicesPage();
     component.edit(component.devices[0]);
     component.draft!.description = ' Updated ';
     await component.save();
@@ -85,24 +108,83 @@ describe('Management dashboard', () => {
     expect(component.draft).toBeUndefined();
   });
 
-  it('ignores a private-data response arriving after sign-out', async () => {
+  it('ignores a device response arriving after sign-out', async () => {
     let resolve!: (value: { items: Device[] }) => void;
     api.list.and.returnValue(new Promise(done => resolve = done));
+    await signIn();
+    const component = devicesPage();
+    auth.user$.next(null);
+    fixture.detectChanges();
+    resolve({ items: [device] });
+    await settle();
+    expect(component.devices).toEqual([]);
+    expect(TestBed.inject(WorkspaceSession).currentUser).toBeUndefined();
+  });
+
+  it('ignores an account response arriving after sign-out', async () => {
+    let resolve!: (value: { userId: string; email: string; isSystemAdmin: boolean }) => void;
+    usersApi.me.and.returnValue(new Promise(done => resolve = done));
     auth.user$.next({ profile: { email: 'person@example.test' } });
     auth.user$.next(null);
-    resolve({ items: [device] });
-    await fixture.whenStable();
-    expect(fixture.componentInstance.devices).toEqual([]);
+    resolve({ userId: 'user-a', email: 'person@example.test', isSystemAdmin: false });
+    await settle();
+    expect(TestBed.inject(WorkspaceSession).currentUser).toBeUndefined();
+    expect(api.list).not.toHaveBeenCalled();
   });
 
   it('shows user access controls to system administrators and grants a device', async () => {
     usersApi.me.and.resolveTo({ userId: 'admin-a', email: 'admin@example.test', isSystemAdmin: true });
     usersApi.list.and.resolveTo({ items: [{ userId: 'user-a', email: 'person@example.test', isSystemAdmin: false, grants: [] }] });
     await signIn();
+    await TestBed.inject(Router).navigateByUrl('/users');
+    await settle();
     expect(fixture.nativeElement.textContent).toContain('User device access');
-    const user = fixture.componentInstance.users[0];
-    await fixture.componentInstance.setGrant(user, fixture.componentInstance.devices[0], true);
+    const component = usersPage();
+    const user = component.users[0];
+    await component.setGrant(user, component.devices[0], true);
     expect(usersApi.setGrant).toHaveBeenCalledWith('user-a', 'home', 'chat-a', true);
-    expect(fixture.componentInstance.hasGrant(user, fixture.componentInstance.devices[0])).toBeTrue();
+    expect(component.hasGrant(user, component.devices[0])).toBeTrue();
+  });
+
+  it('opens the users page from its URL and preserves it when the app is recreated', async () => {
+    usersApi.me.and.resolveTo({ userId: 'admin-a', email: 'admin@example.test', isSystemAdmin: true });
+    await TestBed.inject(Router).navigateByUrl('/users');
+    await signIn();
+    fixture.destroy();
+    fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    await settle();
+    expect(fixture.nativeElement.querySelector('h1').textContent).toBe('User device access');
+    expect(fixture.nativeElement.querySelector('.device-list')).toBeNull();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[aria-current="page"]').getAttribute('href')).toBe('/users');
+  });
+
+  it('navigates between devices and user access using links', async () => {
+    usersApi.me.and.resolveTo({ userId: 'admin-a', email: 'admin@example.test', isSystemAdmin: true });
+    await signIn();
+    fixture.nativeElement.querySelector('nav a[href="/users"]').click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(TestBed.inject(Router).url).toBe('/users');
+    await settle();
+    expect(fixture.nativeElement.querySelector('h1').textContent).toBe('User device access');
+    fixture.nativeElement.querySelector('nav a[href="/devices"]').click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(TestBed.inject(Router).url).toBe('/devices');
+    expect(fixture.nativeElement.querySelector('h1').textContent).toBe('All devices');
+  });
+
+  it('redirects non-admin users away from user access after loading their role', async () => {
+    await TestBed.inject(Router).navigateByUrl('/users');
+    await signIn();
+    await settle();
+    expect(TestBed.inject(Router).url).toBe('/devices');
+    expect(fixture.nativeElement.querySelector('nav a[href="/users"]')).toBeNull();
+    expect(usersApi.list).not.toHaveBeenCalled();
   });
 });

@@ -1,0 +1,11 @@
+<section class="welcome">
+  <div class="intro"><p class="eyebrow">A LITTLE MORE PEACE OF MIND</p><h1>Stay connected.<br>Even when the<br><span>lights go out.</span></h1>
+    <p class="lede">Your devices, notifications, and reports.<br>One simple place to keep everything in check.</p>
+    <button type="button" (click)="signIn.emit()" [disabled]="!ready || !configured">{{ ready ? 'Sign in / create account' : 'Getting ready…' }} <span aria-hidden="true">↗</span></button>
+    <p class="signin-note">Secure account access · Email verification · Password recovery</p>
+  </div>
+  <div class="welcome-card panel"><div class="orb" aria-hidden="true"><span>⌁</span></div>
+    <p class="eyebrow">LESS CHECKING. MORE KNOWING.</p><h2>Make your alerts<br>feel right at home.</h2>
+    <ul><li><span>01</span>Find your assigned devices</li><li><span>02</span>Fine-tune notification timing</li><li><span>03</span>Choose the reports you receive</li></ul>
+  </div>
+</section>

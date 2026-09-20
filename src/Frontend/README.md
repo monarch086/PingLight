@@ -10,6 +10,18 @@ notification delays and report preferences. System administrators see all device
 and users and can grant or revoke device access. General users see only granted
 devices. Device registration and Telegram destination changes are outside this version.
 
+The device list is at `/devices` (All devices for administrators, My devices for
+general users). Administrators manage user device access at `/users`. Both URLs
+support direct visits, refresh, and browser back/forward navigation. Sign-in returns
+to the selected page; refreshing may require signing in again because tokens are
+kept in memory. General users visiting `/users` return to `/devices`.
+
+`AppComponent` owns the shared layout and account initialization. Its router outlet
+renders `DevicesPageComponent`, `UsersPageComponent`, or `AuthCallbackComponent`.
+Each workspace page owns its requests, messages, and editing state; the shell and
+pages share only the current account and pending-write count through
+`WorkspaceSession`. The signed-out screen lives in `WelcomeComponent`.
+
 ## Setup and development
 
 ~~~powershell

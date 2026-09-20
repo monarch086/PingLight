@@ -1,6 +1,7 @@
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { BehaviorSubject } from 'rxjs';
+import { Router } from '@angular/router';
 import type { UserManager, User } from 'oidc-client-ts';
 
 export interface AppConfig {
@@ -16,7 +17,7 @@ export class AuthService {
   config?: AppConfig;
   private manager?: UserManager;
 
-  constructor(@Inject(PLATFORM_ID) private platformId: object) {}
+  constructor(@Inject(PLATFORM_ID) private platformId: object, private router: Router) {}
 
   async initialize(): Promise<void> {
     if (!isPlatformBrowser(this.platformId)) return;
@@ -51,19 +52,23 @@ export class AuthService {
     this.manager.events.addSilentRenewError(() => this.user$.next(null));
     await this.manager.clearStaleState();
     if (window.location.pathname === '/auth/callback') {
+      let returnUrl = '/devices';
       try {
-        await this.manager.signinRedirectCallback();
+        const user = await this.manager.signinRedirectCallback();
+        const state = user.state as { returnUrl?: unknown } | undefined;
+        if (typeof state?.returnUrl === 'string' && /^\/(devices|users)([?#]|$)/.test(state.returnUrl))
+          returnUrl = state.returnUrl;
       } catch {
         throw new Error('Sign-in could not be completed. Please sign in again.');
       } finally {
-        window.history.replaceState({}, document.title, '/');
+        await this.router.navigateByUrl(returnUrl, { replaceUrl: true });
       }
     }
   }
 
   async signIn(): Promise<void> {
     if (!this.manager) throw new Error('Account access is not available yet.');
-    await this.manager.signinRedirect();
+    await this.manager.signinRedirect({ state: { returnUrl: this.router.url } });
   }
 
   async signOut(): Promise<void> {
