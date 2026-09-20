@@ -13,12 +13,11 @@ namespace PingLight.Test;
 public class Function
 {
     private readonly IAmazonDynamoDB DynamoDbClient = new AmazonDynamoDBClient();
-    private static readonly string InitialStage = "initial";
 
     public async Task<APIGatewayProxyResponse> FunctionHandler(JsonObject input, ILambdaContext context)
     {
-        var stage = Environment.GetEnvironmentVariable("STAGE") ?? InitialStage;
-        var customEnv = Environment.GetEnvironmentVariable("CUSTOM_ENV") ?? InitialStage;
+        var stage = Environment.GetEnvironmentVariable("STAGE");
+        var customEnv = Environment.GetEnvironmentVariable("CUSTOM_ENV");
 
         var inputData = input["queryStringParameters"].Deserialize<InputModel>();
 
@@ -28,7 +27,7 @@ public class Function
         {
             var scanRequest = new ScanRequest
             {
-                TableName = stage == InitialStage ? $"PingLight.Changes" : $"PingLight.{stage}.Changes"
+                TableName = $"PingLight.{stage}.Changes"
             };
 
             var scanResponse = await DynamoDbClient.ScanAsync(scanRequest);
@@ -36,9 +35,9 @@ public class Function
 
             ////////await CopyTableAsync(context);
 
-            var eventTester = new CalendarEventsTester();
+            //var eventTester = new CalendarEventsTester();
 
-            message += await eventTester.LoadCalendarEventsAsync(context, stage, inputData);
+            //message += await eventTester.LoadCalendarEventsAsync(context, stage, inputData);
 
             return new SuccessResponse(message);
         }
