@@ -1,5 +1,9 @@
 service: pinglight-front
 
+params:
+  dev:
+    frontendHost: dev.pinglight.xyz
+
 plugins:
   - serverless-apigw-binary
   - serverless-offline
@@ -9,10 +13,21 @@ plugins:
 
 provider:
   name: aws
-  runtime: nodejs18.x
+  runtime: nodejs24.x
   memorySize: 192
   timeout: 10
   region: eu-central-1
+  environment:
+    SSR_ALLOWED_HOSTS:
+      Fn::Join:
+        - ','
+        - - ${param:frontendHost, ''}
+          - Fn::Join:
+              - '.'
+              - - Ref: ApiGatewayRestApi
+                - execute-api
+                - Ref: AWS::Region
+                - Ref: AWS::URLSuffix
   apiGateway:
     shouldStartNameWithService: true
 

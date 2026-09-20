@@ -1,59 +1,32 @@
-import 'zone.js/node';
+﻿import 'zone.js/node';
 
-import { APP_BASE_HREF } from '@angular/common';
-import { ngExpressEngine } from '@nguniversal/express-engine';
-import * as express from 'express';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
-import { AppServerModule } from './src/main.server';
+import { AngularNodeAppEngine, createNodeRequestHandler, isMainModule, writeResponseToNodeResponse } from '@angular/ssr/node';
+import express from 'express';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-// The Express app is exported so that it can be used by serverless Functions.
 export function app(): express.Express {
   const server = express();
-  const distFolder = join(process.cwd(), 'dist/pinglight/browser');
-  const indexHtml = existsSync(join(distFolder, 'index.original.html')) ? 'index.original.html' : 'index';
+  const serverFolder = dirname(fileURLToPath(import.meta.url));
+  const browserFolder = resolve(serverFolder, '../browser');
+  const allowedHosts = (process.env['SSR_ALLOWED_HOSTS'] ?? 'localhost,127.0.0.1,dev.pinglight.xyz')
+    .split(',').map(host => host.trim()).filter(Boolean);
+  const engine = new AngularNodeAppEngine({ allowedHosts });
 
-  // Our Universal express-engine (found @ https://github.com/angular/universal/tree/main/modules/express-engine)
-  server.engine('html', ngExpressEngine({
-    bootstrap: AppServerModule
-  }));
-
-  server.set('view engine', 'html');
-  server.set('views', distFolder);
-
-  // Example Express Rest API endpoints
-  // server.get('/api/**', (req, res) => { });
-  // Serve static files from /browser
-  server.get('*.*', express.static(distFolder, {
-    maxAge: '1y'
-  }));
-
-  // All regular routes use the Universal engine
-  server.get('*', (req, res) => {
-    res.render(indexHtml, { req, providers: [{ provide: APP_BASE_HREF, useValue: req.baseUrl }] });
+  server.get('*.*', express.static(browserFolder, { maxAge: '1y' }));
+  server.use((req, res, next) => {
+    engine.handle(req).then(response => {
+      if (response) writeResponseToNodeResponse(response, res);
+      else next();
+    }).catch(next);
   });
-
   return server;
 }
 
-function run(): void {
+const server = app();
+export const reqHandler = createNodeRequestHandler(server);
+
+if (isMainModule(import.meta.url)) {
   const port = process.env['PORT'] || 4000;
-
-  // Start up the Node server
-  const server = app();
-  server.listen(port, () => {
-    console.log(`Node Express server listening on http://localhost:${port}`);
-  });
+  server.listen(port, () => console.log('PingLight SSR listening on http://localhost:' + port));
 }
-
-// Webpack will replace 'require' with '__webpack_require__'
-// '__non_webpack_require__' is a proxy to Node 'require'
-// The below code is to ensure that the server is run only when not requiring the bundle.
-declare const __non_webpack_require__: NodeRequire;
-const mainModule = __non_webpack_require__.main;
-const moduleFilename = mainModule && mainModule.filename || '';
-if (moduleFilename === __filename || moduleFilename.includes('iisnode')) {
-  run();
-}
-
-export * from './src/main.server';
