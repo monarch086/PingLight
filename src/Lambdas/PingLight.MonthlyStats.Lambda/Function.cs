@@ -47,6 +47,8 @@ public class Function
             var message = MessageBuilder.GetMonthlyStatsMessage(blackouts);
 
             var chart = BarChartGenerator.Generate(lights, from.ToKyivTime(), till.ToKyivTime());
+            context.Logger.LogInformation($"Image size: {chart.Length} bytes.");
+
             await bot.PostImageBytes(chart, message, device.ChatId);
 
             context.Logger.LogInformation(message);
