@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Device, DeviceSettings, DevicesService } from './devices.service';
 import { errorMessage } from './error-message';
@@ -7,11 +7,14 @@ import { WorkspaceSession } from './workspace-session.service';
 
 @Component({
   selector: 'app-devices-page',
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './devices-page.component.html',
   styleUrl: './devices-page.component.scss'
 })
 export class DevicesPageComponent implements OnInit, OnDestroy {
+  private api = inject(DevicesService);
+  session = inject(WorkspaceSession);
+
   loading = false;
   saving = false;
   error = '';
@@ -20,8 +23,6 @@ export class DevicesPageComponent implements OnInit, OnDestroy {
   selected?: Device;
   draft?: DeviceSettings;
   private destroyed = false;
-
-  constructor(private api: DevicesService, public session: WorkspaceSession) {}
 
   get currentUser() { return this.session.currentUser; }
 

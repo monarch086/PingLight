@@ -35,10 +35,10 @@ describe('Management dashboard', () => {
     usersApi.list.and.resolveTo({ items: [] });
     usersApi.setGrant.and.resolveTo();
     await TestBed.configureTestingModule({
-      imports: [WelcomeComponent, RouterModule.forRoot(routes)], declarations: [AppComponent],
-      providers: [{ provide: AuthService, useValue: auth }, { provide: DevicesService, useValue: api },
+    imports: [WelcomeComponent, RouterModule.forRoot(routes), AppComponent],
+    providers: [{ provide: AuthService, useValue: auth }, { provide: DevicesService, useValue: api },
         { provide: UsersService, useValue: usersApi }]
-    }).compileComponents();
+}).compileComponents();
     fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     await fixture.whenStable();

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from './auth.service';
@@ -20,7 +20,9 @@ export interface DevicePage { items: Device[]; }
 
 @Injectable({ providedIn: 'root' })
 export class DevicesService {
-  constructor(private http: HttpClient, private auth: AuthService) {}
+  private http = inject(HttpClient);
+  private auth = inject(AuthService);
+
 
   async list(): Promise<DevicePage> {
     const headers = await this.headers();

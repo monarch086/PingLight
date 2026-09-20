@@ -1,4 +1,4 @@
-import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
@@ -13,11 +13,12 @@ export interface AppConfig {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private platformId = inject(PLATFORM_ID);
+  private router = inject(Router);
+
   readonly user$ = new BehaviorSubject<User | null>(null);
   config?: AppConfig;
   private manager?: UserManager;
-
-  constructor(@Inject(PLATFORM_ID) private platformId: object, private router: Router) {}
 
   async initialize(): Promise<void> {
     if (!isPlatformBrowser(this.platformId)) return;

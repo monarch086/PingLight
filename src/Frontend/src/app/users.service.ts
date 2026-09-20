@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from './auth.service';
@@ -10,7 +10,9 @@ export interface UserPage { items: ManagedUser[]; }
 
 @Injectable({ providedIn: 'root' })
 export class UsersService {
-  constructor(private http: HttpClient, private auth: AuthService) {}
+  private http = inject(HttpClient);
+  private auth = inject(AuthService);
+
 
   async me(): Promise<CurrentUser> {
     return firstValueFrom(this.http.get<CurrentUser>(this.baseUrl + '/users/me', { headers: await this.headers() }));

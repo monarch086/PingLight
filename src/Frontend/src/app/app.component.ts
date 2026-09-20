@@ -1,25 +1,29 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { AuthService } from './auth.service';
 import { UsersService } from './users.service';
 import { WorkspaceSession } from './workspace-session.service';
 import { errorMessage } from './error-message';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { WelcomeComponent } from './welcome.component';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
-  standalone: false,
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+    selector: 'app-root',
+    templateUrl: './app.component.html',
+    styleUrls: ['./app.component.scss'],
+    imports: [RouterLink, RouterLinkActive, RouterOutlet, WelcomeComponent, AsyncPipe]
 })
 export class AppComponent implements OnInit, OnDestroy {
+  auth = inject(AuthService);
+  private usersApi = inject(UsersService);
+  session = inject(WorkspaceSession);
+
   ready = false;
   loading = false;
   error = '';
   private subscription?: Subscription;
   private generation = 0;
-
-  constructor(public auth: AuthService, private usersApi: UsersService,
-    public session: WorkspaceSession) {}
 
   async ngOnInit(): Promise<void> {
     this.subscription = this.auth.user$.subscribe(user => {

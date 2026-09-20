@@ -41,10 +41,16 @@ with the existing `/pings`, `/changes`, and `/test` endpoints.
 
 ~~~powershell
 npm run build:ssr
+npm run lint
 npm test -- --watch=false --browsers=ChromeHeadless
 npm run test:ssr
 npm run serve:ssr
 ~~~
+
+`npm run lint` checks TypeScript and Angular templates with the recommended
+Angular ESLint rules, including template accessibility, and checks SCSS with the
+standard SCSS Stylelint config. Run `npm run lint:fix` to apply safe automatic
+fixes before resolving any remaining findings manually.
 
 One build emits browser files into dist/pinglight/browser and ESM server bundles
 into dist/pinglight/server. The Lambda adapter dynamically imports server.mjs and

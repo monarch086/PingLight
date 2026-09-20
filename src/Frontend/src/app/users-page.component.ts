@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Device, DevicesService } from './devices.service';
 import { ManagedUser, UsersService } from './users.service';
@@ -8,11 +8,16 @@ import { WorkspaceSession } from './workspace-session.service';
 
 @Component({
   selector: 'app-users-page',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './users-page.component.html',
   styleUrl: './users-page.component.scss'
 })
 export class UsersPageComponent implements OnInit, OnDestroy {
+  private api = inject(DevicesService);
+  private usersApi = inject(UsersService);
+  session = inject(WorkspaceSession);
+  private router = inject(Router);
+
   loading = false;
   error = '';
   notice = '';
@@ -20,9 +25,6 @@ export class UsersPageComponent implements OnInit, OnDestroy {
   users: ManagedUser[] = [];
   changingGrant = '';
   private destroyed = false;
-
-  constructor(private api: DevicesService, private usersApi: UsersService,
-    public session: WorkspaceSession, private router: Router) {}
 
   ngOnInit(): void {
     if (!this.session.currentUser?.isSystemAdmin) {

@@ -5,26 +5,31 @@
   color:#648275;
   margin:0 0 18px
 }
+
 h1 {
   font-size:42px;
   letter-spacing:-1.8px;
   margin:0 0 14px;
   line-height:1.1
 }
+
 h2 {
   font-size:22px;
   letter-spacing:-.6px;
   margin:12px 0
 }
+
 p {
   color:#65736b;
   line-height:1.6
 }
+
 .panel {
   background:#fff;
   border:1px solid #dfe6e1;
   border-radius:20px
 }
+
 .badge {
   font-size:10px;
   border-radius:20px;
@@ -32,41 +37,50 @@ p {
   color:#426748;
   padding:6px 10px
 }
+
 .device-id {
   font-size:12px;
   overflow-wrap:anywhere
 }
+
 label {
   display:block;
   font-size:13px;
   font-weight:600;
   margin:20px 0 8px
 }
+
 small,.hint {
   font-size:12px;
   line-height:1.5;
   color:#758074
 }
+
 .check {
   display:flex;
   align-items:center;
   gap:10px;
   font-weight:400
 }
+
 .check input {
   accent-color:#315b42;
   width:17px;
   height:17px
 }
+
 .error,.field-error {
   background:#fff0eb;
   color:#9c4229
 }
+
 .success {
   background:#e7f0e1;
   color:#36532a
 }
+
 .loading {
   font-size:14px
 }
-@media(max-width:600px) { h1 { font-size:36px } }
+
+@media(width <=600px) { h1 { font-size:36px } }

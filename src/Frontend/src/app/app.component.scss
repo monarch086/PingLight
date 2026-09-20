@@ -1,7 +1,9 @@
 @use 'page-styles';
+
 :host {
   display:block
 }
+
 .topbar {
   max-width:1200px;
   margin:auto;
@@ -11,6 +13,7 @@
   justify-content:space-between;
   border-bottom:1px solid #dce4df
 }
+
 .brand {
   display:flex;
   align-items:center;
@@ -21,6 +24,7 @@
   font-weight:750;
   letter-spacing:-1px
 }
+
 .brand-mark {
   display:grid;
   place-items:center;
@@ -31,24 +35,28 @@
   height:34px;
   font-size:22px
 }
+
 .brand-dot {
   width:7px;
   height:7px;
   background:#d4b95c;
   border-radius:50%
 }
+
 .account {
   display:flex;
   align-items:center;
   gap:18px;
   font-size:14px
 }
+
 main {
   max-width:1200px;
   margin:auto;
   padding:48px 32px;
   min-height:75vh
 }
+
 footer {
   max-width:1200px;
   margin:auto;
@@ -59,4 +67,5 @@ footer {
   display:flex;
   justify-content:space-between
 }
-@media(max-width:600px) { .topbar,main { padding:24px 20px } .account span,footer span { display:none } }
+
+@media(width <=600px) { .topbar,main { padding:24px 20px } .account span,footer span { display:none } }

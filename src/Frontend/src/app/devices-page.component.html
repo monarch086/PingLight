@@ -1,34 +1,45 @@
-<div class="alert error" role="alert" *ngIf="error">{{ error }}</div>
-<div class="alert success" role="status" *ngIf="notice">{{ notice }}</div>
+@if (error) {
+  <div class="alert error" role="alert">{{ error }}</div>
+}
+@if (notice) {
+  <div class="alert success" role="status">{{ notice }}</div>
+}
 <section class="page-heading">
   <div><p class="eyebrow">{{ currentUser?.isSystemAdmin ? 'SYSTEM ADMINISTRATION' : 'YOUR WORKSPACE' }}</p><h1>{{ currentUser?.isSystemAdmin ? 'All devices' : 'My devices' }}</h1><p>Keep your notifications working for you.</p></div>
   <button class="secondary" type="button" (click)="load()" [disabled]="loading || saving || !!selected">Refresh devices</button>
 </section>
-<p class="loading" role="status" *ngIf="loading">Loading your devices…</p>
+@if (loading) {
+  <p class="loading" role="status">Loading your devices…</p>
+}
 
-<section class="empty panel" *ngIf="!loading && !devices.length && !error">
-  <span class="empty-icon" aria-hidden="true">↗</span>
-  <h2>Your workspace is ready</h2>
-  <p>Devices assigned to your account will appear here.<br>Contact your administrator to connect your first device.</p>
-</section>
+@if (!loading && !devices.length && !error) {
+  <section class="empty panel">
+    <span class="empty-icon" aria-hidden="true">↗</span>
+    <h2>Your workspace is ready</h2>
+    <p>Devices assigned to your account will appear here.<br>Contact your administrator to connect your first device.</p>
+  </section>
+}
 
 <div class="workspace">
   <section class="device-list" aria-label="Your devices">
-    <article class="panel device" *ngFor="let device of devices" [class.selected]="selected === device">
-      <div class="device-top"><span class="device-icon" aria-hidden="true">⌁</span>
+    @for (device of devices; track device) {
+      <article class="panel device" [class.selected]="selected === device">
+        <div class="device-top"><span class="device-icon" aria-hidden="true">⌁</span>
         <span class="badge" [class.muted]="!device.isActive">{{ device.isActive ? 'Notifications active' : 'Notifications paused' }}</span>
       </div>
       <h2>{{ device.settings.description || device.deviceId }}</h2>
       <p class="device-id">{{ device.deviceId }}</p>
       <p class="device-id">Telegram destination: {{ device.chatId }}</p>
       <dl><div><dt>Notification delay</dt><dd>{{ device.settings.notificationDelaySec }} sec</dd></div>
-        <div><dt>Reports</dt><dd>{{ device.settings.isDailyStatsEnabled ? 'Daily ' : '' }}{{ device.settings.isWeeklyStatsEnabled ? 'Weekly ' : '' }}{{ device.settings.isMonthlyStatsEnabled ? 'Monthly' : '' }}{{ !device.settings.isDailyStatsEnabled && !device.settings.isWeeklyStatsEnabled && !device.settings.isMonthlyStatsEnabled ? 'Off' : '' }}</dd></div>
-      </dl>
-      <button class="secondary full" type="button" (click)="edit(device)" [disabled]="saving || (!!selected && selected !== device)">Edit settings</button>
-    </article>
-  </section>
+      <div><dt>Reports</dt><dd>{{ device.settings.isDailyStatsEnabled ? 'Daily ' : '' }}{{ device.settings.isWeeklyStatsEnabled ? 'Weekly ' : '' }}{{ device.settings.isMonthlyStatsEnabled ? 'Monthly' : '' }}{{ !device.settings.isDailyStatsEnabled && !device.settings.isWeeklyStatsEnabled && !device.settings.isMonthlyStatsEnabled ? 'Off' : '' }}</dd></div>
+    </dl>
+    <button class="secondary full" type="button" (click)="edit(device)" [disabled]="saving || (!!selected && selected !== device)">Edit settings</button>
+  </article>
+}
+</section>
 
-  <section class="panel editor" *ngIf="selected && draft" aria-labelledby="settings-title">
+@if (selected && draft) {
+  <section class="panel editor" aria-labelledby="settings-title">
     <p class="eyebrow">DEVICE PREFERENCES</p><h2 id="settings-title">Edit settings</h2>
     <p class="device-id">{{ selected.deviceId }}</p>
     <p class="device-id">Telegram destination: {{ selected.chatId }}</p>
@@ -39,14 +50,17 @@
         <label for="delay">Notification delay (seconds)</label>
         <input id="delay" name="delay" type="number" [(ngModel)]="draft.notificationDelaySec" required min="0" max="86400" step="1" pattern="[0-9]+" #delay="ngModel" aria-describedby="delay-help">
         <small id="delay-help">Wait before reporting a missed heartbeat. From 0 to 86,400 seconds.</small>
-        <p class="field-error" *ngIf="delay.invalid && delay.touched">Enter a whole number from 0 to 86,400.</p>
+        @if (delay.invalid && delay.touched) {
+          <p class="field-error">Enter a whole number from 0 to 86,400.</p>
+        }
         <h3>Telegram reports</h3><p class="hint">Sent to this device’s configured Telegram destination.</p>
         <label class="check"><input type="checkbox" name="daily" [(ngModel)]="draft.isDailyStatsEnabled">Daily statistics</label>
         <label class="check"><input type="checkbox" name="weekly" [(ngModel)]="draft.isWeeklyStatsEnabled">Weekly statistics</label>
         <label class="check"><input type="checkbox" name="monthly" [(ngModel)]="draft.isMonthlyStatsEnabled">Monthly statistics</label>
         <div class="form-actions"><button type="submit" [disabled]="settingsForm.invalid || saving">{{ saving ? 'Saving…' : 'Save changes' }}</button>
-          <button class="quiet" type="button" (click)="cancel()">Cancel</button></div>
+        <button class="quiet" type="button" (click)="cancel()">Cancel</button></div>
       </fieldset>
     </form>
   </section>
+}
 </div>

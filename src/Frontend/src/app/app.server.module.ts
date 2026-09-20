@@ -1,14 +1,16 @@
 import { NgModule } from '@angular/core';
 import { ServerModule } from '@angular/platform-server';
 import { provideServerRendering, RenderMode, withRoutes } from '@angular/ssr';
+import { HttpClientModule } from '@angular/common/http';
 
-import { AppModule } from './app.module';
+import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 
 @NgModule({
   imports: [
-    AppModule,
     ServerModule,
+    HttpClientModule,
+    AppRoutingModule
   ],
   bootstrap: [AppComponent],
   providers: [provideServerRendering(withRoutes([{ path: '**', renderMode: RenderMode.Server }]))],
