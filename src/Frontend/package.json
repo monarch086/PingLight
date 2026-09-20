@@ -9,7 +9,8 @@
     "test": "ng test",
     "dev:ssr": "ng serve --port 4201",
     "serve:ssr": "node dist/pinglight/server/server.mjs",
-    "build:ssr": "ng build"
+    "build:ssr": "ng build",
+    "test:ssr": "node tests/lambda-smoke.cjs"
   },
   "private": true,
   "dependencies": {
@@ -24,6 +25,7 @@
     "@angular/router": "21.2.23",
     "aws-serverless-express": "^3.4.0",
     "express": "^4.21.2",
+    "oidc-client-ts": "3.5.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.16.0",

@@ -1,27 +1,60 @@
-# Pinglight
+﻿# PingLight frontend
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 16.1.7.
+Angular 21.2 LTS with the Angular application builder and @angular/ssr. The app
+continues to run through Express, Lambda and API Gateway at its existing domain.
+The Lambda runtime is Node.js 24; local development requires Node 24.15 or newer
+within the Node 24 LTS line (.nvmrc selects 24).
 
-## Development server
+The dashboard supports Cognito sign-in and editing assigned device descriptions,
+notification delays and report preferences. Device registration and Telegram
+destination changes are outside this first version.
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4201/`. The application will automatically reload if you change any of the source files.
+## Setup and development
 
-## Code scaffolding
+~~~powershell
+npm ci
+./configure-api.ps1 -Stage dev
+npm start
+~~~
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+The development server is at http://localhost:4201. See the
+[management API setup](../PingLight.WebApi/README.md) for backend configuration.
+The checked-in src/assets/app-config.json is empty; configure it before using
+account access. For a local API, set its apiUrl to http://localhost:5063.
 
-## Build
+## Build and verify
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+~~~powershell
+npm run build:ssr
+npm test -- --watch=false --browsers=ChromeHeadless
+npm run test:ssr
+npm run serve:ssr
+~~~
 
-## Running unit tests
+One build emits browser files into dist/pinglight/browser and ESM server bundles
+into dist/pinglight/server. The Lambda adapter dynamically imports server.mjs and
+reuses the request handler on warm invocations. The smoke test calls this adapter
+with API Gateway events for the home page, callback, config and a binary image.
+The standalone production preview listens at http://localhost:4000.
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+## Deploy
 
-## Running end-to-end tests
+~~~powershell
+npx serverless package --stage dev
+npx serverless deploy --stage dev
+~~~
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+Generate app-config.json for the target stage before building. Angular's SSR
+hostname allowlist is populated with dev.pinglight.xyz for dev and the stack's
+API Gateway hostname. For another stage/custom domain, pass
+--param="frontendHost=your-domain.example" (hostname only). For local testing with
+a different hostname, set SSR_ALLOWED_HOSTS to a comma-separated list.
 
-## Further help
+The new builder replaces the retired @nguniversal packages; hosting, service
+name, API routes and domain mappings remain the same. Node 24 may trigger a
+runtime-enum warning in Serverless v3; AWS supports nodejs24.x. The remaining npm
+audit findings are in Serverless development/deployment tooling. Upgrading that
+tooling to v4 requires a separate compatibility/login review. The stylesheet
+exceeds the existing 2 KB warning budget but is below its 4 KB failure budget.
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+Angular LTS policy: https://angular.dev/reference/releases
