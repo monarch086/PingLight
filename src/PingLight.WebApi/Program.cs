@@ -1,20 +1,25 @@
 using Amazon.DynamoDBv2;
+using Amazon.CognitoIdentityProvider;
 using Microsoft.AspNetCore.Authorization;
 using PingLight.WebApi.Devices;
 using PingLight.WebApi.ServiceExtensions;
+using PingLight.WebApi.Users;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
-builder.Services.AddAWSLambdaHosting(LambdaEventSource.HttpApi);
+builder.Services.AddAWSLambdaHosting(LambdaEventSource.RestApi);
 builder.Services.AddCognitoAuthentication(builder.Configuration);
 builder.Services.AddAuthorization(options =>
     options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy
     .WithOrigins(builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? [])
-    .WithMethods("GET", "PUT").WithHeaders("Authorization", "Content-Type")));
+    .WithMethods("GET", "PUT", "DELETE").WithHeaders("Authorization", "Content-Type")));
 builder.Services.AddSingleton<IAmazonDynamoDB>(_ => new AmazonDynamoDBClient());
+builder.Services.AddSingleton<IAmazonCognitoIdentityProvider>(_ => new AmazonCognitoIdentityProviderClient());
 builder.Services.AddSingleton<IDeviceStore, DynamoDeviceStore>();
+builder.Services.AddSingleton<IUserStore, DynamoUserStore>();
+builder.Services.AddSingleton<IUserDirectory, CognitoUserDirectory>();
 
 var app = builder.Build();
 app.UseExceptionHandler();

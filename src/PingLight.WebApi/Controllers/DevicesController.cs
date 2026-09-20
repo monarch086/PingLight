@@ -1,26 +1,36 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PingLight.WebApi.Devices;
+using PingLight.WebApi.Users;
 
 namespace PingLight.WebApi.Controllers;
 
 [ApiController, Authorize, Route("devices")]
-public sealed class DevicesController(IDeviceStore store) : ControllerBase
+public sealed class DevicesController(IDeviceStore devices, IUserStore users) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<DevicePage>> List(CancellationToken cancellationToken)
     {
-        var owner = User.FindFirst("sub")?.Value;
-        if (string.IsNullOrWhiteSpace(owner)) return Unauthorized();
-        return Ok(await store.ListAsync(owner, cancellationToken));
+        var user = await CurrentUser(cancellationToken);
+        if (user is null) return Unauthorized();
+        return Ok(await devices.ListAsync(user.IsSystemAdmin ? null : user.GrantKeys, cancellationToken));
     }
 
     [HttpPut("{deviceId}/destinations/{chatId}/settings")]
     public async Task<IActionResult> Update(string deviceId, string chatId, DeviceSettings settings, CancellationToken cancellationToken)
     {
-        var owner = User.FindFirst("sub")?.Value;
-        if (string.IsNullOrWhiteSpace(owner)) return Unauthorized();
+        var user = await CurrentUser(cancellationToken);
+        if (user is null) return Unauthorized();
         if (deviceId.Length > 2048 || chatId.Length > 1024) return BadRequest();
-        return await store.UpdateAsync(owner, deviceId, chatId, settings, cancellationToken) ? NoContent() : NotFound();
+        if (!user.IsSystemAdmin && !user.GrantKeys.Contains(UserGrantKey.Encode(deviceId, chatId))) return NotFound();
+        return await devices.UpdateAsync(deviceId, chatId, settings, cancellationToken) ? NoContent() : NotFound();
+    }
+
+    private async Task<UserAccess?> CurrentUser(CancellationToken cancellationToken)
+    {
+        var userId = User.FindFirst("sub")?.Value;
+        if (string.IsNullOrWhiteSpace(userId)) return null;
+        var email = User.FindFirst("email")?.Value ?? User.FindFirst("username")?.Value ?? userId;
+        return await users.GetOrCreateAsync(userId, email, cancellationToken);
     }
 }

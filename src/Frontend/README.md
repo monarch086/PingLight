@@ -6,8 +6,9 @@ The Lambda runtime is Node.js 24; local development requires Node 24.15 or newer
 within the Node 24 LTS line (.nvmrc selects 24).
 
 The dashboard supports Cognito sign-in and editing assigned device descriptions,
-notification delays and report preferences. Device registration and Telegram
-destination changes are outside this first version.
+notification delays and report preferences. System administrators see all devices
+and users and can grant or revoke device access. General users see only granted
+devices. Device registration and Telegram destination changes are outside this version.
 
 ## Setup and development
 
@@ -21,6 +22,8 @@ The development server is at http://localhost:4201. See the
 [management API setup](../PingLight.WebApi/README.md) for backend configuration.
 The checked-in src/assets/app-config.json is empty; configure it before using
 account access. For a local API, set its apiUrl to http://localhost:5063.
+For dev, the configuration script writes `https://dev.api.pinglight.xyz`, shared
+with the existing `/pings`, `/changes`, and `/test` endpoints.
 
 ## Build and verify
 

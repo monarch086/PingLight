@@ -7,6 +7,27 @@ configValidationMode: warn
 params:
   dev:
     frontendOrigin: https://dev.pinglight.xyz
+    apiDomain: dev.api.pinglight.xyz
+  prod:
+    frontendOrigin: https://pinglight.xyz
+    apiDomain: api.pinglight.xyz
+
+custom:
+  coreStack: pinglight-${sls:stage}
+  cors:
+    origins:
+      - ${param:frontendOrigin}
+    headers:
+      - Authorization
+      - Content-Type
+    allowCredentials: false
+  authorizer:
+    name: pinglight-${sls:stage}-users
+    type: COGNITO_USER_POOLS
+    arn:
+      Fn::GetAtt: [UserPool, Arn]
+    scopes:
+      - openid
 
 provider:
   name: aws
@@ -19,39 +40,38 @@ provider:
   environment:
     ASPNETCORE_ENVIRONMENT: Production
     Devices__TableName: PingLight.${sls:stage}.DeviceConfigs
+    Users__TableName:
+      Ref: UsersTable
     Cognito__Authority:
       Fn::Sub: https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}
     Cognito__ClientId:
       Ref: UserPoolClient
+    Cognito__UserPoolId:
+      Ref: UserPool
     AllowedOrigins__0: ${param:frontendOrigin}
-  httpApi:
-    cors:
-      allowedOrigins:
-        - ${param:frontendOrigin}
-      allowedHeaders:
-        - Authorization
-        - Content-Type
-      allowedMethods:
-        - GET
-        - PUT
-        - OPTIONS
-    authorizers:
-      cognito:
-        type: jwt
-        identitySource: $request.header.Authorization
-        issuerUrl:
-          Fn::Sub: https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}
-        audience:
-          - Ref: UserPoolClient
+  apiGateway:
+    restApiId: ${env:PINGLIGHT_REST_API_ID, cf:${self:custom.coreStack}.RestApiId}
+    restApiRootResourceId: ${env:PINGLIGHT_REST_API_ROOT_RESOURCE_ID, cf:${self:custom.coreStack}.RestApiRootResourceId}
   iam:
     role:
       statements:
         - Effect: Allow
           Action:
             - dynamodb:Scan
+            - dynamodb:GetItem
             - dynamodb:UpdateItem
           Resource:
             Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/PingLight.${sls:stage}.DeviceConfigs
+        - Effect: Allow
+          Action:
+            - dynamodb:UpdateItem
+          Resource:
+            Fn::GetAtt: [UsersTable, Arn]
+        - Effect: Allow
+          Action:
+            - cognito-idp:ListUsers
+          Resource:
+            Fn::GetAtt: [UserPool, Arn]
 
 package:
   artifact: bin/Release/management-api.zip
@@ -60,24 +80,55 @@ functions:
   api:
     handler: PingLight.WebApi
     events:
-      - httpApi:
+      - http:
           path: /devices
           method: GET
-          authorizer:
-            name: cognito
-            scopes: [openid]
-      - httpApi:
+          cors: ${self:custom.cors}
+          authorizer: ${self:custom.authorizer}
+      - http:
           path: /devices/{deviceId}/destinations/{chatId}/settings
           method: PUT
-          authorizer:
-            name: cognito
-            scopes: [openid]
+          cors: ${self:custom.cors}
+          authorizer: ${self:custom.authorizer}
+      - http:
+          path: /users/me
+          method: GET
+          cors: ${self:custom.cors}
+          authorizer: ${self:custom.authorizer}
+      - http:
+          path: /users
+          method: GET
+          cors: ${self:custom.cors}
+          authorizer: ${self:custom.authorizer}
+      - http:
+          path: /users/{userId}/devices/{deviceId}/destinations/{chatId}
+          method: PUT
+          cors: ${self:custom.cors}
+          authorizer: ${self:custom.authorizer}
+      - http:
+          path: /users/{userId}/devices/{deviceId}/destinations/{chatId}
+          method: DELETE
+          cors: ${self:custom.cors}
+          authorizer: ${self:custom.authorizer}
 
 resources:
   Conditions:
     IsDev:
       Fn::Equals: ['${sls:stage}', dev]
   Resources:
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      UpdateReplacePolicy: Retain
+      Properties:
+        TableName: PingLight.${sls:stage}.Users
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: UserId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: UserId
+            KeyType: HASH
     UserPool:
       Type: AWS::Cognito::UserPool
       DeletionPolicy: Retain
@@ -153,3 +204,8 @@ resources:
     CognitoUserPoolId:
       Value:
         Ref: UserPool
+    UsersTableName:
+      Value:
+        Ref: UsersTable
+    ApiUrl:
+      Value: https://${param:apiDomain}

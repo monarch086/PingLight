@@ -12,7 +12,7 @@
 
   <ng-container *ngIf="auth.user$ | async; else welcome">
     <section class="page-heading">
-      <div><p class="eyebrow">YOUR WORKSPACE</p><h1>My devices</h1><p>Keep your notifications working for you.</p></div>
+      <div><p class="eyebrow">{{ currentUser?.isSystemAdmin ? 'SYSTEM ADMINISTRATION' : 'YOUR WORKSPACE' }}</p><h1>{{ currentUser?.isSystemAdmin ? 'All devices' : 'My devices' }}</h1><p>Keep your notifications working for you.</p></div>
       <button class="secondary" type="button" (click)="load()" [disabled]="loading || saving || !!selected">Refresh devices</button>
     </section>
     <p class="loading" role="status" *ngIf="loading">Loading your devices…</p>
@@ -61,6 +61,27 @@
         </form>
       </section>
     </div>
+
+    <section class="panel access-panel" *ngIf="currentUser?.isSystemAdmin" aria-labelledby="access-title">
+      <p class="eyebrow">ACCESS MANAGEMENT</p>
+      <h2 id="access-title">User device access</h2>
+      <p>System administrators always have access to every device. Select the devices each general user can manage.</p>
+      <div class="access-user" *ngFor="let user of users">
+        <div class="access-user-heading">
+          <div><strong>{{ user.email || user.userId }}</strong><small>{{ user.userId }}</small></div>
+          <span class="badge" *ngIf="user.isSystemAdmin">System admin</span>
+        </div>
+        <div class="grant-grid" *ngIf="!user.isSystemAdmin">
+          <label class="check grant" *ngFor="let device of devices">
+            <input type="checkbox" [checked]="hasGrant(user, device)"
+              [disabled]="!!changingGrant" (change)="setGrant(user, device, $any($event.target).checked)">
+            <span>{{ device.settings.description || device.deviceId }}<small>{{ device.deviceId }} · {{ device.chatId }}</small></span>
+          </label>
+          <p class="hint" *ngIf="!devices.length">No devices are available.</p>
+        </div>
+      </div>
+      <p class="hint" *ngIf="!users.length">No users have signed in yet.</p>
+    </section>
   </ng-container>
 
   <ng-template #welcome>

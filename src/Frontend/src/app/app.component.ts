@@ -3,6 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Subscription } from 'rxjs';
 import { AuthService } from './auth.service';
 import { Device, DeviceSettings, DevicesService } from './devices.service';
+import { CurrentUser, ManagedUser, UsersService } from './users.service';
 
 @Component({
   standalone: false,
@@ -17,17 +18,22 @@ export class AppComponent implements OnInit, OnDestroy {
   error = '';
   notice = '';
   devices: Device[] = [];
+  currentUser?: CurrentUser;
+  users: ManagedUser[] = [];
+  changingGrant = '';
   selected?: Device;
   draft?: DeviceSettings;
   private subscription?: Subscription;
   private generation = 0;
 
-  constructor(public auth: AuthService, private api: DevicesService) {}
+  constructor(public auth: AuthService, private api: DevicesService, private usersApi: UsersService) {}
 
   async ngOnInit(): Promise<void> {
     this.subscription = this.auth.user$.subscribe(user => {
       this.generation++;
       this.devices = [];
+      this.currentUser = undefined;
+      this.users = [];
       this.selected = undefined;
       this.draft = undefined;
       this.notice = '';
@@ -54,9 +60,15 @@ export class AppComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = '';
     try {
-      const page = await this.api.list();
+      const currentUser = await this.usersApi.me();
+      const [page, userPage] = await Promise.all([
+        this.api.list(),
+        currentUser.isSystemAdmin ? this.usersApi.list() : Promise.resolve({ items: [] })
+      ]);
       if (generation !== this.generation) return;
+      this.currentUser = currentUser;
       this.devices = page.items;
+      this.users = userPage.items;
     } catch (error) {
       if (generation === this.generation) this.error = this.message(error);
     } finally { this.loading = false; }
@@ -88,6 +100,24 @@ export class AppComponent implements OnInit, OnDestroy {
     } catch (error) {
       if (generation === this.generation) this.error = this.message(error);
     } finally { this.saving = false; }
+  }
+
+  hasGrant(user: ManagedUser, device: Device): boolean {
+    return user.grants.some(grant => grant.deviceId === device.deviceId && grant.chatId === device.chatId);
+  }
+
+  async setGrant(user: ManagedUser, device: Device, granted: boolean): Promise<void> {
+    const key = user.userId + ':' + device.deviceId + ':' + device.chatId;
+    this.changingGrant = key;
+    this.error = '';
+    this.notice = '';
+    try {
+      await this.usersApi.setGrant(user.userId, device.deviceId, device.chatId, granted);
+      if (granted) user.grants = [...user.grants, { deviceId: device.deviceId, chatId: device.chatId }];
+      else user.grants = user.grants.filter(item => item.deviceId !== device.deviceId || item.chatId !== device.chatId);
+      this.notice = granted ? 'Device access granted.' : 'Device access removed.';
+    } catch (error) { this.error = this.message(error); }
+    finally { this.changingGrant = ''; }
   }
 
   private message(error: unknown): string {

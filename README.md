@@ -14,10 +14,11 @@ LTS. Use a .NET 10 SDK and Node.js 24.15+ from the Node 24 LTS line. Lambda runt
 settings, Docker images and artifact paths are updated alongside the frameworks.
 The Lambda build script restores its pinned Amazon.Lambda.Tools 7.0.0 locally.
 
-For the Cognito sign-in and assigned-device management dashboard, see
+For Cognito sign-in, role-based device access, and the management dashboard, see
 [the management API setup](src/PingLight.WebApi/README.md). The frontend retains
 its existing Angular SSR / Lambda hosting. The management API deploys as a
-separate Lambda service and reads the existing device configuration table.
+separate Lambda service, attaches its routes to the existing PingLight REST API
+Gateway, and reads the existing device configuration table.
 
 ```ps1
 cd .\src\Lambdas\

@@ -156,3 +156,12 @@ functions:
       - schedule:
           rate: cron(0/10 4-19 * * ? *)
           enabled: true
+
+resources:
+  Outputs:
+    RestApiId:
+      Value:
+        Ref: ApiGatewayRestApi
+    RestApiRootResourceId:
+      Value:
+        Fn::GetAtt: [ApiGatewayRestApi, RootResourceId]

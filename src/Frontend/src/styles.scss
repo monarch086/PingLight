@@ -55,3 +55,11 @@ button span {
   margin-bottom:24px;
   font-size:14px
 }
+
+.access-panel { margin-top:2rem; padding:2rem }
+.access-panel>p { color:var(--muted) }
+.access-user { border-top:1px solid var(--line); padding:1.25rem 0 }
+.access-user-heading { display:flex; align-items:center; justify-content:space-between; gap:1rem }
+.access-user-heading small,.grant small { display:block; color:var(--muted); font-weight:400; margin-top:.2rem }
+.grant-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:.75rem; margin-top:1rem }
+.check.grant { align-items:flex-start; border:1px solid var(--line); border-radius:12px; padding:.8rem }

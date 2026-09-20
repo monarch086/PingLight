@@ -8,11 +8,11 @@ if ($LASTEXITCODE -ne 0) { throw 'Unable to read the management stack.' }
 $stack = $stackJson | ConvertFrom-Json
 $outputs = @{}
 foreach ($output in $stack.Stacks[0].Outputs) { $outputs[$output.OutputKey] = $output.OutputValue }
-foreach ($name in @('HttpApiUrl', 'CognitoAuthority', 'CognitoClientId', 'CognitoDomain')) {
+foreach ($name in @('ApiUrl', 'CognitoAuthority', 'CognitoClientId', 'CognitoDomain')) {
     if (!$outputs[$name]) { throw "Missing stack output: $name" }
 }
 @{
-    apiUrl = $outputs.HttpApiUrl
+    apiUrl = $outputs.ApiUrl
     authority = $outputs.CognitoAuthority
     clientId = $outputs.CognitoClientId
     cognitoDomain = $outputs.CognitoDomain

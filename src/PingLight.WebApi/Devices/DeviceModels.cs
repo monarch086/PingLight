@@ -18,6 +18,7 @@ public record DevicePage(IReadOnlyList<DeviceView> Items);
 
 public interface IDeviceStore
 {
-    Task<DevicePage> ListAsync(string ownerId, CancellationToken cancellationToken);
-    Task<bool> UpdateAsync(string ownerId, string deviceId, string chatId, DeviceSettings settings, CancellationToken cancellationToken);
+    Task<DevicePage> ListAsync(IReadOnlySet<string>? grants, CancellationToken cancellationToken);
+    Task<bool> ExistsAsync(string deviceId, string chatId, CancellationToken cancellationToken);
+    Task<bool> UpdateAsync(string deviceId, string chatId, DeviceSettings settings, CancellationToken cancellationToken);
 }

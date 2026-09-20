@@ -4,6 +4,7 @@ import { BehaviorSubject } from 'rxjs';
 import { AppComponent } from './app.component';
 import { AuthService } from './auth.service';
 import { DevicesService, Device } from './devices.service';
+import { UsersService } from './users.service';
 
 const device: Device = {
   deviceId: 'home', chatId: 'chat-a', isActive: true,
@@ -15,6 +16,7 @@ describe('Management dashboard', () => {
   let fixture: ComponentFixture<AppComponent>;
   let auth: { user$: BehaviorSubject<unknown>; initialize: jasmine.Spy; signIn: jasmine.Spy; config: object };
   let api: jasmine.SpyObj<DevicesService>;
+  let usersApi: jasmine.SpyObj<UsersService>;
 
   beforeEach(async () => {
     auth = { user$: new BehaviorSubject<unknown>(null), initialize: jasmine.createSpy().and.resolveTo(),
@@ -22,9 +24,14 @@ describe('Management dashboard', () => {
     api = jasmine.createSpyObj('DevicesService', ['list', 'save']);
     api.list.and.resolveTo({ items: [structuredClone(device)] });
     api.save.and.resolveTo();
+    usersApi = jasmine.createSpyObj('UsersService', ['me', 'list', 'setGrant']);
+    usersApi.me.and.resolveTo({ userId: 'user-a', email: 'person@example.test', isSystemAdmin: false });
+    usersApi.list.and.resolveTo({ items: [] });
+    usersApi.setGrant.and.resolveTo();
     await TestBed.configureTestingModule({
       imports: [FormsModule], declarations: [AppComponent],
-      providers: [{ provide: AuthService, useValue: auth }, { provide: DevicesService, useValue: api }]
+      providers: [{ provide: AuthService, useValue: auth }, { provide: DevicesService, useValue: api },
+        { provide: UsersService, useValue: usersApi }]
     }).compileComponents();
     fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
@@ -41,6 +48,7 @@ describe('Management dashboard', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Sign in / create account');
     expect(api.list).not.toHaveBeenCalled();
+    expect(usersApi.me).not.toHaveBeenCalled();
   });
 
   it('loads assigned devices after sign-in and clears them on sign-out', async () => {
@@ -85,5 +93,16 @@ describe('Management dashboard', () => {
     resolve({ items: [device] });
     await fixture.whenStable();
     expect(fixture.componentInstance.devices).toEqual([]);
+  });
+
+  it('shows user access controls to system administrators and grants a device', async () => {
+    usersApi.me.and.resolveTo({ userId: 'admin-a', email: 'admin@example.test', isSystemAdmin: true });
+    usersApi.list.and.resolveTo({ items: [{ userId: 'user-a', email: 'person@example.test', isSystemAdmin: false, grants: [] }] });
+    await signIn();
+    expect(fixture.nativeElement.textContent).toContain('User device access');
+    const user = fixture.componentInstance.users[0];
+    await fixture.componentInstance.setGrant(user, fixture.componentInstance.devices[0], true);
+    expect(usersApi.setGrant).toHaveBeenCalledWith('user-a', 'home', 'chat-a', true);
+    expect(fixture.componentInstance.hasGrant(user, fixture.componentInstance.devices[0])).toBeTrue();
   });
 });
