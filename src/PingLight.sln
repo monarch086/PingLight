@@ -35,6 +35,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PingLight.Devices.Lambda", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PingLight.WebApi", "PingLight.WebApi\PingLight.WebApi.csproj", "{BDC0D26C-8FF4-41EC-A239-AD6ADAB1C572}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PingLight.WebApi.Tests", "Tests\PingLight.WebApi.Tests\PingLight.WebApi.Tests.csproj", "{441AE9E0-73B7-4A01-BB84-F762F6B96508}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -97,6 +99,10 @@ Global
 		{BDC0D26C-8FF4-41EC-A239-AD6ADAB1C572}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BDC0D26C-8FF4-41EC-A239-AD6ADAB1C572}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BDC0D26C-8FF4-41EC-A239-AD6ADAB1C572}.Release|Any CPU.Build.0 = Release|Any CPU
+		{441AE9E0-73B7-4A01-BB84-F762F6B96508}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{441AE9E0-73B7-4A01-BB84-F762F6B96508}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{441AE9E0-73B7-4A01-BB84-F762F6B96508}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{441AE9E0-73B7-4A01-BB84-F762F6B96508}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -113,6 +119,7 @@ Global
 		{98821474-6F0D-4BAD-AA52-9CBB634EFA9C} = {FC391FCC-55C3-4B68-9FFE-EDD46C03FF07}
 		{2D8DF344-7C57-4F37-B3FB-A9D49E257EFD} = {FC391FCC-55C3-4B68-9FFE-EDD46C03FF07}
 		{2A3BA24E-13E6-4E16-A99C-0A63B418121F} = {FC391FCC-55C3-4B68-9FFE-EDD46C03FF07}
+		{441AE9E0-73B7-4A01-BB84-F762F6B96508} = {A321C28E-A124-4ECB-9C60-44D43F769A9D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0428F7FE-7083-4EA6-96E0-6E900B7AC90B}

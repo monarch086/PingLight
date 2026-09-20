@@ -1,0 +1,155 @@
+service: pinglight-management
+frameworkVersion: '3'
+# Serverless v3's runtime enum predates dotnet10; CloudFormation supports it.
+# Keep validation enabled as warnings, matching the existing Lambda service.
+configValidationMode: warn
+
+params:
+  dev:
+    frontendOrigin: https://dev.pinglight.xyz
+
+provider:
+  name: aws
+  runtime: dotnet10
+  region: eu-central-1
+  stage: dev
+  memorySize: 512
+  timeout: 15
+  logRetentionInDays: 14
+  environment:
+    ASPNETCORE_ENVIRONMENT: Production
+    Devices__TableName: PingLight.${sls:stage}.DeviceConfigs
+    Cognito__Authority:
+      Fn::Sub: https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}
+    Cognito__ClientId:
+      Ref: UserPoolClient
+    AllowedOrigins__0: ${param:frontendOrigin}
+  httpApi:
+    cors:
+      allowedOrigins:
+        - ${param:frontendOrigin}
+      allowedHeaders:
+        - Authorization
+        - Content-Type
+      allowedMethods:
+        - GET
+        - PUT
+        - OPTIONS
+    authorizers:
+      cognito:
+        type: jwt
+        identitySource: $request.header.Authorization
+        issuerUrl:
+          Fn::Sub: https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}
+        audience:
+          - Ref: UserPoolClient
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Scan
+            - dynamodb:UpdateItem
+          Resource:
+            Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/PingLight.${sls:stage}.DeviceConfigs
+
+package:
+  artifact: bin/Release/management-api.zip
+
+functions:
+  api:
+    handler: PingLight.WebApi
+    events:
+      - httpApi:
+          path: /devices
+          method: GET
+          authorizer:
+            name: cognito
+            scopes: [openid]
+      - httpApi:
+          path: /devices/{deviceId}/destinations/{chatId}/settings
+          method: PUT
+          authorizer:
+            name: cognito
+            scopes: [openid]
+
+resources:
+  Conditions:
+    IsDev:
+      Fn::Equals: ['${sls:stage}', dev]
+  Resources:
+    UserPool:
+      Type: AWS::Cognito::UserPool
+      DeletionPolicy: Retain
+      UpdateReplacePolicy: Retain
+      Properties:
+        UserPoolName: pinglight-${sls:stage}-users
+        UsernameAttributes: [email]
+        AutoVerifiedAttributes: [email]
+        UsernameConfiguration:
+          CaseSensitive: false
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 12
+            RequireLowercase: true
+            RequireUppercase: true
+            RequireNumbers: true
+            RequireSymbols: false
+        AccountRecoverySetting:
+          RecoveryMechanisms:
+            - Name: verified_email
+              Priority: 1
+        Schema:
+          - Name: email
+            Required: true
+            Mutable: true
+    UserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        UserPoolId:
+          Ref: UserPool
+        ClientName: pinglight-${sls:stage}-frontend
+        GenerateSecret: false
+        AllowedOAuthFlowsUserPoolClient: true
+        AllowedOAuthFlows: [code]
+        AllowedOAuthScopes: [openid, email, profile]
+        SupportedIdentityProviders: [COGNITO]
+        PreventUserExistenceErrors: ENABLED
+        EnableTokenRevocation: true
+        AccessTokenValidity: 15
+        IdTokenValidity: 15
+        RefreshTokenValidity: 1
+        TokenValidityUnits:
+          AccessToken: minutes
+          IdToken: minutes
+          RefreshToken: days
+        CallbackURLs:
+          Fn::If:
+            - IsDev
+            - ['${param:frontendOrigin}/auth/callback', 'http://localhost:4201/auth/callback']
+            - ['${param:frontendOrigin}/auth/callback']
+        LogoutURLs:
+          Fn::If:
+            - IsDev
+            - ['${param:frontendOrigin}/', 'http://localhost:4201/']
+            - ['${param:frontendOrigin}/']
+    UserPoolDomain:
+      Type: AWS::Cognito::UserPoolDomain
+      Properties:
+        UserPoolId:
+          Ref: UserPool
+        Domain:
+          Fn::Sub: pinglight-${sls:stage}-${AWS::AccountId}
+  Outputs:
+    CognitoAuthority:
+      Value:
+        Fn::Sub: https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}
+    CognitoClientId:
+      Value:
+        Ref: UserPoolClient
+    CognitoDomain:
+      Value:
+        Fn::Sub: https://pinglight-${sls:stage}-${AWS::AccountId}.auth.${AWS::Region}.amazoncognito.com
+    CognitoUserPoolId:
+      Value:
+        Ref: UserPool

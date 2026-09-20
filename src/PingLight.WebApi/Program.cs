@@ -1,30 +1,32 @@
-using Microsoft.AspNetCore.Identity;
+using Amazon.DynamoDBv2;
+using Microsoft.AspNetCore.Authorization;
+using PingLight.WebApi.Devices;
 using PingLight.WebApi.ServiceExtensions;
 
 var builder = WebApplication.CreateBuilder(args);
-
 builder.Services.AddControllers();
-
-builder.Services.AddSwagger(builder.Configuration);
-builder.Services.AddDatabase(builder.Configuration);
-builder.Services.AddOauthAuthorization(builder.Configuration);
+builder.Services.AddProblemDetails();
+builder.Services.AddAWSLambdaHosting(LambdaEventSource.HttpApi);
+builder.Services.AddCognitoAuthentication(builder.Configuration);
+builder.Services.AddAuthorization(options =>
+    options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
+builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy
+    .WithOrigins(builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? [])
+    .WithMethods("GET", "PUT").WithHeaders("Authorization", "Content-Type")));
+builder.Services.AddSingleton<IAmazonDynamoDB>(_ => new AmazonDynamoDBClient());
+builder.Services.AddSingleton<IDeviceStore, DynamoDeviceStore>();
 
 var app = builder.Build();
-
-//if (app.Environment.IsDevelopment())
-//{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-//}
-
-app.ApplyMigrations();
-
-app.MapIdentityApi<IdentityUser>();
-
-// app.UseHttpsRedirection();
-
+app.UseExceptionHandler();
+app.UseCors();
+app.UseAuthentication();
 app.UseAuthorization();
-
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.CacheControl = "no-store";
+    await next();
+});
 app.MapControllers();
-
 app.Run();
+
+public partial class Program { }
