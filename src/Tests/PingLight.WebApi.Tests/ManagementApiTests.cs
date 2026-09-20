@@ -186,6 +186,41 @@ public class ManagementApiTests
         Assert.That(denied.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
         devices.VerifyAll();
     }
+
+    [Test]
+    public async Task GeneralUserCanToggleNotificationsForGrantedDeviceButNotAnotherDevice()
+    {
+        Authenticate();
+        Current(grants: UserGrantKey.Encode("a", "chat-a"));
+        devices.Setup(x => x.SetActiveAsync("a", "chat-a", false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var allowed = await client.PutAsJsonAsync("/devices/a/destinations/chat-a/notifications", new NotificationState(false));
+        var denied = await client.PutAsJsonAsync("/devices/b/destinations/chat-b/notifications", new NotificationState(true));
+        Assert.That(allowed.StatusCode, Is.EqualTo(HttpStatusCode.NoContent));
+        Assert.That(denied.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
+        devices.VerifyAll();
+    }
+}
+
+public class DynamoDeviceStoreTests
+{
+    [Test]
+    public async Task NotificationToggleOnlyUpdatesActiveFlag()
+    {
+        var db = new Mock<IAmazonDynamoDB>(MockBehavior.Strict);
+        db.Setup(x => x.UpdateItemAsync(It.Is<UpdateItemRequest>(request =>
+                request.UpdateExpression == "SET IsActive = :isActive" &&
+                request.ConditionExpression == "attribute_exists(DeviceId)" &&
+                request.ExpressionAttributeValues.Count == 1 &&
+                request.ExpressionAttributeValues[":isActive"].BOOL == false), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UpdateItemResponse());
+        var store = new DynamoDeviceStore(db.Object, new ConfigurationBuilder().AddInMemoryCollection(
+            new Dictionary<string, string?> { ["Devices:TableName"] = "devices" }).Build());
+
+        Assert.That(await store.SetActiveAsync("a", "chat-a", false, CancellationToken.None), Is.True);
+        db.VerifyAll();
+    }
 }
 
 public class DynamoUserStoreTests

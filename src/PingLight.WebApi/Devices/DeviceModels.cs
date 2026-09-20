@@ -15,10 +15,12 @@ public record DeviceSettings
 
 public record DeviceView(string DeviceId, string ChatId, DeviceSettings Settings, bool IsActive);
 public record DevicePage(IReadOnlyList<DeviceView> Items);
+public record NotificationState(bool IsActive);
 
 public interface IDeviceStore
 {
     Task<DevicePage> ListAsync(IReadOnlySet<string>? grants, CancellationToken cancellationToken);
     Task<bool> ExistsAsync(string deviceId, string chatId, CancellationToken cancellationToken);
     Task<bool> UpdateAsync(string deviceId, string chatId, DeviceSettings settings, CancellationToken cancellationToken);
+    Task<bool> SetActiveAsync(string deviceId, string chatId, bool isActive, CancellationToken cancellationToken);
 }

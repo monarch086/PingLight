@@ -27,9 +27,10 @@ describe('Management dashboard', () => {
   beforeEach(async () => {
     auth = { user$: new BehaviorSubject<unknown>(null), initialize: jasmine.createSpy().and.resolveTo(),
       signIn: jasmine.createSpy().and.resolveTo(), config: {} };
-    api = jasmine.createSpyObj('DevicesService', ['list', 'save']);
+    api = jasmine.createSpyObj('DevicesService', ['list', 'save', 'setActive']);
     api.list.and.resolveTo({ items: [structuredClone(device)] });
     api.save.and.resolveTo();
+    api.setActive.and.resolveTo();
     usersApi = jasmine.createSpyObj('UsersService', ['me', 'list', 'setGrant']);
     usersApi.me.and.resolveTo({ userId: 'user-a', email: 'person@example.test', isSystemAdmin: false });
     usersApi.list.and.resolveTo({ items: [] });
@@ -106,6 +107,28 @@ describe('Management dashboard', () => {
     expect(component.devices[0].settings.description).toBe('Updated');
     expect(component.notice).toContain('Settings saved');
     expect(component.draft).toBeUndefined();
+  });
+
+  it('disables notifications directly from the device card', async () => {
+    await signIn();
+    const component = devicesPage();
+    const toggle = fixture.nativeElement.querySelector('.notification-toggle') as HTMLButtonElement;
+    toggle.click();
+    await settle();
+    expect(api.setActive).toHaveBeenCalledWith('home', 'chat-a', false);
+    expect(component.devices[0].isActive).toBeFalse();
+    expect(toggle.textContent).toContain('Enable notifications');
+    expect(component.notice).toContain('disabled');
+  });
+
+  it('keeps the notification state when the direct update fails', async () => {
+    api.setActive.and.rejectWith(new Error('Network unavailable'));
+    await signIn();
+    const component = devicesPage();
+    await component.setActive(component.devices[0], false);
+    expect(component.devices[0].isActive).toBeTrue();
+    expect(component.error).toBeTruthy();
+    expect(TestBed.inject(WorkspaceSession).pendingWrites).toBe(0);
   });
 
   it('ignores a device response arriving after sign-out', async () => {

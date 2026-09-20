@@ -26,6 +26,17 @@ public sealed class DevicesController(IDeviceStore devices, IUserStore users) : 
         return await devices.UpdateAsync(deviceId, chatId, settings, cancellationToken) ? NoContent() : NotFound();
     }
 
+    [HttpPut("{deviceId}/destinations/{chatId}/notifications")]
+    public async Task<IActionResult> SetNotifications(string deviceId, string chatId, NotificationState state,
+        CancellationToken cancellationToken)
+    {
+        var user = await CurrentUser(cancellationToken);
+        if (user is null) return Unauthorized();
+        if (deviceId.Length > 2048 || chatId.Length > 1024) return BadRequest();
+        if (!user.IsSystemAdmin && !user.GrantKeys.Contains(UserGrantKey.Encode(deviceId, chatId))) return NotFound();
+        return await devices.SetActiveAsync(deviceId, chatId, state.IsActive, cancellationToken) ? NoContent() : NotFound();
+    }
+
     private async Task<UserAccess?> CurrentUser(CancellationToken cancellationToken)
     {
         var userId = User.FindFirst("sub")?.Value;

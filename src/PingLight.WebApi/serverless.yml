@@ -90,6 +90,11 @@ functions:
           cors: ${self:custom.cors}
           authorizer: ${self:custom.authorizer}
       - http:
+          path: /devices/{deviceId}/destinations/{chatId}/notifications
+          method: PUT
+          cors: ${self:custom.cors}
+          authorizer: ${self:custom.authorizer}
+      - http:
           path: /users/me
           method: GET
           cors: ${self:custom.cors}

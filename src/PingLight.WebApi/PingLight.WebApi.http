@@ -17,3 +17,12 @@ Content-Type: application/json
   "isWeeklyStatsEnabled": false,
   "isMonthlyStatsEnabled": false
 }
+
+###
+PUT {{host}}/devices/REPLACE_WITH_ASSIGNED_DEVICE_ID/destinations/REPLACE_WITH_CHAT_ID/notifications
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "isActive": true
+}

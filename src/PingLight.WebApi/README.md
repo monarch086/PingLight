@@ -19,9 +19,11 @@ not part of this application's runtime.
   for a general user.
 - `PUT /devices/{deviceId}/destinations/{chatId}/settings` updates description,
   notification delay, and daily/weekly/monthly report flags.
+- `PUT /devices/{deviceId}/destinations/{chatId}/notifications` enables or
+  disables all notifications for that device destination.
 
-Missing and unassigned devices return 404 on update. ChatId, IsActive, roles, and
-provisioning credentials cannot be edited through the device settings endpoint.
+Missing and unassigned devices return 404 on update. ChatId, roles, and
+provisioning credentials cannot be edited through the management API.
 There is no public registration or claiming of devices.
 
 The existing device table is scanned in internal pages of 100 records and filtered

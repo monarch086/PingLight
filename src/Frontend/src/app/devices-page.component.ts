@@ -22,6 +22,7 @@ export class DevicesPageComponent implements OnInit, OnDestroy {
   devices: Device[] = [];
   selected?: Device;
   draft?: DeviceSettings;
+  private changingActive = new Set<string>();
   private destroyed = false;
 
   get currentUser() { return this.session.currentUser; }
@@ -53,6 +54,30 @@ export class DevicesPageComponent implements OnInit, OnDestroy {
 
   cancel(): void { this.selected = undefined; this.draft = undefined; }
 
+  isChangingActive(device: Device): boolean {
+    return this.changingActive.has(this.deviceKey(device));
+  }
+
+  async setActive(device: Device, isActive: boolean): Promise<void> {
+    const key = this.deviceKey(device);
+    if (this.changingActive.has(key)) return;
+    this.changingActive.add(key);
+    this.session.pendingWrites++;
+    this.error = '';
+    this.notice = '';
+    try {
+      await this.api.setActive(device.deviceId, device.chatId, isActive);
+      if (this.destroyed) return;
+      device.isActive = isActive;
+      this.notice = isActive ? 'Device notifications enabled.' : 'Device notifications disabled.';
+    } catch (error) {
+      if (!this.destroyed) this.error = errorMessage(error);
+    } finally {
+      this.changingActive.delete(key);
+      this.session.pendingWrites--;
+    }
+  }
+
   async save(): Promise<void> {
     if (!this.selected || !this.draft || this.saving) return;
     const device = this.selected;
@@ -73,5 +98,9 @@ export class DevicesPageComponent implements OnInit, OnDestroy {
       this.saving = false;
       this.session.pendingWrites--;
     }
+  }
+
+  private deviceKey(device: Device): string {
+    return device.deviceId + ':' + device.chatId;
   }
 }

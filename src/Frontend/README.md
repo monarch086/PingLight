@@ -6,7 +6,8 @@ The Lambda runtime is Node.js 24; local development requires Node 24.15 or newer
 within the Node 24 LTS line (.nvmrc selects 24).
 
 The dashboard supports Cognito sign-in and editing assigned device descriptions,
-notification delays and report preferences. System administrators see all devices
+notification delays and report preferences. Notifications can be enabled or
+disabled directly from each device card. System administrators see all devices
 and users and can grant or revoke device access. General users see only granted
 devices. Device registration and Telegram destination changes are outside this version.
 

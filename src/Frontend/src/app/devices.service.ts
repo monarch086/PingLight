@@ -37,6 +37,13 @@ export class DevicesService {
       settings, { headers }));
   }
 
+  async setActive(deviceId: string, chatId: string, isActive: boolean): Promise<void> {
+    const headers = await this.headers();
+    const url = this.baseUrl + '/devices/' + encodeURIComponent(deviceId) + '/destinations/' +
+      encodeURIComponent(chatId) + '/notifications';
+    await firstValueFrom(this.http.put(url, { isActive }, { headers }));
+  }
+
   private get baseUrl(): string { return this.auth.config!.apiUrl.replace(/\/$/, ''); }
   private async headers(): Promise<HttpHeaders> {
     return new HttpHeaders({ Authorization: 'Bearer ' + await this.auth.accessToken() });

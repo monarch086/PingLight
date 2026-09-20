@@ -82,4 +82,24 @@ public sealed class DynamoDeviceStore : IDeviceStore
         }
         catch (ConditionalCheckFailedException) { return false; }
     }
+
+    public async Task<bool> SetActiveAsync(string deviceId, string chatId, bool isActive, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await db.UpdateItemAsync(new UpdateItemRequest
+            {
+                TableName = table,
+                Key = new() { ["DeviceId"] = new(deviceId), ["ChatId"] = new(chatId) },
+                ConditionExpression = "attribute_exists(DeviceId)",
+                UpdateExpression = "SET IsActive = :isActive",
+                ExpressionAttributeValues = new()
+                {
+                    [":isActive"] = new() { BOOL = isActive }
+                }
+            }, cancellationToken);
+            return true;
+        }
+        catch (ConditionalCheckFailedException) { return false; }
+    }
 }
