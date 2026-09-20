@@ -32,8 +32,10 @@ are updated in place without replacing attributes consumed by the workers.
 ## Deploy to dev
 
 Use AWS credentials for the account containing `PingLight.dev.DeviceConfigs`,
-.NET 10 SDK, PowerShell, and Serverless Framework 3. Restore the deployment CLI
-with `npm ci` in `src/Frontend` first.
+.NET 10 SDK, PowerShell, and Serverless Framework 4. Install the deployment CLI
+with `npm install -g serverless@4` and authenticate with `serverless login`
+(or configure a Serverless access/license key). Use the global `serverless`
+command for this API; the frontend's local CLI still uses v3.
 
 First deploy the existing Lambda service once so its CloudFormation stack exports
 the shared REST API ID and root resource ID:
@@ -41,16 +43,16 @@ the shared REST API ID and root resource ID:
 ~~~powershell
 cd ../Lambdas
 ./build.ps1
-../Frontend/node_modules/.bin/serverless.cmd deploy --stage dev
+serverless deploy --stage dev
 ~~~
 
 Then, from `src/PingLight.WebApi`:
 
 ~~~powershell
 ./build.ps1
-../Frontend/node_modules/.bin/serverless.cmd package --stage dev
+serverless package --stage dev
 # Review the generated CloudFormation before deploying.
-../Frontend/node_modules/.bin/serverless.cmd deploy --stage dev
+serverless deploy --stage dev
 ~~~
 
 This creates the separate `pinglight-management-dev` stack, but attaches its

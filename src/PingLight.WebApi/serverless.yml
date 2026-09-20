@@ -1,6 +1,5 @@
 service: pinglight-management
-frameworkVersion: '3'
-# Serverless v3's runtime enum predates dotnet10; CloudFormation supports it.
+frameworkVersion: '4'
 # Keep validation enabled as warnings, matching the existing Lambda service.
 configValidationMode: warn
 
