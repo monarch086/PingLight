@@ -213,8 +213,13 @@ button span {
 }
 
 .badge.muted {
-  background:#f2f0e7;
-  color:#8d7851
+  background:#f4cc55;
+  color:#5b4100
+}
+
+.device.inactive {
+  background:#fff8e6;
+  border-color:#e5c86f
 }
 
 .notification-switch strong,

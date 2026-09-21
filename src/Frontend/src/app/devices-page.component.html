@@ -24,7 +24,7 @@
   @if (!selected) {
     <section class="device-list" aria-label="Ваші пристрої">
       @for (device of devices; track device.deviceId + ':' + device.chatId) {
-        <article class="panel device">
+        <article class="panel device" [class.inactive]="!device.isActive">
         <div class="device-top"><span class="device-icon" aria-hidden="true">⌁</span>
         <span class="badge" [class.muted]="!device.isActive">{{ device.isActive ? 'Сповіщення активні' : 'Сповіщення призупинені' }}</span>
       </div>
