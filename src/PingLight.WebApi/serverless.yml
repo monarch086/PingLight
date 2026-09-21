@@ -66,6 +66,7 @@ provider:
           Action:
             - dynamodb:Query
             - dynamodb:TransactWriteItems
+            - dynamodb:DeleteItem
           Resource:
             Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/PingLight.${sls:stage}.Changes
         - Effect: Allow
