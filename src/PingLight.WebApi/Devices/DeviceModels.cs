@@ -13,7 +13,9 @@ public record DeviceSettings
     public bool IsMonthlyStatsEnabled { get; init; }
 }
 
-public record DeviceView(string DeviceId, string ChatId, DeviceSettings Settings, bool IsActive);
+public record TurnOffPeriod(DateTimeOffset StartedAt, DateTimeOffset? EndedAt);
+public record TurnOffPage(IReadOnlyList<TurnOffPeriod> Items, int Page, bool HasPreviousPage, bool HasNextPage);
+public record DeviceView(string DeviceId, string ChatId, DeviceSettings Settings, bool IsActive, TurnOffPeriod? LastTurnOff = null);
 public record DevicePage(IReadOnlyList<DeviceView> Items);
 public record NotificationState(bool IsActive);
 
@@ -23,4 +25,5 @@ public interface IDeviceStore
     Task<bool> ExistsAsync(string deviceId, string chatId, CancellationToken cancellationToken);
     Task<bool> UpdateAsync(string deviceId, string chatId, DeviceSettings settings, CancellationToken cancellationToken);
     Task<bool> SetActiveAsync(string deviceId, string chatId, bool isActive, CancellationToken cancellationToken);
+    Task<TurnOffPage> ListTurnOffsAsync(string deviceId, int page, CancellationToken cancellationToken);
 }

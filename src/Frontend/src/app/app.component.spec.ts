@@ -11,9 +11,11 @@ import { DevicesService, Device } from './devices.service';
 import { UsersService } from './users.service';
 import { Router, RouterModule } from '@angular/router';
 import { routes } from './app-routing.module';
+import { TurnOffHistoryComponent } from './turn-off-history.component';
 
 const device: Device = {
   deviceId: 'home', chatId: 'chat-a', isActive: true,
+  lastTurnOff: { startedAt: '2026-09-20T10:00:00Z', endedAt: '2026-09-20T11:30:00Z' },
   settings: { description: 'Home', notificationDelaySec: 120,
     isDailyStatsEnabled: true, isWeeklyStatsEnabled: false, isMonthlyStatsEnabled: false }
 };
@@ -27,10 +29,12 @@ describe('Management dashboard', () => {
   beforeEach(async () => {
     auth = { user$: new BehaviorSubject<unknown>(null), initialize: jasmine.createSpy().and.resolveTo(),
       signIn: jasmine.createSpy().and.resolveTo(), config: {} };
-    api = jasmine.createSpyObj('DevicesService', ['list', 'save', 'setActive']);
+    api = jasmine.createSpyObj('DevicesService', ['list', 'save', 'setActive', 'listTurnOffs']);
     api.list.and.resolveTo({ items: [structuredClone(device)] });
     api.save.and.resolveTo();
     api.setActive.and.resolveTo();
+    api.listTurnOffs.and.resolveTo({ items: [device.lastTurnOff!], page: 1,
+      hasPreviousPage: false, hasNextPage: true });
     usersApi = jasmine.createSpyObj('UsersService', ['me', 'list', 'setGrant']);
     usersApi.me.and.resolveTo({ userId: 'user-a', email: 'person@example.test', isSystemAdmin: false });
     usersApi.list.and.resolveTo({ items: [] });
@@ -146,6 +150,21 @@ describe('Management dashboard', () => {
     expect(component.devices[0].isActive).toBeTrue();
     expect(component.error).toBeTruthy();
     expect(TestBed.inject(WorkspaceSession).pendingWrites).toBe(0);
+  });
+
+  it('shows the last turn-off and opens paged turn-off history', async () => {
+    await signIn();
+    expect(fixture.nativeElement.querySelector('.last-turn-off').textContent).toContain('1h 30m');
+    fixture.nativeElement.querySelector('.history-link').click();
+    await settle();
+    expect(TestBed.inject(Router).url).toContain('/devices/home/destinations/chat-a/turn-offs');
+    expect(fixture.debugElement.query(By.directive(TurnOffHistoryComponent))).not.toBeNull();
+    expect(api.listTurnOffs).toHaveBeenCalledWith('home', 'chat-a', 1);
+    expect(fixture.nativeElement.querySelectorAll('.period').length).toBe(1);
+    (fixture.nativeElement.querySelector('.pagination button:last-child') as HTMLButtonElement).click();
+    await settle();
+    expect(TestBed.inject(Router).url).toContain('page=2');
+    expect(api.listTurnOffs).toHaveBeenCalledWith('home', 'chat-a', 2);
   });
 
   it('ignores a device response arriving after sign-out', async () => {

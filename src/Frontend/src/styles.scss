@@ -136,6 +136,32 @@ button span {
   cursor:pointer
 }
 
+.last-turn-off dd {
+  max-width:160px
+}
+
+.last-turn-off span {
+  color:#6f7c73
+}
+
+.history-link {
+  display:inline-block;
+  margin-bottom:12px;
+  color:#315b42;
+  font-size:13px;
+  font-weight:600
+}
+
+.device-icon {
+  color:#52795d;
+  font-size:28px
+}
+
+.badge.muted {
+  background:#f2f0e7;
+  color:#8d7851
+}
+
 .notification-switch strong,
 .notification-switch small {
   display:block

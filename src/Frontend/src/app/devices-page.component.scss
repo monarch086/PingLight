@@ -24,26 +24,11 @@
   padding:24px
 }
 
-.selected {
-  border-color:#35684f;
-  box-shadow:0 0 0 1px #35684f
-}
-
 .device-top {
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:8px
-}
-
-.device-icon {
-  font-size:28px;
-  color:#52795d
-}
-
-.muted {
-  background:#f2f0e7;
-  color:#8d7851
 }
 
 dl {

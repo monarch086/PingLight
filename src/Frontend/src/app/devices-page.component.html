@@ -33,7 +33,16 @@
       <p class="device-id">Telegram destination: {{ device.chatId }}</p>
       <dl><div><dt>Notification delay</dt><dd>{{ device.settings.notificationDelaySec }} sec</dd></div>
       <div><dt>Reports</dt><dd>{{ device.settings.isDailyStatsEnabled ? 'Daily ' : '' }}{{ device.settings.isWeeklyStatsEnabled ? 'Weekly ' : '' }}{{ device.settings.isMonthlyStatsEnabled ? 'Monthly' : '' }}{{ !device.settings.isDailyStatsEnabled && !device.settings.isWeeklyStatsEnabled && !device.settings.isMonthlyStatsEnabled ? 'Off' : '' }}</dd></div>
+      <div class="last-turn-off"><dt>Last turn-off</dt>
+        @if (device.lastTurnOff; as period) {
+          <dd>{{ period.startedAt | date:'medium' }}<br>
+            <span>{{ period.endedAt ? (period.endedAt | date:'medium') : 'Still off' }} · {{ duration(period.startedAt, period.endedAt) }}</span></dd>
+        } @else {
+          <dd>No turn-offs recorded</dd>
+        }
+      </div>
     </dl>
+    <a class="history-link" [routerLink]="['/devices', device.deviceId, 'destinations', device.chatId, 'turn-offs']">Turn-off history</a>
     <label class="notification-switch">
       <span>
         <strong>Notifications</strong>

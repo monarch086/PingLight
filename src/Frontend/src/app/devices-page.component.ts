@@ -1,13 +1,15 @@
 
+import { DatePipe } from '@angular/common';
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Device, DeviceSettings, DevicesService } from './devices.service';
 import { errorMessage } from './error-message';
 import { WorkspaceSession } from './workspace-session.service';
 
 @Component({
   selector: 'app-devices-page',
-  imports: [FormsModule],
+  imports: [DatePipe, FormsModule, RouterLink],
   templateUrl: './devices-page.component.html',
   styleUrl: './devices-page.component.scss'
 })
@@ -102,5 +104,13 @@ export class DevicesPageComponent implements OnInit, OnDestroy {
 
   private deviceKey(device: Device): string {
     return device.deviceId + ':' + device.chatId;
+  }
+
+  duration(startedAt: string, endedAt: string | null): string {
+    if (!endedAt) return 'Ongoing';
+    const minutes = Math.max(0, Math.round((Date.parse(endedAt) - Date.parse(startedAt)) / 60000));
+    const hours = Math.floor(minutes / 60);
+    const remainder = minutes % 60;
+    return hours ? `${hours}h ${remainder}m` : `${remainder}m`;
   }
 }

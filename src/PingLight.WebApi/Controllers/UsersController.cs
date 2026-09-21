@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PingLight.WebApi.Authorization;
 using PingLight.WebApi.Devices;
 using PingLight.WebApi.Users;
 
@@ -15,12 +16,9 @@ public sealed class UsersController(IUserStore users, IUserDirectory directory, 
         return user is null ? Unauthorized() : Ok(new CurrentUserView(user.UserId, user.Email, user.IsSystemAdmin));
     }
 
-    [HttpGet]
+    [HttpGet, SystemAdmin]
     public async Task<ActionResult<UserPage>> List(CancellationToken cancellationToken)
     {
-        var admin = await CurrentUser(cancellationToken);
-        if (admin is null) return Unauthorized();
-        if (!admin.IsSystemAdmin) return Forbid();
         var accounts = await directory.ListAsync(cancellationToken);
         var records = await Task.WhenAll(accounts.Select(account =>
             users.GetOrCreateAsync(account.UserId, account.Email, cancellationToken)));
@@ -28,12 +26,9 @@ public sealed class UsersController(IUserStore users, IUserDirectory directory, 
             new UserView(user.UserId, user.Email, user.IsSystemAdmin, user.Grants)).ToArray()));
     }
 
-    [HttpPut("{userId}/devices/{deviceId}/destinations/{chatId}")]
+    [HttpPut("{userId}/devices/{deviceId}/destinations/{chatId}"), SystemAdmin]
     public async Task<IActionResult> Grant(string userId, string deviceId, string chatId, CancellationToken cancellationToken)
     {
-        var admin = await CurrentUser(cancellationToken);
-        if (admin is null) return Unauthorized();
-        if (!admin.IsSystemAdmin) return Forbid();
         if (!Valid(userId, deviceId, chatId)) return BadRequest();
         if (!await devices.ExistsAsync(deviceId, chatId, cancellationToken)) return NotFound();
         var account = await directory.FindAsync(userId, cancellationToken);
@@ -42,12 +37,9 @@ public sealed class UsersController(IUserStore users, IUserDirectory directory, 
         return await users.SetGrantAsync(userId, deviceId, chatId, true, cancellationToken) ? NoContent() : NotFound();
     }
 
-    [HttpDelete("{userId}/devices/{deviceId}/destinations/{chatId}")]
+    [HttpDelete("{userId}/devices/{deviceId}/destinations/{chatId}"), SystemAdmin]
     public async Task<IActionResult> Revoke(string userId, string deviceId, string chatId, CancellationToken cancellationToken)
     {
-        var admin = await CurrentUser(cancellationToken);
-        if (admin is null) return Unauthorized();
-        if (!admin.IsSystemAdmin) return Forbid();
         if (!Valid(userId, deviceId, chatId)) return BadRequest();
         if (await directory.FindAsync(userId, cancellationToken) is null) return NotFound();
         return await users.SetGrantAsync(userId, deviceId, chatId, false, cancellationToken) ? NoContent() : NotFound();

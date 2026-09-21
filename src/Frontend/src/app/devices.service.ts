@@ -15,8 +15,16 @@ export interface Device {
   chatId: string;
   settings: DeviceSettings;
   isActive: boolean;
+  lastTurnOff?: TurnOffPeriod | null;
 }
 export interface DevicePage { items: Device[]; }
+export interface TurnOffPeriod { startedAt: string; endedAt: string | null; }
+export interface TurnOffPage {
+  items: TurnOffPeriod[];
+  page: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
 
 @Injectable({ providedIn: 'root' })
 export class DevicesService {
@@ -42,6 +50,13 @@ export class DevicesService {
     const url = this.baseUrl + '/devices/' + encodeURIComponent(deviceId) + '/destinations/' +
       encodeURIComponent(chatId) + '/notifications';
     await firstValueFrom(this.http.put(url, { isActive }, { headers }));
+  }
+
+  async listTurnOffs(deviceId: string, chatId: string, page: number): Promise<TurnOffPage> {
+    const headers = await this.headers();
+    const url = this.baseUrl + '/devices/' + encodeURIComponent(deviceId) + '/destinations/' +
+      encodeURIComponent(chatId) + '/turn-offs?page=' + page;
+    return firstValueFrom(this.http.get<TurnOffPage>(url, { headers }));
   }
 
   private get baseUrl(): string { return this.auth.config!.apiUrl.replace(/\/$/, ''); }

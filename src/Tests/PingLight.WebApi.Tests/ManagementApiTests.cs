@@ -151,6 +151,7 @@ public class ManagementApiTests
         Current();
         Assert.That((await client.GetAsync("/users")).StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
         Assert.That((await client.PutAsync("/users/other/devices/a/destinations/chat-a", null)).StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
+        Assert.That((await client.DeleteAsync("/users/other/devices/a/destinations/chat-a")).StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
         devices.VerifyNoOtherCalls();
     }
 
@@ -201,6 +202,22 @@ public class ManagementApiTests
         Assert.That(denied.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
         devices.VerifyAll();
     }
+
+    [Test]
+    public async Task GeneralUserCanPageTurnOffsForGrantedDeviceButNotAnotherDevice()
+    {
+        Authenticate();
+        Current(grants: UserGrantKey.Encode("a", "chat-a"));
+        devices.Setup(x => x.ExistsAsync("a", "chat-a", It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        devices.Setup(x => x.ListTurnOffsAsync("a", 2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TurnOffPage([], 2, true, false));
+
+        var allowed = await client.GetAsync("/devices/a/destinations/chat-a/turn-offs?page=2");
+        var denied = await client.GetAsync("/devices/b/destinations/chat-b/turn-offs");
+        Assert.That(allowed.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.That(denied.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
+        devices.VerifyAll();
+    }
 }
 
 public class DynamoDeviceStoreTests
@@ -216,11 +233,44 @@ public class DynamoDeviceStoreTests
                 request.ExpressionAttributeValues[":isActive"].BOOL == false), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new UpdateItemResponse());
         var store = new DynamoDeviceStore(db.Object, new ConfigurationBuilder().AddInMemoryCollection(
-            new Dictionary<string, string?> { ["Devices:TableName"] = "devices" }).Build());
+            new Dictionary<string, string?> { ["Devices:TableName"] = "devices", ["Changes:TableName"] = "changes" }).Build());
 
         Assert.That(await store.SetActiveAsync("a", "chat-a", false, CancellationToken.None), Is.True);
         db.VerifyAll();
     }
+
+    [Test]
+    public async Task TurnOffHistoryReturnsTenMostRecentPeriodsAndAnotherPage()
+    {
+        var db = new Mock<IAmazonDynamoDB>(MockBehavior.Strict);
+        var items = Enumerable.Range(0, 12).SelectMany(index =>
+        {
+            var start = new DateTimeOffset(2026, 9, 20, 12, 0, 0, TimeSpan.Zero).AddHours(-index * 2);
+            return new[] { Change(start.AddHours(1), true), Change(start, false) };
+        }).ToList();
+        db.Setup(x => x.QueryAsync(It.Is<QueryRequest>(request => request.TableName == "changes" && !request.ScanIndexForward),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new QueryResponse { Items = items });
+        var store = new DynamoDeviceStore(db.Object, new ConfigurationBuilder().AddInMemoryCollection(
+            new Dictionary<string, string?> { ["Devices:TableName"] = "devices", ["Changes:TableName"] = "changes" }).Build());
+
+        var first = await store.ListTurnOffsAsync("a", 1, CancellationToken.None);
+        var second = await store.ListTurnOffsAsync("a", 2, CancellationToken.None);
+
+        Assert.That(first.Items, Has.Count.EqualTo(10));
+        Assert.That(first.HasNextPage, Is.True);
+        Assert.That(first.Items[0].StartedAt, Is.GreaterThan(first.Items[9].StartedAt));
+        Assert.That(second.Items, Has.Count.EqualTo(2));
+        Assert.That(second.HasPreviousPage, Is.True);
+        Assert.That(second.HasNextPage, Is.False);
+        db.Verify(x => x.QueryAsync(It.IsAny<QueryRequest>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    private static Dictionary<string, AttributeValue> Change(DateTimeOffset at, bool isLight) => new()
+    {
+        ["ChangeDate"] = new(at.ToString("O")),
+        ["IsLight"] = new() { BOOL = isLight }
+    };
 }
 
 public class DynamoUserStoreTests

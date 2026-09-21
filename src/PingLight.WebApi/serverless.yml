@@ -39,6 +39,7 @@ provider:
   environment:
     ASPNETCORE_ENVIRONMENT: Production
     Devices__TableName: PingLight.${sls:stage}.DeviceConfigs
+    Changes__TableName: PingLight.${sls:stage}.Changes
     Users__TableName:
       Ref: UsersTable
     Cognito__Authority:
@@ -61,6 +62,11 @@ provider:
             - dynamodb:UpdateItem
           Resource:
             Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/PingLight.${sls:stage}.DeviceConfigs
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+          Resource:
+            Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/PingLight.${sls:stage}.Changes
         - Effect: Allow
           Action:
             - dynamodb:UpdateItem
@@ -92,6 +98,11 @@ functions:
       - http:
           path: /devices/{deviceId}/destinations/{chatId}/notifications
           method: PUT
+          cors: ${self:custom.cors}
+          authorizer: ${self:custom.authorizer}
+      - http:
+          path: /devices/{deviceId}/destinations/{chatId}/turn-offs
+          method: GET
           cors: ${self:custom.cors}
           authorizer: ${self:custom.authorizer}
       - http:
