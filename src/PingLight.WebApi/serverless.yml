@@ -65,6 +65,7 @@ provider:
         - Effect: Allow
           Action:
             - dynamodb:Query
+            - dynamodb:TransactWriteItems
           Resource:
             Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/PingLight.${sls:stage}.Changes
         - Effect: Allow
@@ -103,6 +104,11 @@ functions:
       - http:
           path: /devices/{deviceId}/destinations/{chatId}/turn-offs
           method: GET
+          cors: ${self:custom.cors}
+          authorizer: ${self:custom.authorizer}
+      - http:
+          path: /devices/{deviceId}/destinations/{chatId}/turn-offs/latest
+          method: DELETE
           cors: ${self:custom.cors}
           authorizer: ${self:custom.authorizer}
       - http:

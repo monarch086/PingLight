@@ -29,12 +29,13 @@ describe('Management dashboard', () => {
   beforeEach(async () => {
     auth = { user$: new BehaviorSubject<unknown>(null), initialize: jasmine.createSpy().and.resolveTo(),
       signIn: jasmine.createSpy().and.resolveTo(), config: {} };
-    api = jasmine.createSpyObj('DevicesService', ['list', 'save', 'setActive', 'listTurnOffs']);
+    api = jasmine.createSpyObj('DevicesService', ['list', 'save', 'setActive', 'listTurnOffs', 'removeLastTurnOff']);
     api.list.and.resolveTo({ items: [structuredClone(device)] });
     api.save.and.resolveTo();
     api.setActive.and.resolveTo();
     api.listTurnOffs.and.resolveTo({ items: [device.lastTurnOff!], page: 1,
       hasPreviousPage: false, hasNextPage: true });
+    api.removeLastTurnOff.and.resolveTo();
     usersApi = jasmine.createSpyObj('UsersService', ['me', 'list', 'setGrant']);
     usersApi.me.and.resolveTo({ userId: 'user-a', email: 'person@example.test', isSystemAdmin: false });
     usersApi.list.and.resolveTo({ items: [] });
@@ -107,7 +108,7 @@ describe('Management dashboard', () => {
     }] });
     await signIn();
     expect(fixture.nativeElement.querySelectorAll('.device').length).toBe(2);
-    (fixture.nativeElement.querySelector('.device button') as HTMLButtonElement).click();
+    (fixture.nativeElement.querySelector('.device .full') as HTMLButtonElement).click();
     await settle();
     expect(fixture.nativeElement.querySelectorAll('.device').length).toBe(0);
     expect(fixture.nativeElement.querySelector('.editor')).not.toBeNull();
@@ -165,6 +166,19 @@ describe('Management dashboard', () => {
     await settle();
     expect(TestBed.inject(Router).url).toContain('page=2');
     expect(api.listTurnOffs).toHaveBeenCalledWith('home', 'chat-a', 2);
+  });
+
+  it('removes the last turn-off from a device card and refreshes the device', async () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    api.list.and.returnValues(Promise.resolve({ items: [structuredClone(device)] }),
+      Promise.resolve({ items: [{ ...structuredClone(device), lastTurnOff: null }] }));
+    await signIn();
+    (fixture.nativeElement.querySelector('.danger-link') as HTMLButtonElement).click();
+    await settle();
+    expect(api.removeLastTurnOff).toHaveBeenCalledWith('home', 'chat-a');
+    expect(api.list).toHaveBeenCalledTimes(2);
+    expect(fixture.nativeElement.querySelector('.last-turn-off').textContent).toContain('No turn-offs recorded');
+    expect(devicesPage().notice).toContain('removed');
   });
 
   it('ignores a device response arriving after sign-out', async () => {

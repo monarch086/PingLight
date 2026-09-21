@@ -59,6 +59,13 @@ export class DevicesService {
     return firstValueFrom(this.http.get<TurnOffPage>(url, { headers }));
   }
 
+  async removeLastTurnOff(deviceId: string, chatId: string): Promise<void> {
+    const headers = await this.headers();
+    const url = this.baseUrl + '/devices/' + encodeURIComponent(deviceId) + '/destinations/' +
+      encodeURIComponent(chatId) + '/turn-offs/latest';
+    await firstValueFrom(this.http.delete(url, { headers }));
+  }
+
   private get baseUrl(): string { return this.auth.config!.apiUrl.replace(/\/$/, ''); }
   private async headers(): Promise<HttpHeaders> {
     return new HttpHeaders({ Authorization: 'Bearer ' + await this.auth.accessToken() });

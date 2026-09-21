@@ -48,7 +48,8 @@ public sealed class DynamoDeviceStore : IDeviceStore
         } while (startKey is { Count: > 0 });
         var latestByDevice = (await Task.WhenAll(items.Select(item => item.DeviceId).Distinct(StringComparer.Ordinal)
             .Select(async deviceId =>
-                (DeviceId: deviceId, Period: (await ReadTurnOffsAsync(deviceId, 1, 1, cancellationToken)).Items.FirstOrDefault()))))
+                (DeviceId: deviceId, Period: (await ReadTurnOffRecordsAsync(deviceId, 1, 1, cancellationToken))
+                    .Items.FirstOrDefault()?.Period))))
             .ToDictionary(result => result.DeviceId, result => result.Period, StringComparer.Ordinal);
         return new(items.Select(item => item with { LastTurnOff = latestByDevice[item.DeviceId] }).ToArray());
     }
@@ -111,15 +112,37 @@ public sealed class DynamoDeviceStore : IDeviceStore
     }
 
     public Task<TurnOffPage> ListTurnOffsAsync(string deviceId, int page, CancellationToken cancellationToken) =>
-        ReadTurnOffsAsync(deviceId, page, TurnOffPageSize, cancellationToken);
+        ReadTurnOffsAsync(deviceId, page, cancellationToken);
 
-    private async Task<TurnOffPage> ReadTurnOffsAsync(string deviceId, int page, int pageSize,
+    public async Task<bool> RemoveLastTurnOffAsync(string deviceId, CancellationToken cancellationToken)
+    {
+        var latest = (await ReadTurnOffRecordsAsync(deviceId, 1, 1, cancellationToken)).Items.FirstOrDefault();
+        if (latest is null) return false;
+
+        var writes = new List<TransactWriteItem> { DeleteChange(deviceId, latest.StartedAtKey, false) };
+        if (latest.EndedAtKey is not null) writes.Add(DeleteChange(deviceId, latest.EndedAtKey, true));
+        try
+        {
+            await db.TransactWriteItemsAsync(new TransactWriteItemsRequest { TransactItems = writes }, cancellationToken);
+            return true;
+        }
+        catch (TransactionCanceledException) { return false; }
+    }
+
+    private async Task<TurnOffPage> ReadTurnOffsAsync(string deviceId, int page, CancellationToken cancellationToken)
+    {
+        var result = await ReadTurnOffRecordsAsync(deviceId, page, TurnOffPageSize, cancellationToken);
+        return new(result.Items.Select(item => item.Period).ToArray(), page, result.HasPreviousPage, result.HasNextPage);
+    }
+
+    private async Task<TurnOffRecordPage> ReadTurnOffRecordsAsync(string deviceId, int page, int pageSize,
         CancellationToken cancellationToken)
     {
         var requiredPeriods = checked(page * pageSize + 1);
-        var periods = new List<TurnOffPeriod>(requiredPeriods);
+        var periods = new List<TurnOffRecord>(requiredPeriods);
         Dictionary<string, AttributeValue>? startKey = null;
         DateTimeOffset? pendingEnd = null;
+        string? pendingEndKey = null;
         var isNewestChange = true;
 
         do
@@ -143,15 +166,17 @@ public sealed class DynamoDeviceStore : IDeviceStore
                 if (item["IsLight"].BOOL)
                 {
                     pendingEnd = changedAt;
+                    pendingEndKey = item["ChangeDate"].S;
                 }
                 else if (pendingEnd is not null)
                 {
-                    periods.Add(new(changedAt, pendingEnd));
+                    periods.Add(new(new(changedAt, pendingEnd), item["ChangeDate"].S, pendingEndKey));
                     pendingEnd = null;
+                    pendingEndKey = null;
                 }
                 else if (isNewestChange)
                 {
-                    periods.Add(new(changedAt, null));
+                    periods.Add(new(new(changedAt, null), item["ChangeDate"].S, null));
                 }
                 isNewestChange = false;
                 if (periods.Count >= requiredPeriods) break;
@@ -162,4 +187,19 @@ public sealed class DynamoDeviceStore : IDeviceStore
         var offset = (page - 1) * pageSize;
         return new(periods.Skip(offset).Take(pageSize).ToArray(), page, page > 1, periods.Count > offset + pageSize);
     }
+
+    private TransactWriteItem DeleteChange(string deviceId, string changeDate, bool isLight) => new()
+    {
+        Delete = new()
+        {
+            TableName = changesTable,
+            Key = new() { ["DeviceId"] = new(deviceId), ["ChangeDate"] = new(changeDate) },
+            ConditionExpression = "IsLight = :isLight",
+            ExpressionAttributeValues = new() { [":isLight"] = new() { BOOL = isLight } }
+        }
+    };
+
+    private sealed record TurnOffRecord(TurnOffPeriod Period, string StartedAtKey, string? EndedAtKey);
+    private sealed record TurnOffRecordPage(IReadOnlyList<TurnOffRecord> Items, int Page,
+        bool HasPreviousPage, bool HasNextPage);
 }

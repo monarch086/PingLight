@@ -23,7 +23,7 @@
 <div class="workspace">
   @if (!selected) {
     <section class="device-list" aria-label="Your devices">
-      @for (device of devices; track device) {
+      @for (device of devices; track device.deviceId + ':' + device.chatId) {
         <article class="panel device">
         <div class="device-top"><span class="device-icon" aria-hidden="true">⌁</span>
         <span class="badge" [class.muted]="!device.isActive">{{ device.isActive ? 'Notifications active' : 'Notifications paused' }}</span>
@@ -42,7 +42,11 @@
         }
       </div>
     </dl>
-    <a class="history-link" [routerLink]="['/devices', device.deviceId, 'destinations', device.chatId, 'turn-offs']">Turn-off history</a>
+    <div class="history-actions">
+      <a class="history-link" [routerLink]="['/devices', device.deviceId, 'destinations', device.chatId, 'turn-offs']">Turn-off history</a>
+      <button class="danger-link" type="button" (click)="removeLastTurnOff(device)"
+        [disabled]="!device.lastTurnOff || isRemovingTurnOff(device)">{{ isRemovingTurnOff(device) ? 'Removing…' : 'Remove last turn-off' }}</button>
+    </div>
     <label class="notification-switch">
       <span>
         <strong>Notifications</strong>

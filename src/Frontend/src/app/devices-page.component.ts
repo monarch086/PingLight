@@ -25,6 +25,7 @@ export class DevicesPageComponent implements OnInit, OnDestroy {
   selected?: Device;
   draft?: DeviceSettings;
   private changingActive = new Set<string>();
+  private removingTurnOff = new Set<string>();
   private destroyed = false;
 
   get currentUser() { return this.session.currentUser; }
@@ -60,6 +61,10 @@ export class DevicesPageComponent implements OnInit, OnDestroy {
     return this.changingActive.has(this.deviceKey(device));
   }
 
+  isRemovingTurnOff(device: Device): boolean {
+    return this.removingTurnOff.has(this.deviceKey(device));
+  }
+
   async setActive(device: Device, isActive: boolean): Promise<void> {
     const key = this.deviceKey(device);
     if (this.changingActive.has(key)) return;
@@ -76,6 +81,27 @@ export class DevicesPageComponent implements OnInit, OnDestroy {
       if (!this.destroyed) this.error = errorMessage(error);
     } finally {
       this.changingActive.delete(key);
+      this.session.pendingWrites--;
+    }
+  }
+
+  async removeLastTurnOff(device: Device): Promise<void> {
+    const key = this.deviceKey(device);
+    if (!device.lastTurnOff || this.removingTurnOff.has(key) ||
+        !window.confirm('Remove the last turn-off period? This cannot be undone.')) return;
+    this.removingTurnOff.add(key);
+    this.session.pendingWrites++;
+    this.error = '';
+    this.notice = '';
+    try {
+      await this.api.removeLastTurnOff(device.deviceId, device.chatId);
+      if (this.destroyed) return;
+      await this.load();
+      if (!this.destroyed) this.notice = 'Last turn-off removed.';
+    } catch (error) {
+      if (!this.destroyed) this.error = errorMessage(error);
+    } finally {
+      this.removingTurnOff.delete(key);
       this.session.pendingWrites--;
     }
   }

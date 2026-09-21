@@ -146,10 +146,29 @@ button span {
 
 .history-link {
   display:inline-block;
-  margin-bottom:12px;
   color:#315b42;
   font-size:13px;
   font-weight:600
+}
+
+.history-actions {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:12px
+}
+
+.danger-link {
+  padding:0;
+  background:transparent;
+  color:#a43d35;
+  font-size:12px
+}
+
+.danger-link:hover:not(:disabled) {
+  background:transparent;
+  color:#742b26
 }
 
 .device-icon {

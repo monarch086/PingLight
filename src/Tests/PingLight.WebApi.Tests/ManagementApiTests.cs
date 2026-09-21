@@ -218,6 +218,21 @@ public class ManagementApiTests
         Assert.That(denied.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
         devices.VerifyAll();
     }
+
+    [Test]
+    public async Task GeneralUserCanRemoveLastTurnOffForGrantedDeviceButNotAnotherDevice()
+    {
+        Authenticate();
+        Current(grants: UserGrantKey.Encode("a", "chat-a"));
+        devices.Setup(x => x.ExistsAsync("a", "chat-a", It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        devices.Setup(x => x.RemoveLastTurnOffAsync("a", It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        var allowed = await client.DeleteAsync("/devices/a/destinations/chat-a/turn-offs/latest");
+        var denied = await client.DeleteAsync("/devices/b/destinations/chat-b/turn-offs/latest");
+        Assert.That(allowed.StatusCode, Is.EqualTo(HttpStatusCode.NoContent));
+        Assert.That(denied.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
+        devices.VerifyAll();
+    }
 }
 
 public class DynamoDeviceStoreTests
@@ -266,11 +281,64 @@ public class DynamoDeviceStoreTests
         db.Verify(x => x.QueryAsync(It.IsAny<QueryRequest>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
     }
 
+    [Test]
+    public async Task RemovingOngoingTurnOffDeletesOnlyItsStartChange()
+    {
+        const string start = "2026-09-20T10:00:00.0000000Z";
+        var db = new Mock<IAmazonDynamoDB>(MockBehavior.Strict);
+        db.Setup(x => x.QueryAsync(It.IsAny<QueryRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new QueryResponse { Items = [Change(start, false)] });
+        db.Setup(x => x.TransactWriteItemsAsync(It.Is<TransactWriteItemsRequest>(request =>
+                request.TransactItems.Count == 1 &&
+                request.TransactItems[0].Delete.Key["ChangeDate"].S == start &&
+                request.TransactItems[0].Delete.ExpressionAttributeValues[":isLight"].BOOL == false),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TransactWriteItemsResponse());
+        var store = CreateStore(db.Object);
+
+        Assert.That(await store.RemoveLastTurnOffAsync("a", CancellationToken.None), Is.True);
+        db.VerifyAll();
+    }
+
+    [Test]
+    public async Task RemovingCompletedTurnOffDeletesItsStartAndEndChanges()
+    {
+        const string start = "2026-09-20T10:00:00.0000000Z";
+        const string end = "2026-09-20T11:00:00.0000000Z";
+        var db = new Mock<IAmazonDynamoDB>(MockBehavior.Strict);
+        db.Setup(x => x.QueryAsync(It.IsAny<QueryRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new QueryResponse { Items = [Change(end, true), Change(start, false)] });
+        db.Setup(x => x.TransactWriteItemsAsync(It.Is<TransactWriteItemsRequest>(request =>
+                request.TransactItems.Count == 2 &&
+                request.TransactItems[0].Delete.Key["ChangeDate"].S == start &&
+                request.TransactItems[1].Delete.Key["ChangeDate"].S == end &&
+                request.TransactItems[1].Delete.ExpressionAttributeValues[":isLight"].BOOL),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TransactWriteItemsResponse());
+        var store = CreateStore(db.Object);
+
+        Assert.That(await store.RemoveLastTurnOffAsync("a", CancellationToken.None), Is.True);
+        db.VerifyAll();
+    }
+
     private static Dictionary<string, AttributeValue> Change(DateTimeOffset at, bool isLight) => new()
     {
         ["ChangeDate"] = new(at.ToString("O")),
         ["IsLight"] = new() { BOOL = isLight }
     };
+
+    private static Dictionary<string, AttributeValue> Change(string at, bool isLight) => new()
+    {
+        ["ChangeDate"] = new(at),
+        ["IsLight"] = new() { BOOL = isLight }
+    };
+
+    private static DynamoDeviceStore CreateStore(IAmazonDynamoDB db) => new(db,
+        new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Devices:TableName"] = "devices",
+            ["Changes:TableName"] = "changes"
+        }).Build());
 }
 
 public class DynamoUserStoreTests

@@ -26,4 +26,5 @@ public interface IDeviceStore
     Task<bool> UpdateAsync(string deviceId, string chatId, DeviceSettings settings, CancellationToken cancellationToken);
     Task<bool> SetActiveAsync(string deviceId, string chatId, bool isActive, CancellationToken cancellationToken);
     Task<TurnOffPage> ListTurnOffsAsync(string deviceId, int page, CancellationToken cancellationToken);
+    Task<bool> RemoveLastTurnOffAsync(string deviceId, CancellationToken cancellationToken);
 }

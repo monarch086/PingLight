@@ -39,6 +39,13 @@ public sealed class DevicesController(IDeviceStore devices, IUserStore users) : 
         return Ok(await devices.ListTurnOffsAsync(deviceId, page, cancellationToken));
     }
 
+    [HttpDelete("{deviceId}/destinations/{chatId}/turn-offs/latest"), DeviceAccess]
+    public async Task<IActionResult> RemoveLastTurnOff(string deviceId, string chatId, CancellationToken cancellationToken)
+    {
+        if (!await devices.ExistsAsync(deviceId, chatId, cancellationToken)) return NotFound();
+        return await devices.RemoveLastTurnOffAsync(deviceId, cancellationToken) ? NoContent() : NotFound();
+    }
+
     private async Task<UserAccess?> CurrentUser(CancellationToken cancellationToken)
     {
         var userId = User.FindFirst("sub")?.Value;
