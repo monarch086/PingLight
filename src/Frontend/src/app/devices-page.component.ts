@@ -93,7 +93,7 @@ export class DevicesPageComponent implements OnInit, OnDestroy {
       await this.api.setActive(device.deviceId, device.chatId, isActive);
       if (this.destroyed) return;
       device.isActive = isActive;
-      this.notice = isActive ? 'Device notifications enabled.' : 'Device notifications disabled.';
+      this.notice = isActive ? 'Сповіщення пристрою увімкнено.' : 'Сповіщення пристрою вимкнено.';
     } catch (error) {
       if (!this.destroyed) this.error = errorMessage(error);
     } finally {
@@ -117,7 +117,7 @@ export class DevicesPageComponent implements OnInit, OnDestroy {
       await this.load();
       if (!this.destroyed) {
         this.pendingRemoval = undefined;
-        this.notice = 'Last turn-off removed.';
+        this.notice = 'Останнє відключення видалено.';
       }
     } catch (error) {
       if (!this.destroyed) {
@@ -142,7 +142,7 @@ export class DevicesPageComponent implements OnInit, OnDestroy {
       await this.api.save(device.deviceId, device.chatId, settings);
       if (this.destroyed) return;
       device.settings = settings;
-      this.notice = 'Settings saved. Future notifications will use your preferences.';
+      this.notice = 'Налаштування збережено. Наступні сповіщення враховуватимуть ваші параметри.';
       this.cancel();
     } catch (error) {
       if (!this.destroyed) this.error = errorMessage(error);
@@ -157,10 +157,10 @@ export class DevicesPageComponent implements OnInit, OnDestroy {
   }
 
   duration(startedAt: string, endedAt: string | null): string {
-    if (!endedAt) return 'Ongoing';
+    if (!endedAt) return 'Триває';
     const minutes = Math.max(0, Math.round((Date.parse(endedAt) - Date.parse(startedAt)) / 60000));
     const hours = Math.floor(minutes / 60);
     const remainder = minutes % 60;
-    return hours ? `${hours}h ${remainder}m` : `${remainder}m`;
+    return hours ? `${hours} год ${remainder} хв` : `${remainder} хв`;
   }
 }

@@ -1,9 +1,9 @@
 <header class="topbar">
-  <a class="brand" routerLink="/devices" aria-label="PingLight home"><span class="brand-mark">P</span>PingLight<span class="brand-dot"></span></a>
+  <a class="brand" routerLink="/devices" aria-label="Головна PingLight"><span class="brand-mark">P</span>PingLight<span class="brand-dot"></span></a>
   @if (auth.user$ | async; as user) {
     <div class="account">
-      <span>{{ user.profile.email || 'Your account' }}</span>
-      <button class="quiet" type="button" (click)="signOut()" [disabled]="session.pendingWrites > 0">Sign out</button>
+      <span>{{ user.profile.email || 'Ваш обліковий запис' }}</span>
+      <button class="quiet" type="button" (click)="signOut()" [disabled]="session.pendingWrites > 0">Вийти</button>
     </div>
   }
 </header>
@@ -14,16 +14,16 @@
   }
   @if (auth.user$ | async) {
     @if (loading) {
-      <p class="loading" role="status">Loading your workspace…</p>
+      <p class="loading" role="status">Завантажуємо ваш робочий простір…</p>
     }
     @if (!loading && !session.currentUser) {
-      <button type="button" (click)="loadUser()">Retry loading workspace</button>
+      <button type="button" (click)="loadUser()">Повторити завантаження</button>
     }
     @if (session.currentUser; as user) {
-      <nav class="page-nav" aria-label="Workspace">
-        <a routerLink="/devices" routerLinkActive="active" ariaCurrentWhenActive="page">{{ user.isSystemAdmin ? 'All devices' : 'My devices' }}</a>
+      <nav class="page-nav" aria-label="Робочий простір">
+        <a routerLink="/devices" routerLinkActive="active" ariaCurrentWhenActive="page">{{ user.isSystemAdmin ? 'Усі пристрої' : 'Мої пристрої' }}</a>
         @if (user.isSystemAdmin) {
-          <a routerLink="/users" routerLinkActive="active" ariaCurrentWhenActive="page">User device access</a>
+          <a routerLink="/users" routerLinkActive="active" ariaCurrentWhenActive="page">Доступ користувачів</a>
         }
       </nav>
       <router-outlet></router-outlet>
@@ -32,4 +32,4 @@
     <app-welcome [ready]="ready" [configured]="!!auth.config" (signIn)="signIn()"></app-welcome>
   }
 </main>
-<footer>PingLight <span>Small signals. A clearer picture.</span></footer>
+<footer>PingLight <span>Малі сигнали. Чіткіша картина.</span></footer>

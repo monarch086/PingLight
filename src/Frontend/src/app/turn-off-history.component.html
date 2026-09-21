@@ -1,40 +1,40 @@
-<a class="back-link" routerLink="/devices">← Back to devices</a>
+<a class="back-link" routerLink="/devices">← Назад до пристроїв</a>
 
 <section class="page-heading">
   <div>
-    <p class="eyebrow">DEVICE ACTIVITY</p>
-    <h1>Turn-off history</h1>
-    <p>{{ deviceId }} · Telegram destination: {{ chatId }}</p>
+    <p class="eyebrow">АКТИВНІСТЬ ПРИСТРОЮ</p>
+    <h1>Історія відключень</h1>
+    <p>{{ deviceId }} · Отримувач Telegram: {{ chatId }}</p>
   </div>
-  <button class="secondary" type="button" (click)="load()" [disabled]="loading">Refresh history</button>
+  <button class="secondary" type="button" (click)="load()" [disabled]="loading">Оновити історію</button>
 </section>
 
 @if (error) {
   <div class="alert error" role="alert">{{ error }}</div>
 }
 @if (loading) {
-  <p class="loading" role="status">Loading turn-off history…</p>
+  <p class="loading" role="status">Завантажуємо історію відключень…</p>
 } @else if (!periods.length && !error) {
   <section class="panel empty">
-    <h2>No turn-offs recorded</h2>
-    <p>This device has no turn-off periods to show.</p>
+    <h2>Відключень не зафіксовано</h2>
+    <p>Для цього пристрою немає періодів відключення.</p>
   </section>
 } @else if (periods.length) {
-  <section class="panel history" aria-label="Turn-off periods">
+  <section class="panel history" aria-label="Періоди відключення">
     @for (period of periods; track period.startedAt) {
       <article class="period">
-        <div><span>Turned off</span><strong>{{ period.startedAt | date:'medium' }}</strong></div>
-        <div><span>Turned on</span><strong>{{ period.endedAt ? (period.endedAt | date:'medium') : 'Still off' }}</strong></div>
-        <div><span>Duration</span><strong>{{ duration(period) }}</strong></div>
+        <div><span>Початок відключення</span><strong>{{ period.startedAt | date:'medium' }}</strong></div>
+        <div><span>Відновлення</span><strong>{{ period.endedAt ? (period.endedAt | date:'medium') : 'Відключення триває' }}</strong></div>
+        <div><span>Тривалість</span><strong>{{ duration(period) }}</strong></div>
       </article>
     }
   </section>
 }
 
 @if (hasPreviousPage || hasNextPage) {
-  <nav class="pagination" aria-label="Turn-off history pages">
-    <button class="secondary" type="button" (click)="goToPage(page - 1)" [disabled]="!hasPreviousPage || loading">Previous</button>
-    <span>Page {{ page }}</span>
-    <button class="secondary" type="button" (click)="goToPage(page + 1)" [disabled]="!hasNextPage || loading">Next</button>
+  <nav class="pagination" aria-label="Сторінки історії відключень">
+    <button class="secondary" type="button" (click)="goToPage(page - 1)" [disabled]="!hasPreviousPage || loading">Попередня</button>
+    <span>Сторінка {{ page }}</span>
+    <button class="secondary" type="button" (click)="goToPage(page + 1)" [disabled]="!hasNextPage || loading">Наступна</button>
   </nav>
 }

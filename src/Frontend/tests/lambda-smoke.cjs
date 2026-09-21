@@ -21,7 +21,7 @@ setTimeout(() => { console.error('Lambda SSR smoke test timed out.'); process.ex
   for (const path of ['/devices', '/users', '/auth/callback']) {
     const response = await request(path, path.includes('callback') ? { code: 'smoke-code', state: 'smoke-state' } : null);
     assert.equal(response.statusCode, 200, path + ': ' + body(response));
-    assert.match(body(response), /Stay connected/);
+    assert.match(body(response), /Залишайтеся на зв’язку/);
     assert.doesNotMatch(body(response), /smoke-code/);
   }
   const config = await request('/assets/app-config.json');

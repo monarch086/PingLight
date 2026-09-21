@@ -2,10 +2,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 export function errorMessage(error: unknown): string {
   if (error instanceof HttpErrorResponse) {
-    if (error.status === 401) return 'Your session has ended. Please sign in again.';
-    if (error.status === 404 || error.status === 403) return 'This device is no longer available to your account.';
-    if (error.status === 400) return 'Please check your settings and try again.';
-    return 'Unable to reach your devices. Please try again.';
+    if (error.status === 401) return 'Сеанс завершено. Увійдіть ще раз.';
+    if (error.status === 404 || error.status === 403) return 'Цей пристрій більше не доступний для вашого облікового запису.';
+    if (error.status === 400) return 'Перевірте налаштування та спробуйте ще раз.';
+    return 'Не вдалося зв’язатися з вашими пристроями. Спробуйте ще раз.';
   }
-  return error instanceof Error ? error.message : 'Something went wrong. Please try again.';
+  return error instanceof UserFacingError ? error.message : 'Сталася помилка. Спробуйте ще раз.';
 }
+
+export class UserFacingError extends Error { }

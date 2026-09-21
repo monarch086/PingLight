@@ -3,6 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
 import type { UserManager, User } from 'oidc-client-ts';
+import { UserFacingError } from './error-message';
 
 export interface AppConfig {
   apiUrl: string;
@@ -23,14 +24,14 @@ export class AuthService {
   async initialize(): Promise<void> {
     if (!isPlatformBrowser(this.platformId)) return;
     const response = await fetch('/assets/app-config.json', { cache: 'no-store' });
-    if (!response.ok) throw new Error('Unable to load application configuration. Please try again.');
+    if (!response.ok) throw new UserFacingError('Не вдалося завантажити конфігурацію застосунку. Спробуйте ще раз.');
     const config = await response.json() as AppConfig;
     if (!config.apiUrl || !config.authority || !config.clientId || !config.cognitoDomain)
-      throw new Error('Account access is not available yet. Please try again later.');
+      throw new UserFacingError('Доступ до облікового запису поки недоступний. Спробуйте пізніше.');
     for (const address of [config.apiUrl, config.authority, config.cognitoDomain]) {
       const url = new URL(address);
       if (url.protocol !== 'https:' && !(url.protocol === 'http:' && url.hostname === 'localhost'))
-        throw new Error('Account access is not available. Please contact support.');
+        throw new UserFacingError('Доступ до облікового запису недоступний. Зверніться до служби підтримки.');
     }
     this.config = config;
     const { UserManager, WebStorageStateStore } = await import('oidc-client-ts');
@@ -61,7 +62,7 @@ export class AuthService {
         if (typeof state?.returnUrl === 'string' && /^\/(devices|users)([?#]|$)/.test(state.returnUrl))
           returnUrl = state.returnUrl;
       } catch {
-        throw new Error('Sign-in could not be completed. Please sign in again.');
+        throw new UserFacingError('Не вдалося завершити вхід. Спробуйте увійти ще раз.');
       } finally {
         await this.router.navigateByUrl(returnUrl, { replaceUrl: true });
       }
@@ -73,7 +74,7 @@ export class AuthService {
   }
 
   async signIn(): Promise<void> {
-    if (!this.manager) throw new Error('Account access is not available yet.');
+    if (!this.manager) throw new UserFacingError('Доступ до облікового запису поки недоступний.');
     await this.manager.signinRedirect({ state: { returnUrl: this.router.url } });
   }
 
@@ -91,7 +92,7 @@ export class AuthService {
     const user = await this.manager?.getUser();
     if (!user || user.expired) {
       this.user$.next(null);
-      throw new Error('Your session has ended. Please sign in again.');
+      throw new UserFacingError('Сеанс завершено. Увійдіть ще раз.');
     }
     return user.access_token;
   }

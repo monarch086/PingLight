@@ -69,7 +69,7 @@ export class UsersPageComponent implements OnInit, OnDestroy {
       if (this.destroyed) return;
       if (granted) user.grants = [...user.grants, { deviceId: device.deviceId, chatId: device.chatId }];
       else user.grants = user.grants.filter(item => item.deviceId !== device.deviceId || item.chatId !== device.chatId);
-      this.notice = granted ? 'Device access granted.' : 'Device access removed.';
+      this.notice = granted ? 'Доступ до пристрою надано.' : 'Доступ до пристрою скасовано.';
     } catch (error) {
       if (!this.destroyed) this.error = errorMessage(error);
     } finally {

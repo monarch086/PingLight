@@ -1,4 +1,6 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { LOCALE_ID, Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { registerLocaleData } from '@angular/common';
+import localeUk from '@angular/common/locales/uk';
 import { Subscription } from 'rxjs';
 import { AuthService } from './auth.service';
 import { UsersService } from './users.service';
@@ -8,11 +10,14 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { WelcomeComponent } from './welcome.component';
 import { AsyncPipe } from '@angular/common';
 
+registerLocaleData(localeUk);
+
 @Component({
     selector: 'app-root',
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.scss'],
-    imports: [RouterLink, RouterLinkActive, RouterOutlet, WelcomeComponent, AsyncPipe]
+    imports: [RouterLink, RouterLinkActive, RouterOutlet, WelcomeComponent, AsyncPipe],
+    providers: [{ provide: LOCALE_ID, useValue: 'uk-UA' }]
 })
 export class AppComponent implements OnInit, OnDestroy {
   auth = inject(AuthService);
@@ -64,6 +69,6 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   async signOut(): Promise<void> {
-    try { await this.auth.signOut(); } catch { this.error = 'Unable to sign out. Please try again.'; }
+    try { await this.auth.signOut(); } catch { this.error = 'Не вдалося вийти. Спробуйте ще раз.'; }
   }
 }

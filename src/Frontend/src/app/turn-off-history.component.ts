@@ -63,10 +63,10 @@ export class TurnOffHistoryComponent implements OnInit, OnDestroy {
   }
 
   duration(period: TurnOffPeriod): string {
-    if (!period.endedAt) return 'Ongoing';
+    if (!period.endedAt) return 'Триває';
     const minutes = Math.max(0, Math.round((Date.parse(period.endedAt) - Date.parse(period.startedAt)) / 60000));
     const hours = Math.floor(minutes / 60);
     const remainder = minutes % 60;
-    return hours ? `${hours}h ${remainder}m` : `${remainder}m`;
+    return hours ? `${hours} год ${remainder} хв` : `${remainder} хв`;
   }
 }

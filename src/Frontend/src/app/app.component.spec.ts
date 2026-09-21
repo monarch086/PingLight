@@ -73,7 +73,7 @@ describe('Management dashboard', () => {
 
   it('shows sign-in without requesting private data for anonymous visitors', () => {
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Sign in / create account');
+    expect(fixture.nativeElement.textContent).toContain('Увійти / створити обліковий запис');
     expect(api.list).not.toHaveBeenCalled();
     expect(usersApi.me).not.toHaveBeenCalled();
   });
@@ -126,7 +126,7 @@ describe('Management dashboard', () => {
     await component.save();
     expect(api.save).toHaveBeenCalledWith('home', 'chat-a', { ...device.settings, description: 'Updated' });
     expect(component.devices[0].settings.description).toBe('Updated');
-    expect(component.notice).toContain('Settings saved');
+    expect(component.notice).toContain('Налаштування збережено');
     expect(component.draft).toBeUndefined();
   });
 
@@ -139,8 +139,8 @@ describe('Management dashboard', () => {
     expect(api.setActive).toHaveBeenCalledWith('home', 'chat-a', false);
     expect(component.devices[0].isActive).toBeFalse();
     expect(toggle.checked).toBeFalse();
-    expect(fixture.nativeElement.querySelector('.notification-state').textContent).toContain('Disabled');
-    expect(component.notice).toContain('disabled');
+    expect(fixture.nativeElement.querySelector('.notification-state').textContent).toContain('Вимкнено');
+    expect(component.notice).toContain('вимкнено');
   });
 
   it('keeps the notification state when the direct update fails', async () => {
@@ -155,7 +155,7 @@ describe('Management dashboard', () => {
 
   it('shows the last turn-off and opens paged turn-off history', async () => {
     await signIn();
-    expect(fixture.nativeElement.querySelector('.last-turn-off').textContent).toContain('1h 30m');
+    expect(fixture.nativeElement.querySelector('.last-turn-off').textContent).toContain('1 год 30 хв');
     fixture.nativeElement.querySelector('.history-link').click();
     await settle();
     expect(TestBed.inject(Router).url).toContain('/devices/home/destinations/chat-a/turn-offs');
@@ -180,8 +180,8 @@ describe('Management dashboard', () => {
     await settle();
     expect(api.removeLastTurnOff).toHaveBeenCalledWith('home', 'chat-a');
     expect(api.list).toHaveBeenCalledTimes(2);
-    expect(fixture.nativeElement.querySelector('.last-turn-off').textContent).toContain('No turn-offs recorded');
-    expect(devicesPage().notice).toContain('removed');
+    expect(fixture.nativeElement.querySelector('.last-turn-off').textContent).toContain('Відключень не зафіксовано');
+    expect(devicesPage().notice).toContain('видалено');
   });
 
   it('ignores a device response arriving after sign-out', async () => {
@@ -214,7 +214,7 @@ describe('Management dashboard', () => {
     await signIn();
     await TestBed.inject(Router).navigateByUrl('/users');
     await settle();
-    expect(fixture.nativeElement.textContent).toContain('User device access');
+    expect(fixture.nativeElement.textContent).toContain('Доступ користувачів до пристроїв');
     const component = usersPage();
     const user = component.users[0];
     await component.setGrant(user, component.devices[0], true);
@@ -232,7 +232,7 @@ describe('Management dashboard', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     await settle();
-    expect(fixture.nativeElement.querySelector('h1').textContent).toBe('User device access');
+    expect(fixture.nativeElement.querySelector('h1').textContent).toBe('Доступ користувачів до пристроїв');
     expect(fixture.nativeElement.querySelector('.device-list')).toBeNull();
     await fixture.whenStable();
     fixture.detectChanges();
@@ -247,12 +247,12 @@ describe('Management dashboard', () => {
     fixture.detectChanges();
     expect(TestBed.inject(Router).url).toBe('/users');
     await settle();
-    expect(fixture.nativeElement.querySelector('h1').textContent).toBe('User device access');
+    expect(fixture.nativeElement.querySelector('h1').textContent).toBe('Доступ користувачів до пристроїв');
     fixture.nativeElement.querySelector('nav a[href="/devices"]').click();
     await fixture.whenStable();
     fixture.detectChanges();
     expect(TestBed.inject(Router).url).toBe('/devices');
-    expect(fixture.nativeElement.querySelector('h1').textContent).toBe('All devices');
+    expect(fixture.nativeElement.querySelector('h1').textContent).toBe('Усі пристрої');
   });
 
   it('redirects non-admin users away from user access after loading their role', async () => {
