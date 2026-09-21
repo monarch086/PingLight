@@ -72,9 +72,9 @@ dd {
 }
 
 .editor {
-  width:340px;
+  width:min(100%,520px);
   padding:26px;
-  flex-shrink:0
+  margin:auto
 }
 
 input:not([type="checkbox"]) {

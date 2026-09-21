@@ -21,9 +21,10 @@
 }
 
 <div class="workspace">
-  <section class="device-list" aria-label="Your devices">
-    @for (device of devices; track device) {
-      <article class="panel device" [class.selected]="selected === device">
+  @if (!selected) {
+    <section class="device-list" aria-label="Your devices">
+      @for (device of devices; track device) {
+        <article class="panel device">
         <div class="device-top"><span class="device-icon" aria-hidden="true">⌁</span>
         <span class="badge" [class.muted]="!device.isActive">{{ device.isActive ? 'Notifications active' : 'Notifications paused' }}</span>
       </div>
@@ -43,12 +44,13 @@
         (change)="setActive(device, $any($event.target).checked)">
     </label>
     <button class="secondary full" type="button" (click)="edit(device)" [disabled]="saving || (!!selected && selected !== device)">Edit settings</button>
-  </article>
-}
-</section>
+        </article>
+      }
+    </section>
+  }
 
-@if (selected && draft) {
-  <section class="panel editor" aria-labelledby="settings-title">
+  @if (selected && draft) {
+    <section class="panel editor" aria-labelledby="settings-title">
     <p class="eyebrow">DEVICE PREFERENCES</p><h2 id="settings-title">Edit settings</h2>
     <p class="device-id">{{ selected.deviceId }}</p>
     <p class="device-id">Telegram destination: {{ selected.chatId }}</p>
@@ -70,6 +72,6 @@
         <button class="quiet" type="button" (click)="cancel()">Cancel</button></div>
       </fieldset>
     </form>
-  </section>
-}
+    </section>
+  }
 </div>

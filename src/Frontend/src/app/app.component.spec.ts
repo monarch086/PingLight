@@ -97,6 +97,22 @@ describe('Management dashboard', () => {
     expect(component.error).toBeTruthy();
   });
 
+  it('shows only the editor while changing device settings', async () => {
+    api.list.and.resolveTo({ items: [structuredClone(device), {
+      ...structuredClone(device), deviceId: 'office', chatId: 'chat-b'
+    }] });
+    await signIn();
+    expect(fixture.nativeElement.querySelectorAll('.device').length).toBe(2);
+    (fixture.nativeElement.querySelector('.device button') as HTMLButtonElement).click();
+    await settle();
+    expect(fixture.nativeElement.querySelectorAll('.device').length).toBe(0);
+    expect(fixture.nativeElement.querySelector('.editor')).not.toBeNull();
+    (fixture.nativeElement.querySelector('.editor button[type="button"]') as HTMLButtonElement).click();
+    await settle();
+    expect(fixture.nativeElement.querySelectorAll('.device').length).toBe(2);
+    expect(fixture.nativeElement.querySelector('.editor')).toBeNull();
+  });
+
   it('saves only editable settings and confirms success', async () => {
     await signIn();
     const component = devicesPage();
