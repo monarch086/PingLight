@@ -78,6 +78,16 @@ describe('Management dashboard', () => {
     expect(usersApi.me).not.toHaveBeenCalled();
   });
 
+  it('opens the PingLight sign-in form without an external redirect', async () => {
+    await settle();
+    (fixture.nativeElement.querySelector('.welcome button') as HTMLButtonElement).click();
+    await settle();
+    expect(fixture.nativeElement.querySelector('app-auth-page')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('input[autocomplete="email"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('input[autocomplete="current-password"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('a[href*="amazoncognito"]')).toBeNull();
+  });
+
   it('loads assigned devices after sign-in and clears them on sign-out', async () => {
     await signIn();
     expect(fixture.nativeElement.textContent).toContain('Home');

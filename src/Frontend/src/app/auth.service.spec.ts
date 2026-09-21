@@ -1,65 +1,86 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
-import { User, UserManager } from 'oidc-client-ts';
 import { AuthService } from './auth.service';
+import { CognitoAuthClient } from './cognito-auth-client.service';
 
-describe('Sign-in return route', () => {
-  let originalUrl: string;
+describe('AuthService', () => {
   let auth: AuthService;
-  let router: Router;
-  let getUser: jasmine.Spy;
+  let cognito: jasmine.SpyObj<CognitoAuthClient>;
 
   beforeEach(() => {
-    originalUrl = window.location.href;
-    TestBed.configureTestingModule({ providers: [provideRouter([
-      { path: 'users', children: [] }, { path: 'devices', children: [] }
-    ])] });
+    cognito = jasmine.createSpyObj<CognitoAuthClient>('CognitoAuthClient', [
+      'configure', 'getCurrentUser', 'fetchAuthSession', 'signIn', 'signUp', 'confirmSignUp',
+      'resendSignUpCode', 'resetPassword', 'confirmResetPassword', 'signOut'
+    ]);
+    cognito.getCurrentUser.and.rejectWith(Object.assign(new Error(), { name: 'UserUnAuthenticatedException' }));
+    TestBed.configureTestingModule({ providers: [{ provide: CognitoAuthClient, useValue: cognito }] });
     auth = TestBed.inject(AuthService);
-    router = TestBed.inject(Router);
     spyOn(window, 'fetch').and.resolveTo(new Response(JSON.stringify({
-      apiUrl: 'https://api.example.test', authority: 'https://auth.example.test',
-      clientId: 'test-client', cognitoDomain: 'https://login.example.test'
+      apiUrl: 'https://api.example.test', clientId: 'test-client', userPoolId: 'eu-central-1_test'
     })));
-    spyOn(UserManager.prototype, 'clearStaleState').and.resolveTo();
-    getUser = spyOn(UserManager.prototype, 'getUser').and.resolveTo(null);
   });
 
-  afterEach(() => window.history.replaceState({}, '', originalUrl));
-
-  it('includes the selected page in the sign-in transaction', async () => {
-    const signIn = spyOn(UserManager.prototype, 'signinRedirect').and.resolveTo();
-    await router.navigateByUrl('/users');
+  it('configures Cognito without opening a hosted login page', async () => {
     await auth.initialize();
-    await auth.signIn();
-    expect(signIn).toHaveBeenCalledWith({ state: { returnUrl: '/users' } });
-  });
-
-  it('restores an unexpired user after a page refresh', async () => {
-    const restored = { expired: false, profile: { email: 'person@example.test' } } as User;
-    getUser.and.resolveTo(restored);
-    await auth.initialize();
-    expect(auth.user$.value).toBe(restored);
-  });
-
-  it('clears an expired stored user', async () => {
-    getUser.and.resolveTo({ expired: true } as User);
-    const removeUser = spyOn(UserManager.prototype, 'removeUser').and.resolveTo();
-    await auth.initialize();
-    expect(removeUser).toHaveBeenCalled();
+    expect(cognito.configure).toHaveBeenCalledWith('eu-central-1_test', 'test-client');
     expect(auth.user$.value).toBeNull();
   });
 
-  it('returns to the selected page after the callback', async () => {
-    window.history.replaceState({}, '', '/auth/callback?code=test');
-    spyOn(UserManager.prototype, 'signinRedirectCallback').and.resolveTo({ state: { returnUrl: '/users' } } as User);
+  it('restores an existing session after a page refresh', async () => {
+    cognito.getCurrentUser.and.resolveTo({ username: 'person', userId: 'user-a' });
+    cognito.fetchAuthSession.and.resolveTo(session('person@example.test'));
     await auth.initialize();
-    expect(router.url).toBe('/users');
+    expect(auth.user$.value?.profile.email).toBe('person@example.test');
   });
 
-  it('uses the device page for an untrusted return URL', async () => {
-    window.history.replaceState({}, '', '/auth/callback?code=test');
-    spyOn(UserManager.prototype, 'signinRedirectCallback').and.resolveTo({ state: { returnUrl: '//example.test' } } as User);
+  it('signs in through the SRP flow and publishes the session', async () => {
+    cognito.signIn.and.resolveTo({ isSignedIn: true, nextStep: { signInStep: 'DONE' } });
+    cognito.fetchAuthSession.and.resolveTo(session('person@example.test'));
     await auth.initialize();
-    expect(router.url).toBe('/devices');
+    const result = await auth.signIn(' Person@Example.Test ', 'Password1234');
+    expect(result).toBe('SIGNED_IN');
+    expect(cognito.signIn).toHaveBeenCalledWith({
+      username: 'person@example.test', password: 'Password1234', options: { authFlowType: 'USER_SRP_AUTH' }
+    });
+    expect(auth.user$.value?.profile.email).toBe('person@example.test');
+  });
+
+  it('opens confirmation for an unconfirmed account', async () => {
+    cognito.signIn.and.rejectWith(Object.assign(new Error(), { name: 'UserNotConfirmedException' }));
+    await auth.initialize();
+    expect(await auth.signIn('person@example.test', 'Password1234')).toBe('CONFIRM_SIGN_UP');
+  });
+
+  it('opens password recovery when Cognito requires a reset', async () => {
+    cognito.signIn.and.rejectWith(Object.assign(new Error(), { name: 'PasswordResetRequiredException' }));
+    await auth.initialize();
+    expect(await auth.signIn('person@example.test', 'Password1234')).toBe('RESET_PASSWORD');
+  });
+
+  it('registers a normalized email address', async () => {
+    cognito.signUp.and.resolveTo({
+      isSignUpComplete: false,
+      nextStep: { signUpStep: 'CONFIRM_SIGN_UP', codeDeliveryDetails: { deliveryMedium: 'EMAIL' } }
+    });
+    await auth.initialize();
+    await auth.signUp(' Person@Example.Test ', 'Password1234');
+    expect(cognito.signUp).toHaveBeenCalledWith({
+      username: 'person@example.test', password: 'Password1234',
+      options: { userAttributes: { email: 'person@example.test' } }
+    });
+  });
+
+  it('returns the Cognito access token for API calls', async () => {
+    cognito.fetchAuthSession.and.resolveTo(session('person@example.test'));
+    await auth.initialize();
+    expect(await auth.accessToken()).toBe('access-token');
   });
 });
+
+function session(email: string): never {
+  return {
+    tokens: {
+      accessToken: { payload: {}, toString: () => 'access-token' },
+      idToken: { payload: { email }, toString: () => 'id-token' }
+    }
+  } as never;
+}

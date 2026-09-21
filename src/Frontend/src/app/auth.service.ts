@@ -1,99 +1,165 @@
-import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { Router } from '@angular/router';
-import type { UserManager, User } from 'oidc-client-ts';
+import { CognitoAuthClient } from './cognito-auth-client.service';
 import { UserFacingError } from './error-message';
 
 export interface AppConfig {
   apiUrl: string;
-  authority: string;
   clientId: string;
-  cognitoDomain: string;
+  userPoolId: string;
 }
+
+export interface SignedInUser {
+  profile: { email?: string };
+}
+
+export type SignInResult = 'SIGNED_IN' | 'CONFIRM_SIGN_UP' | 'RESET_PASSWORD';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private platformId = inject(PLATFORM_ID);
-  private router = inject(Router);
+  private cognito = inject(CognitoAuthClient);
 
-  readonly user$ = new BehaviorSubject<User | null>(null);
+  readonly user$ = new BehaviorSubject<SignedInUser | null>(null);
   config?: AppConfig;
-  private manager?: UserManager;
 
   async initialize(): Promise<void> {
     if (!isPlatformBrowser(this.platformId)) return;
     const response = await fetch('/assets/app-config.json', { cache: 'no-store' });
     if (!response.ok) throw new UserFacingError('Не вдалося завантажити конфігурацію застосунку. Спробуйте ще раз.');
     const config = await response.json() as AppConfig;
-    if (!config.apiUrl || !config.authority || !config.clientId || !config.cognitoDomain)
+    if (!config.apiUrl || !config.clientId || !config.userPoolId)
       throw new UserFacingError('Доступ до облікового запису поки недоступний. Спробуйте пізніше.');
-    for (const address of [config.apiUrl, config.authority, config.cognitoDomain]) {
-      const url = new URL(address);
-      if (url.protocol !== 'https:' && !(url.protocol === 'http:' && url.hostname === 'localhost'))
-        throw new UserFacingError('Доступ до облікового запису недоступний. Зверніться до служби підтримки.');
-    }
+    const apiUrl = new URL(config.apiUrl);
+    if (apiUrl.protocol !== 'https:' && !(apiUrl.protocol === 'http:' && apiUrl.hostname === 'localhost'))
+      throw new UserFacingError('Доступ до облікового запису недоступний. Зверніться до служби підтримки.');
     this.config = config;
-    const { UserManager, WebStorageStateStore } = await import('oidc-client-ts');
-    this.manager = new UserManager({
-      authority: config.authority,
-      client_id: config.clientId,
-      redirect_uri: window.location.origin + '/auth/callback',
-      response_type: 'code',
-      scope: 'openid email profile',
-      automaticSilentRenew: true,
-      // Keep the login within this browser tab so a page refresh can restore it.
-      userStore: new WebStorageStateStore({ store: window.sessionStorage }),
-      stateStore: new WebStorageStateStore({ store: window.sessionStorage }),
-      loadUserInfo: false,
-      revokeTokenTypes: ['refresh_token']
-    });
-    this.manager.events.addUserLoaded(user => this.user$.next(user));
-    this.manager.events.addUserUnloaded(() => this.user$.next(null));
-    this.manager.events.addAccessTokenExpired(() => this.user$.next(null));
-    this.manager.events.addSilentRenewError(() => this.user$.next(null));
-    await this.manager.clearStaleState();
-    if (window.location.pathname === '/auth/callback') {
-      let returnUrl = '/devices';
-      try {
-        const user = await this.manager.signinRedirectCallback();
-        this.user$.next(user);
-        const state = user.state as { returnUrl?: unknown } | undefined;
-        if (typeof state?.returnUrl === 'string' && /^\/(devices|users)([?#]|$)/.test(state.returnUrl))
-          returnUrl = state.returnUrl;
-      } catch {
-        throw new UserFacingError('Не вдалося завершити вхід. Спробуйте увійти ще раз.');
-      } finally {
-        await this.router.navigateByUrl(returnUrl, { replaceUrl: true });
-      }
-      return;
+    this.cognito.configure(config.userPoolId, config.clientId);
+    try {
+      await this.cognito.getCurrentUser();
+      await this.publishSession();
+    } catch (error) {
+      if (!isNoCurrentUser(error)) throw error;
     }
-    const user = await this.manager.getUser();
-    if (user && !user.expired) this.user$.next(user);
-    else if (user) await this.manager.removeUser();
   }
 
-  async signIn(): Promise<void> {
-    if (!this.manager) throw new UserFacingError('Доступ до облікового запису поки недоступний.');
-    await this.manager.signinRedirect({ state: { returnUrl: this.router.url } });
+  async signIn(email: string, password: string): Promise<SignInResult> {
+    this.ensureConfigured();
+    try {
+      const result = await this.cognito.signIn({
+        username: normalizeEmail(email),
+        password,
+        options: { authFlowType: 'USER_SRP_AUTH' }
+      });
+      switch (result.nextStep.signInStep) {
+        case 'DONE':
+          await this.publishSession();
+          return 'SIGNED_IN';
+        case 'CONFIRM_SIGN_UP': return 'CONFIRM_SIGN_UP';
+        case 'RESET_PASSWORD': return 'RESET_PASSWORD';
+        default: throw new UserFacingError('Цей спосіб входу не підтримується. Зверніться до служби підтримки.');
+      }
+    } catch (error) {
+      if (errorName(error) === 'UserNotConfirmedException') return 'CONFIRM_SIGN_UP';
+      if (errorName(error) === 'PasswordResetRequiredException') return 'RESET_PASSWORD';
+      throw authError(error);
+    }
+  }
+
+  async signUp(email: string, password: string): Promise<void> {
+    this.ensureConfigured();
+    try {
+      await this.cognito.signUp({
+        username: normalizeEmail(email),
+        password,
+        options: { userAttributes: { email: normalizeEmail(email) } }
+      });
+    } catch (error) { throw authError(error); }
+  }
+
+  async confirmSignUp(email: string, code: string): Promise<void> {
+    this.ensureConfigured();
+    try {
+      await this.cognito.confirmSignUp({ username: normalizeEmail(email), confirmationCode: code.trim() });
+    } catch (error) { throw authError(error); }
+  }
+
+  async resendSignUpCode(email: string): Promise<void> {
+    this.ensureConfigured();
+    try {
+      await this.cognito.resendSignUpCode({ username: normalizeEmail(email) });
+    } catch (error) { throw authError(error); }
+  }
+
+  async requestPasswordReset(email: string): Promise<void> {
+    this.ensureConfigured();
+    try { await this.cognito.resetPassword({ username: normalizeEmail(email) }); }
+    catch (error) { throw authError(error); }
+  }
+
+  async confirmPasswordReset(email: string, code: string, newPassword: string): Promise<void> {
+    this.ensureConfigured();
+    try {
+      await this.cognito.confirmResetPassword({
+        username: normalizeEmail(email),
+        confirmationCode: code.trim(),
+        newPassword
+      });
+    } catch (error) { throw authError(error); }
   }
 
   async signOut(): Promise<void> {
-    if (!this.manager || !this.config) return;
-    try { await this.manager.revokeTokens(['refresh_token']); } catch { /* Always clear the local session. */ }
-    await this.manager.removeUser();
-    const logout = new URL('/logout', this.config.cognitoDomain);
-    logout.searchParams.set('client_id', this.config.clientId);
-    logout.searchParams.set('logout_uri', window.location.origin + '/');
-    window.location.assign(logout.toString());
+    try { await this.cognito.signOut(); }
+    finally { this.user$.next(null); }
   }
 
   async accessToken(): Promise<string> {
-    const user = await this.manager?.getUser();
-    if (!user || user.expired) {
+    try {
+      const session = await this.cognito.fetchAuthSession();
+      const token = session.tokens?.accessToken;
+      if (!token) throw new Error('No access token');
+      return token.toString();
+    } catch {
       this.user$.next(null);
       throw new UserFacingError('Сеанс завершено. Увійдіть ще раз.');
     }
-    return user.access_token;
   }
+
+  private async publishSession(): Promise<void> {
+    const session = await this.cognito.fetchAuthSession();
+    const email = session.tokens?.idToken?.payload['email'];
+    this.user$.next({ profile: { email: typeof email === 'string' ? email : undefined } });
+  }
+
+  private ensureConfigured(): void {
+    if (!this.config) throw new UserFacingError('Доступ до облікового запису поки недоступний.');
+  }
+}
+
+function normalizeEmail(email: string): string { return email.trim().toLowerCase(); }
+
+function errorName(error: unknown): string {
+  return typeof error === 'object' && error !== null && 'name' in error ? String(error.name) : '';
+}
+
+function isNoCurrentUser(error: unknown): boolean {
+  return errorName(error) === 'UserUnAuthenticatedException';
+}
+
+function authError(error: unknown): UserFacingError {
+  const messages: Record<string, string> = {
+    AliasExistsException: 'Обліковий запис із цією електронною адресою вже існує.',
+    CodeMismatchException: 'Код неправильний. Перевірте його та спробуйте ще раз.',
+    ExpiredCodeException: 'Термін дії коду минув. Запросіть новий код.',
+    InvalidPasswordException: 'Пароль не відповідає вимогам безпеки.',
+    LimitExceededException: 'Забагато спроб. Зачекайте трохи та спробуйте ще раз.',
+    NotAuthorizedException: 'Неправильна електронна адреса або пароль.',
+    PasswordResetRequiredException: 'Потрібно створити новий пароль.',
+    TooManyRequestsException: 'Забагато спроб. Зачекайте трохи та спробуйте ще раз.',
+    UserAlreadyAuthenticatedException: 'Ви вже ввійшли до облікового запису.',
+    UsernameExistsException: 'Обліковий запис із цією електронною адресою вже існує.',
+    UserNotFoundException: 'Неправильна електронна адреса або пароль.'
+  };
+  return new UserFacingError(messages[errorName(error)] || 'Не вдалося виконати дію. Спробуйте ще раз.');
 }

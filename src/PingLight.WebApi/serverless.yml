@@ -25,8 +25,9 @@ custom:
     type: COGNITO_USER_POOLS
     arn:
       Fn::GetAtt: [UserPool, Arn]
+    # Direct Cognito SDK authentication issues access tokens with this reserved scope.
     scopes:
-      - openid
+      - aws.cognito.signin.user.admin
 
 provider:
   name: aws
@@ -183,6 +184,9 @@ resources:
           Ref: UserPool
         ClientName: pinglight-${sls:stage}-frontend
         GenerateSecret: false
+        ExplicitAuthFlows:
+          - ALLOW_USER_SRP_AUTH
+          - ALLOW_REFRESH_TOKEN_AUTH
         AllowedOAuthFlowsUserPoolClient: true
         AllowedOAuthFlows: [code]
         AllowedOAuthScopes: [openid, email, profile]

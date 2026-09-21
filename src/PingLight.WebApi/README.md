@@ -61,14 +61,13 @@ This creates the separate `pinglight-management-dev` stack, but attaches its
 `/devices` and `/users` resources to the REST API owned by `pinglight-dev`. It does
 not create another API Gateway. The existing custom-domain mapping therefore makes
 the routes available below `https://dev.api.pinglight.xyz`. The management stack
-also creates a Cognito authorizer, user pool, public PKCE client, hosted login
-domain, and retained `PingLight.dev.Users` DynamoDB table. It references the
+also creates a Cognito authorizer, user pool, public browser client, hosted login
+domain, and retained `PingLight.dev.Users` DynamoDB table. The hosted domain is
+retained for compatibility but is not used by the frontend. The stack references the
 existing DeviceConfigs table without replacing it.
 
-Dev login redirects allow `https://dev.pinglight.xyz` and
-`http://localhost:4201`. For another stage, explicitly pass
-`--param="frontendOrigin=https://your-domain"`. The user pool and Users table are
-retained on stack deletion or replacement.
+For another stage, explicitly pass `--param="frontendOrigin=https://your-domain"`.
+The user pool and Users table are retained on stack deletion or replacement.
 
 After deployment, from `src/Frontend`:
 
@@ -84,9 +83,10 @@ domain. `configure-api.ps1` reads the management stack's `ApiUrl` output, which 
 `https://dev.api.pinglight.xyz` for dev. `app-config.json` contains only public
 endpoints and client IDs. Generate it before building.
 
-Sign-in uses authorization code + PKCE through `oidc-client-ts`. The OIDC user and
-temporary login transaction are stored in browser session storage, preserving the
-login across refreshes in the current tab. Sign-out removes the stored user.
+Sign-in, sign-up, account confirmation, and password recovery use Cognito's SRP
+flow through Amplify Auth without redirecting to the Cognito hosted domain. Tokens
+are stored in browser session storage, preserving login across refreshes in the
+current tab. Sign-out removes the stored user.
 Existing access tokens can remain valid for up to 15 minutes after sign-out.
 
 ## Bootstrap the first system administrator

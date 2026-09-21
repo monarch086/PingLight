@@ -9,6 +9,7 @@ import { errorMessage } from './error-message';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { WelcomeComponent } from './welcome.component';
 import { AsyncPipe } from '@angular/common';
+import { AuthPageComponent } from './auth-page.component';
 
 registerLocaleData(localeUk);
 
@@ -16,7 +17,7 @@ registerLocaleData(localeUk);
     selector: 'app-root',
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.scss'],
-    imports: [RouterLink, RouterLinkActive, RouterOutlet, WelcomeComponent, AsyncPipe],
+    imports: [RouterLink, RouterLinkActive, RouterOutlet, WelcomeComponent, AuthPageComponent, AsyncPipe],
     providers: [{ provide: LOCALE_ID, useValue: 'uk-UA' }]
 })
 export class AppComponent implements OnInit, OnDestroy {
@@ -26,6 +27,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ready = false;
   loading = false;
+  showAuth = false;
   error = '';
   private subscription?: Subscription;
   private generation = 0;
@@ -36,7 +38,10 @@ export class AppComponent implements OnInit, OnDestroy {
       this.session.currentUser = undefined;
       this.error = '';
       this.loading = false;
-      if (user) void this.loadUser();
+      if (user) {
+        this.showAuth = false;
+        void this.loadUser();
+      }
     });
     try { await this.auth.initialize(); }
     catch (error) { this.error = errorMessage(error); }
@@ -63,12 +68,10 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   }
 
-  async signIn(): Promise<void> {
-    this.error = '';
-    try { await this.auth.signIn(); } catch (error) { this.error = errorMessage(error); }
-  }
-
   async signOut(): Promise<void> {
-    try { await this.auth.signOut(); } catch { this.error = 'Не вдалося вийти. Спробуйте ще раз.'; }
+    try {
+      await this.auth.signOut();
+      this.showAuth = false;
+    } catch { this.error = 'Не вдалося вийти. Спробуйте ще раз.'; }
   }
 }

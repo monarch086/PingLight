@@ -5,7 +5,7 @@ continues to run through Express, Lambda and API Gateway at its existing domain.
 The Lambda runtime is Node.js 24; local development requires Node 24.15 or newer
 within the Node 24 LTS line (.nvmrc selects 24).
 
-The dashboard supports Cognito sign-in and editing assigned device descriptions,
+The dashboard supports custom, same-site Cognito sign-in and registration and editing assigned device descriptions,
 notification delays and report preferences. Notifications can be enabled or
 disabled directly from each device card. System administrators see all devices
 and users and can grant or revoke device access. General users see only granted
@@ -19,7 +19,8 @@ keeps the user signed in within the current browser tab. General users visiting
 `/users` return to `/devices`.
 
 `AppComponent` owns the shared layout and account initialization. Its router outlet
-renders `DevicesPageComponent`, `UsersPageComponent`, or `AuthCallbackComponent`.
+renders `DevicesPageComponent` or `UsersPageComponent`. `AuthPageComponent` handles
+sign-in, registration, email confirmation, and password recovery without an external redirect.
 Each workspace page owns its requests, messages, and editing state; the shell and
 pages share only the current account and pending-write count through
 `WorkspaceSession`. The signed-out screen lives in `WelcomeComponent`.

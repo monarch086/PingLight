@@ -29,7 +29,11 @@
       <router-outlet></router-outlet>
     }
   } @else {
-    <app-welcome [ready]="ready" [configured]="!!auth.config" (signIn)="signIn()"></app-welcome>
+    @if (showAuth) {
+      <app-auth-page (accountClosed)="showAuth = false"></app-auth-page>
+    } @else {
+      <app-welcome [ready]="ready" [configured]="!!auth.config" (signIn)="showAuth = true"></app-welcome>
+    }
   }
 </main>
 <footer>PingLight <span>Малі сигнали. Чіткіша картина.</span></footer>
