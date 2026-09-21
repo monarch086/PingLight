@@ -44,7 +44,7 @@
     </dl>
     <div class="history-actions">
       <a class="history-link" [routerLink]="['/devices', device.deviceId, 'destinations', device.chatId, 'turn-offs']">Turn-off history</a>
-      <button class="danger-link" type="button" (click)="removeLastTurnOff(device)"
+      <button class="danger-link" type="button" (click)="openRemoveModal(device)"
         [disabled]="!device.lastTurnOff || isRemovingTurnOff(device)">{{ isRemovingTurnOff(device) ? 'Removing…' : 'Remove last turn-off' }}</button>
     </div>
     <label class="notification-switch">
@@ -88,3 +88,18 @@
     </section>
   }
 </div>
+
+@if (pendingRemoval; as device) {
+  <dialog #removeDialog class="modal panel" aria-labelledby="remove-turn-off-title"
+    aria-describedby="remove-turn-off-description" (cancel)="onRemoveDialogCancel($event)">
+      <p class="eyebrow">CONFIRM REMOVAL</p>
+      <h2 id="remove-turn-off-title">Remove last turn-off?</h2>
+      <p id="remove-turn-off-description">This permanently removes the latest turn-off period for
+        <strong>{{ device.settings.description || device.deviceId }}</strong>. This action cannot be undone.</p>
+      <div class="modal-actions">
+        <button class="quiet" type="button" (click)="cancelRemoveModal()" [disabled]="isRemovingTurnOff(device)">Cancel</button>
+        <button class="danger" type="button" (click)="confirmRemoveLastTurnOff()"
+          [disabled]="isRemovingTurnOff(device)">{{ isRemovingTurnOff(device) ? 'Removing…' : 'Remove turn-off' }}</button>
+      </div>
+  </dialog>
+}

@@ -169,11 +169,14 @@ describe('Management dashboard', () => {
   });
 
   it('removes the last turn-off from a device card and refreshes the device', async () => {
-    spyOn(window, 'confirm').and.returnValue(true);
     api.list.and.returnValues(Promise.resolve({ items: [structuredClone(device)] }),
       Promise.resolve({ items: [{ ...structuredClone(device), lastTurnOff: null }] }));
     await signIn();
     (fixture.nativeElement.querySelector('.danger-link') as HTMLButtonElement).click();
+    await settle();
+    expect(fixture.nativeElement.querySelector('dialog.modal')).not.toBeNull();
+    expect(api.removeLastTurnOff).not.toHaveBeenCalled();
+    (fixture.nativeElement.querySelector('.modal .danger') as HTMLButtonElement).click();
     await settle();
     expect(api.removeLastTurnOff).toHaveBeenCalledWith('home', 'chat-a');
     expect(api.list).toHaveBeenCalledTimes(2);

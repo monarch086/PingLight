@@ -171,6 +171,42 @@ button span {
   color:#742b26
 }
 
+.modal {
+  width:min(100%,440px);
+  padding:28px;
+  border:0;
+  color:#203e30;
+  box-shadow:0 20px 60px #0c211780
+}
+
+.modal::backdrop {
+  background:#10281db3
+}
+
+.modal h2 {
+  margin-top:4px
+}
+
+.modal p:not(.eyebrow) {
+  color:#647269;
+  line-height:1.55
+}
+
+.modal-actions {
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top:26px
+}
+
+.danger {
+  background:#a43d35
+}
+
+.danger:hover:not(:disabled) {
+  background:#742b26
+}
+
 .device-icon {
   color:#52795d;
   font-size:28px

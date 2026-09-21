@@ -1,6 +1,6 @@
 
 import { DatePipe } from '@angular/common';
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Device, DeviceSettings, DevicesService } from './devices.service';
@@ -14,6 +14,7 @@ import { WorkspaceSession } from './workspace-session.service';
   styleUrl: './devices-page.component.scss'
 })
 export class DevicesPageComponent implements OnInit, OnDestroy {
+  @ViewChild('removeDialog') private removeDialog?: ElementRef<HTMLDialogElement>;
   private api = inject(DevicesService);
   session = inject(WorkspaceSession);
 
@@ -24,6 +25,7 @@ export class DevicesPageComponent implements OnInit, OnDestroy {
   devices: Device[] = [];
   selected?: Device;
   draft?: DeviceSettings;
+  pendingRemoval?: Device;
   private changingActive = new Set<string>();
   private removingTurnOff = new Set<string>();
   private destroyed = false;
@@ -65,6 +67,21 @@ export class DevicesPageComponent implements OnInit, OnDestroy {
     return this.removingTurnOff.has(this.deviceKey(device));
   }
 
+  openRemoveModal(device: Device): void {
+    if (!device.lastTurnOff || this.isRemovingTurnOff(device)) return;
+    this.pendingRemoval = device;
+    setTimeout(() => this.removeDialog?.nativeElement.showModal());
+  }
+
+  cancelRemoveModal(): void {
+    if (!this.pendingRemoval || !this.isRemovingTurnOff(this.pendingRemoval)) this.pendingRemoval = undefined;
+  }
+
+  onRemoveDialogCancel(event: Event): void {
+    event.preventDefault();
+    this.cancelRemoveModal();
+  }
+
   async setActive(device: Device, isActive: boolean): Promise<void> {
     const key = this.deviceKey(device);
     if (this.changingActive.has(key)) return;
@@ -85,10 +102,11 @@ export class DevicesPageComponent implements OnInit, OnDestroy {
     }
   }
 
-  async removeLastTurnOff(device: Device): Promise<void> {
+  async confirmRemoveLastTurnOff(): Promise<void> {
+    const device = this.pendingRemoval;
+    if (!device) return;
     const key = this.deviceKey(device);
-    if (!device.lastTurnOff || this.removingTurnOff.has(key) ||
-        !window.confirm('Remove the last turn-off period? This cannot be undone.')) return;
+    if (!device.lastTurnOff || this.removingTurnOff.has(key)) return;
     this.removingTurnOff.add(key);
     this.session.pendingWrites++;
     this.error = '';
@@ -97,9 +115,15 @@ export class DevicesPageComponent implements OnInit, OnDestroy {
       await this.api.removeLastTurnOff(device.deviceId, device.chatId);
       if (this.destroyed) return;
       await this.load();
-      if (!this.destroyed) this.notice = 'Last turn-off removed.';
+      if (!this.destroyed) {
+        this.pendingRemoval = undefined;
+        this.notice = 'Last turn-off removed.';
+      }
     } catch (error) {
-      if (!this.destroyed) this.error = errorMessage(error);
+      if (!this.destroyed) {
+        this.pendingRemoval = undefined;
+        this.error = errorMessage(error);
+      }
     } finally {
       this.removingTurnOff.delete(key);
       this.session.pendingWrites--;
