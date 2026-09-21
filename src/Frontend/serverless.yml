@@ -3,6 +3,8 @@ service: pinglight-front
 params:
   dev:
     frontendHost: dev.pinglight.xyz
+  prod:
+    frontendHost: pinglight.xyz
 
 plugins:
   - serverless-apigw-binary
