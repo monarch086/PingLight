@@ -212,14 +212,15 @@ button span {
   font-size:28px
 }
 
-.badge.muted {
-  background:#f4cc55;
-  color:#5b4100
+.device .badge.muted {
+  background:#f0b429;
+  color:#4b3300
 }
 
-.device.inactive {
-  background:#fff8e6;
-  border-color:#e5c86f
+.device.panel.inactive {
+  background:#fff3cd;
+  border-color:#d5a419;
+  box-shadow:inset 4px 0 #d5a419
 }
 
 .notification-switch strong,
