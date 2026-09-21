@@ -8,7 +8,7 @@ import { errorMessage } from './error-message';
   selector: 'app-turn-off-history',
   imports: [DatePipe, RouterLink],
   templateUrl: './turn-off-history.component.html',
-  styleUrl: './turn-off-history.component.scss'
+  styleUrl: './turn-off-history.component.scss',
 })
 export class TurnOffHistoryComponent implements OnInit, OnDestroy {
   private api = inject(DevicesService);
@@ -28,18 +28,27 @@ export class TurnOffHistoryComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.deviceId = this.route.snapshot.paramMap.get('deviceId') ?? '';
     this.chatId = this.route.snapshot.paramMap.get('chatId') ?? '';
-    const requestedPage = Number(this.route.snapshot.queryParamMap.get('page') ?? '1');
-    this.page = Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+    const requestedPage = Number(
+      this.route.snapshot.queryParamMap.get('page') ?? '1',
+    );
+    this.page =
+      Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
     void this.load();
   }
 
-  ngOnDestroy(): void { this.destroyed = true; }
+  ngOnDestroy(): void {
+    this.destroyed = true;
+  }
 
   async load(): Promise<void> {
     this.loading = true;
     this.error = '';
     try {
-      const result = await this.api.listTurnOffs(this.deviceId, this.chatId, this.page);
+      const result = await this.api.listTurnOffs(
+        this.deviceId,
+        this.chatId,
+        this.page,
+      );
       if (this.destroyed) return;
       this.periods = result.items;
       this.page = result.page;
@@ -56,7 +65,7 @@ export class TurnOffHistoryComponent implements OnInit, OnDestroy {
     if (page < 1 || this.loading) return;
     await this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: page === 1 ? {} : { page }
+      queryParams: page === 1 ? {} : { page },
     });
     this.page = page;
     await this.load();
@@ -64,7 +73,12 @@ export class TurnOffHistoryComponent implements OnInit, OnDestroy {
 
   duration(period: TurnOffPeriod): string {
     if (!period.endedAt) return 'Триває';
-    const minutes = Math.max(0, Math.round((Date.parse(period.endedAt) - Date.parse(period.startedAt)) / 60000));
+    const minutes = Math.max(
+      0,
+      Math.round(
+        (Date.parse(period.endedAt) - Date.parse(period.startedAt)) / 60000,
+      ),
+    );
     const hours = Math.floor(minutes / 60);
     const remainder = minutes % 60;
     return hours ? `${hours} год ${remainder} хв` : `${remainder} хв`;

@@ -14,11 +14,18 @@ import { AuthPageComponent } from './auth-page.component';
 registerLocaleData(localeUk);
 
 @Component({
-    selector: 'app-root',
-    templateUrl: './app.component.html',
-    styleUrls: ['./app.component.scss'],
-    imports: [RouterLink, RouterLinkActive, RouterOutlet, WelcomeComponent, AuthPageComponent, AsyncPipe],
-    providers: [{ provide: LOCALE_ID, useValue: 'uk-UA' }]
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.scss'],
+  imports: [
+    RouterLink,
+    RouterLinkActive,
+    RouterOutlet,
+    WelcomeComponent,
+    AuthPageComponent,
+    AsyncPipe,
+  ],
+  providers: [{ provide: LOCALE_ID, useValue: 'uk-UA' }],
 })
 export class AppComponent implements OnInit, OnDestroy {
   auth = inject(AuthService);
@@ -33,7 +40,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private generation = 0;
 
   async ngOnInit(): Promise<void> {
-    this.subscription = this.auth.user$.subscribe(user => {
+    this.subscription = this.auth.user$.subscribe((user) => {
       this.generation++;
       this.session.currentUser = undefined;
       this.error = '';
@@ -43,9 +50,13 @@ export class AppComponent implements OnInit, OnDestroy {
         void this.loadUser();
       }
     });
-    try { await this.auth.initialize(); }
-    catch (error) { this.error = errorMessage(error); }
-    finally { this.ready = true; }
+    try {
+      await this.auth.initialize();
+    } catch (error) {
+      this.error = errorMessage(error);
+    } finally {
+      this.ready = true;
+    }
   }
 
   ngOnDestroy(): void {
@@ -72,6 +83,8 @@ export class AppComponent implements OnInit, OnDestroy {
     try {
       await this.auth.signOut();
       this.showAuth = false;
-    } catch { this.error = 'Не вдалося вийти. Спробуйте ще раз.'; }
+    } catch {
+      this.error = 'Не вдалося вийти. Спробуйте ще раз.';
+    }
   }
 }

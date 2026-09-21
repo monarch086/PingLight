@@ -1,9 +1,18 @@
 <header class="topbar">
-  <a class="brand" routerLink="/devices" aria-label="Головна PingLight"><span class="brand-mark">P</span>PingLight<span class="brand-dot"></span></a>
+  <a class="brand" routerLink="/devices" aria-label="Головна PingLight"
+    ><span class="brand-mark">P</span>PingLight<span class="brand-dot"></span
+  ></a>
   @if (auth.user$ | async; as user) {
     <div class="account">
       <span>{{ user.profile.email || 'Ваш обліковий запис' }}</span>
-      <button class="quiet" type="button" (click)="signOut()" [disabled]="session.pendingWrites > 0">Вийти</button>
+      <button
+        class="quiet"
+        type="button"
+        (click)="signOut()"
+        [disabled]="session.pendingWrites > 0"
+      >
+        Вийти
+      </button>
     </div>
   }
 </header>
@@ -21,9 +30,19 @@
     }
     @if (session.currentUser; as user) {
       <nav class="page-nav" aria-label="Робочий простір">
-        <a routerLink="/devices" routerLinkActive="active" ariaCurrentWhenActive="page">{{ user.isSystemAdmin ? 'Усі пристрої' : 'Мої пристрої' }}</a>
+        <a
+          routerLink="/devices"
+          routerLinkActive="active"
+          ariaCurrentWhenActive="page"
+          >{{ user.isSystemAdmin ? 'Усі пристрої' : 'Мої пристрої' }}</a
+        >
         @if (user.isSystemAdmin) {
-          <a routerLink="/users" routerLinkActive="active" ariaCurrentWhenActive="page">Доступ користувачів</a>
+          <a
+            routerLink="/users"
+            routerLinkActive="active"
+            ariaCurrentWhenActive="page"
+            >Доступ користувачів</a
+          >
         }
       </nav>
       <router-outlet></router-outlet>
@@ -32,7 +51,11 @@
     @if (showAuth) {
       <app-auth-page (accountClosed)="showAuth = false"></app-auth-page>
     } @else {
-      <app-welcome [ready]="ready" [configured]="!!auth.config" (signIn)="showAuth = true"></app-welcome>
+      <app-welcome
+        [ready]="ready"
+        [configured]="!!auth.config"
+        (signIn)="showAuth = true"
+      ></app-welcome>
     }
   }
 </main>

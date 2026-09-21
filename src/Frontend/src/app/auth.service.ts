@@ -26,14 +26,26 @@ export class AuthService {
 
   async initialize(): Promise<void> {
     if (!isPlatformBrowser(this.platformId)) return;
-    const response = await fetch('/assets/app-config.json', { cache: 'no-store' });
-    if (!response.ok) throw new UserFacingError('Не вдалося завантажити конфігурацію застосунку. Спробуйте ще раз.');
-    const config = await response.json() as AppConfig;
+    const response = await fetch('/assets/app-config.json', {
+      cache: 'no-store',
+    });
+    if (!response.ok)
+      throw new UserFacingError(
+        'Не вдалося завантажити конфігурацію застосунку. Спробуйте ще раз.',
+      );
+    const config = (await response.json()) as AppConfig;
     if (!config.apiUrl || !config.clientId || !config.userPoolId)
-      throw new UserFacingError('Доступ до облікового запису поки недоступний. Спробуйте пізніше.');
+      throw new UserFacingError(
+        'Доступ до облікового запису поки недоступний. Спробуйте пізніше.',
+      );
     const apiUrl = new URL(config.apiUrl);
-    if (apiUrl.protocol !== 'https:' && !(apiUrl.protocol === 'http:' && apiUrl.hostname === 'localhost'))
-      throw new UserFacingError('Доступ до облікового запису недоступний. Зверніться до служби підтримки.');
+    if (
+      apiUrl.protocol !== 'https:' &&
+      !(apiUrl.protocol === 'http:' && apiUrl.hostname === 'localhost')
+    )
+      throw new UserFacingError(
+        'Доступ до облікового запису недоступний. Зверніться до служби підтримки.',
+      );
     this.config = config;
     this.cognito.configure(config.userPoolId, config.clientId);
     try {
@@ -50,19 +62,26 @@ export class AuthService {
       const result = await this.cognito.signIn({
         username: normalizeEmail(email),
         password,
-        options: { authFlowType: 'USER_SRP_AUTH' }
+        options: { authFlowType: 'USER_SRP_AUTH' },
       });
       switch (result.nextStep.signInStep) {
         case 'DONE':
           await this.publishSession();
           return 'SIGNED_IN';
-        case 'CONFIRM_SIGN_UP': return 'CONFIRM_SIGN_UP';
-        case 'RESET_PASSWORD': return 'RESET_PASSWORD';
-        default: throw new UserFacingError('Цей спосіб входу не підтримується. Зверніться до служби підтримки.');
+        case 'CONFIRM_SIGN_UP':
+          return 'CONFIRM_SIGN_UP';
+        case 'RESET_PASSWORD':
+          return 'RESET_PASSWORD';
+        default:
+          throw new UserFacingError(
+            'Цей спосіб входу не підтримується. Зверніться до служби підтримки.',
+          );
       }
     } catch (error) {
-      if (errorName(error) === 'UserNotConfirmedException') return 'CONFIRM_SIGN_UP';
-      if (errorName(error) === 'PasswordResetRequiredException') return 'RESET_PASSWORD';
+      if (errorName(error) === 'UserNotConfirmedException')
+        return 'CONFIRM_SIGN_UP';
+      if (errorName(error) === 'PasswordResetRequiredException')
+        return 'RESET_PASSWORD';
       throw authError(error);
     }
   }
@@ -73,45 +92,66 @@ export class AuthService {
       await this.cognito.signUp({
         username: normalizeEmail(email),
         password,
-        options: { userAttributes: { email: normalizeEmail(email) } }
+        options: { userAttributes: { email: normalizeEmail(email) } },
       });
-    } catch (error) { throw authError(error); }
+    } catch (error) {
+      throw authError(error);
+    }
   }
 
   async confirmSignUp(email: string, code: string): Promise<void> {
     this.ensureConfigured();
     try {
-      await this.cognito.confirmSignUp({ username: normalizeEmail(email), confirmationCode: code.trim() });
-    } catch (error) { throw authError(error); }
+      await this.cognito.confirmSignUp({
+        username: normalizeEmail(email),
+        confirmationCode: code.trim(),
+      });
+    } catch (error) {
+      throw authError(error);
+    }
   }
 
   async resendSignUpCode(email: string): Promise<void> {
     this.ensureConfigured();
     try {
       await this.cognito.resendSignUpCode({ username: normalizeEmail(email) });
-    } catch (error) { throw authError(error); }
+    } catch (error) {
+      throw authError(error);
+    }
   }
 
   async requestPasswordReset(email: string): Promise<void> {
     this.ensureConfigured();
-    try { await this.cognito.resetPassword({ username: normalizeEmail(email) }); }
-    catch (error) { throw authError(error); }
+    try {
+      await this.cognito.resetPassword({ username: normalizeEmail(email) });
+    } catch (error) {
+      throw authError(error);
+    }
   }
 
-  async confirmPasswordReset(email: string, code: string, newPassword: string): Promise<void> {
+  async confirmPasswordReset(
+    email: string,
+    code: string,
+    newPassword: string,
+  ): Promise<void> {
     this.ensureConfigured();
     try {
       await this.cognito.confirmResetPassword({
         username: normalizeEmail(email),
         confirmationCode: code.trim(),
-        newPassword
+        newPassword,
       });
-    } catch (error) { throw authError(error); }
+    } catch (error) {
+      throw authError(error);
+    }
   }
 
   async signOut(): Promise<void> {
-    try { await this.cognito.signOut(); }
-    finally { this.user$.next(null); }
+    try {
+      await this.cognito.signOut();
+    } finally {
+      this.user$.next(null);
+    }
   }
 
   async accessToken(): Promise<string> {
@@ -129,18 +169,27 @@ export class AuthService {
   private async publishSession(): Promise<void> {
     const session = await this.cognito.fetchAuthSession();
     const email = session.tokens?.idToken?.payload['email'];
-    this.user$.next({ profile: { email: typeof email === 'string' ? email : undefined } });
+    this.user$.next({
+      profile: { email: typeof email === 'string' ? email : undefined },
+    });
   }
 
   private ensureConfigured(): void {
-    if (!this.config) throw new UserFacingError('Доступ до облікового запису поки недоступний.');
+    if (!this.config)
+      throw new UserFacingError(
+        'Доступ до облікового запису поки недоступний.',
+      );
   }
 }
 
-function normalizeEmail(email: string): string { return email.trim().toLowerCase(); }
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
 
 function errorName(error: unknown): string {
-  return typeof error === 'object' && error !== null && 'name' in error ? String(error.name) : '';
+  return typeof error === 'object' && error !== null && 'name' in error
+    ? String(error.name)
+    : '';
 }
 
 function isNoCurrentUser(error: unknown): boolean {
@@ -149,17 +198,24 @@ function isNoCurrentUser(error: unknown): boolean {
 
 function authError(error: unknown): UserFacingError {
   const messages: Record<string, string> = {
-    AliasExistsException: 'Обліковий запис із цією електронною адресою вже існує.',
-    CodeMismatchException: 'Код неправильний. Перевірте його та спробуйте ще раз.',
+    AliasExistsException:
+      'Обліковий запис із цією електронною адресою вже існує.',
+    CodeMismatchException:
+      'Код неправильний. Перевірте його та спробуйте ще раз.',
     ExpiredCodeException: 'Термін дії коду минув. Запросіть новий код.',
     InvalidPasswordException: 'Пароль не відповідає вимогам безпеки.',
-    LimitExceededException: 'Забагато спроб. Зачекайте трохи та спробуйте ще раз.',
+    LimitExceededException:
+      'Забагато спроб. Зачекайте трохи та спробуйте ще раз.',
     NotAuthorizedException: 'Неправильна електронна адреса або пароль.',
     PasswordResetRequiredException: 'Потрібно створити новий пароль.',
-    TooManyRequestsException: 'Забагато спроб. Зачекайте трохи та спробуйте ще раз.',
+    TooManyRequestsException:
+      'Забагато спроб. Зачекайте трохи та спробуйте ще раз.',
     UserAlreadyAuthenticatedException: 'Ви вже ввійшли до облікового запису.',
-    UsernameExistsException: 'Обліковий запис із цією електронною адресою вже існує.',
-    UserNotFoundException: 'Неправильна електронна адреса або пароль.'
+    UsernameExistsException:
+      'Обліковий запис із цією електронною адресою вже існує.',
+    UserNotFoundException: 'Неправильна електронна адреса або пароль.',
   };
-  return new UserFacingError(messages[errorName(error)] || 'Не вдалося виконати дію. Спробуйте ще раз.');
+  return new UserFacingError(
+    messages[errorName(error)] || 'Не вдалося виконати дію. Спробуйте ще раз.',
+  );
 }

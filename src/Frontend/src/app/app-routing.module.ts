@@ -6,16 +6,30 @@ import { TurnOffHistoryComponent } from './turn-off-history.component';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'devices' },
-  { path: 'devices', component: DevicesPageComponent, title: 'Пристрої · PingLight' },
-  { path: 'devices/:deviceId/destinations/:chatId/turn-offs', component: TurnOffHistoryComponent, title: 'Історія відключень · PingLight' },
-  { path: 'users', component: UsersPageComponent, title: 'Доступ користувачів · PingLight' },
-  { path: '**', redirectTo: 'devices' }
+  {
+    path: 'devices',
+    component: DevicesPageComponent,
+    title: 'Пристрої · PingLight',
+  },
+  {
+    path: 'devices/:deviceId/destinations/:chatId/turn-offs',
+    component: TurnOffHistoryComponent,
+    title: 'Історія відключень · PingLight',
+  },
+  {
+    path: 'users',
+    component: UsersPageComponent,
+    title: 'Доступ користувачів · PingLight',
+  },
+  { path: '**', redirectTo: 'devices' },
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes, {
-    initialNavigation: 'enabledBlocking'
-})],
-  exports: [RouterModule]
+  imports: [
+    RouterModule.forRoot(routes, {
+      initialNavigation: 'enabledBlocking',
+    }),
+  ],
+  exports: [RouterModule],
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}

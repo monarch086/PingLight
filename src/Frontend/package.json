@@ -11,10 +11,12 @@
     "serve:ssr": "node dist/pinglight/server/server.mjs",
     "build:ssr": "ng build",
     "test:ssr": "node tests/lambda-smoke.cjs",
-    "lint": "npm run lint:eslint && npm run lint:styles",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "npm run format:check && npm run lint:eslint && npm run lint:styles",
     "lint:eslint": "ng lint",
     "lint:styles": "stylelint \"src/**/*.scss\"",
-    "lint:fix": "npm run lint:eslint -- --fix && npm run lint:styles -- --fix"
+    "lint:fix": "npm run format && npm run lint:eslint -- --fix && npm run lint:styles -- --fix"
   },
   "private": true,
   "dependencies": {
@@ -51,6 +53,7 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "prettier": "^3.9.8",
     "serverless": "^3.39.0",
     "serverless-api-compression": "^1.0.1",
     "serverless-api-gateway-throttling": "^2.0.3",

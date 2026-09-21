@@ -7,12 +7,12 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 
 @NgModule({
-  imports: [
-    ServerModule,
-    HttpClientModule,
-    AppRoutingModule
-  ],
+  imports: [ServerModule, HttpClientModule, AppRoutingModule],
   bootstrap: [AppComponent],
-  providers: [provideServerRendering(withRoutes([{ path: '**', renderMode: RenderMode.Server }]))],
+  providers: [
+    provideServerRendering(
+      withRoutes([{ path: '**', renderMode: RenderMode.Server }]),
+    ),
+  ],
 })
 export class AppServerModule {}

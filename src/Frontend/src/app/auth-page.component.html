@@ -1,48 +1,130 @@
 <section class="auth-page">
   <div class="auth-intro">
     <p class="eyebrow">ВАШ ОБЛІКОВИЙ ЗАПИС</p>
-    <h1>Керуйте PingLight<br><span>без зайвих переходів.</span></h1>
-    <p>Вхід, реєстрація та відновлення доступу відбуваються безпосередньо на сайті PingLight.</p>
+    <h1>Керуйте PingLight<br /><span>без зайвих переходів.</span></h1>
+    <p>
+      Вхід, реєстрація та відновлення доступу відбуваються безпосередньо на
+      сайті PingLight.
+    </p>
   </div>
 
   <div class="auth-card panel">
-    <button class="back" type="button" (click)="accountClosed.emit()">← На головну</button>
+    <button class="back" type="button" (click)="accountClosed.emit()">
+      ← На головну
+    </button>
 
     @if (mode === 'sign-in') {
       <p class="eyebrow">ВХІД</p>
       <h2>Раді бачити вас знову</h2>
       <form (ngSubmit)="submitSignIn()">
-        <label>Електронна адреса<input type="email" name="email" [(ngModel)]="email" autocomplete="email" required></label>
-        <label>Пароль<input type="password" name="password" [(ngModel)]="password" autocomplete="current-password" required></label>
-        <button type="submit" [disabled]="busy">{{ busy ? 'Входимо…' : 'Увійти' }}</button>
+        <label
+          >Електронна адреса<input
+            type="email"
+            name="email"
+            [(ngModel)]="email"
+            autocomplete="email"
+            required
+        /></label>
+        <label
+          >Пароль<input
+            type="password"
+            name="password"
+            [(ngModel)]="password"
+            autocomplete="current-password"
+            required
+        /></label>
+        <button type="submit" [disabled]="busy">
+          {{ busy ? 'Входимо…' : 'Увійти' }}
+        </button>
       </form>
-      <button class="text-button" type="button" (click)="show('forgot-password')">Забули пароль?</button>
-      <p class="switch">Ще немає облікового запису? <button type="button" (click)="show('sign-up')">Зареєструватися</button></p>
+      <button
+        class="text-button"
+        type="button"
+        (click)="show('forgot-password')"
+      >
+        Забули пароль?
+      </button>
+      <p class="switch">
+        Ще немає облікового запису?
+        <button type="button" (click)="show('sign-up')">Зареєструватися</button>
+      </p>
     }
 
     @if (mode === 'sign-up') {
       <p class="eyebrow">РЕЄСТРАЦІЯ</p>
       <h2>Створіть обліковий запис</h2>
       <form (ngSubmit)="submitSignUp()">
-        <label>Електронна адреса<input type="email" name="email" [(ngModel)]="email" autocomplete="email" required></label>
-        <label>Пароль<input type="password" name="password" [(ngModel)]="password" autocomplete="new-password" minlength="12" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{12,}" required></label>
+        <label
+          >Електронна адреса<input
+            type="email"
+            name="email"
+            [(ngModel)]="email"
+            autocomplete="email"
+            required
+        /></label>
+        <label
+          >Пароль<input
+            type="password"
+            name="password"
+            [(ngModel)]="password"
+            autocomplete="new-password"
+            minlength="12"
+            pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{12,}"
+            required
+        /></label>
         <small>Щонайменше 12 символів, велика й мала літери та цифра.</small>
-        <label>Повторіть пароль<input type="password" name="passwordConfirmation" [(ngModel)]="passwordConfirmation" autocomplete="new-password" required></label>
-        <button type="submit" [disabled]="busy">{{ busy ? 'Створюємо…' : 'Створити обліковий запис' }}</button>
+        <label
+          >Повторіть пароль<input
+            type="password"
+            name="passwordConfirmation"
+            [(ngModel)]="passwordConfirmation"
+            autocomplete="new-password"
+            required
+        /></label>
+        <button type="submit" [disabled]="busy">
+          {{ busy ? 'Створюємо…' : 'Створити обліковий запис' }}
+        </button>
       </form>
-      <p class="switch">Уже маєте обліковий запис? <button type="button" (click)="show('sign-in')">Увійти</button></p>
+      <p class="switch">
+        Уже маєте обліковий запис?
+        <button type="button" (click)="show('sign-in')">Увійти</button>
+      </p>
     }
 
     @if (mode === 'confirm-sign-up') {
       <p class="eyebrow">ПІДТВЕРДЖЕННЯ</p>
       <h2>Підтвердьте електронну адресу</h2>
-      <p>Введіть код, надісланий на <strong>{{ email }}</strong>.</p>
+      <p>
+        Введіть код, надісланий на <strong>{{ email }}</strong
+        >.
+      </p>
       <form (ngSubmit)="submitConfirmation()">
-        <label>Код підтвердження<input type="text" name="code" [(ngModel)]="code" autocomplete="one-time-code" inputmode="numeric" required></label>
-        <button type="submit" [disabled]="busy">{{ busy ? 'Перевіряємо…' : 'Підтвердити' }}</button>
+        <label
+          >Код підтвердження<input
+            type="text"
+            name="code"
+            [(ngModel)]="code"
+            autocomplete="one-time-code"
+            inputmode="numeric"
+            required
+        /></label>
+        <button type="submit" [disabled]="busy">
+          {{ busy ? 'Перевіряємо…' : 'Підтвердити' }}
+        </button>
       </form>
-      <button class="text-button" type="button" (click)="resendConfirmation()" [disabled]="busy">Надіслати код ще раз</button>
-      <p class="switch"><button type="button" (click)="show('sign-in')">Повернутися до входу</button></p>
+      <button
+        class="text-button"
+        type="button"
+        (click)="resendConfirmation()"
+        [disabled]="busy"
+      >
+        Надіслати код ще раз
+      </button>
+      <p class="switch">
+        <button type="button" (click)="show('sign-in')">
+          Повернутися до входу
+        </button>
+      </p>
     }
 
     @if (mode === 'forgot-password') {
@@ -50,26 +132,73 @@
       <h2>Змініть пароль</h2>
       <p>Ми надішлемо код на електронну адресу вашого облікового запису.</p>
       <form (ngSubmit)="beginPasswordReset()">
-        <label>Електронна адреса<input type="email" name="email" [(ngModel)]="email" autocomplete="email" required></label>
-        <button type="submit" [disabled]="busy">{{ busy ? 'Надсилаємо…' : 'Отримати код' }}</button>
+        <label
+          >Електронна адреса<input
+            type="email"
+            name="email"
+            [(ngModel)]="email"
+            autocomplete="email"
+            required
+        /></label>
+        <button type="submit" [disabled]="busy">
+          {{ busy ? 'Надсилаємо…' : 'Отримати код' }}
+        </button>
       </form>
-      <p class="switch"><button type="button" (click)="show('sign-in')">Повернутися до входу</button></p>
+      <p class="switch">
+        <button type="button" (click)="show('sign-in')">
+          Повернутися до входу
+        </button>
+      </p>
     }
 
     @if (mode === 'confirm-password') {
       <p class="eyebrow">НОВИЙ ПАРОЛЬ</p>
       <h2>Введіть код і новий пароль</h2>
       <form (ngSubmit)="submitPasswordReset()">
-        <label>Код підтвердження<input type="text" name="code" [(ngModel)]="code" autocomplete="one-time-code" inputmode="numeric" required></label>
-        <label>Новий пароль<input type="password" name="password" [(ngModel)]="password" autocomplete="new-password" minlength="12" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{12,}" required></label>
+        <label
+          >Код підтвердження<input
+            type="text"
+            name="code"
+            [(ngModel)]="code"
+            autocomplete="one-time-code"
+            inputmode="numeric"
+            required
+        /></label>
+        <label
+          >Новий пароль<input
+            type="password"
+            name="password"
+            [(ngModel)]="password"
+            autocomplete="new-password"
+            minlength="12"
+            pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{12,}"
+            required
+        /></label>
         <small>Щонайменше 12 символів, велика й мала літери та цифра.</small>
-        <label>Повторіть пароль<input type="password" name="passwordConfirmation" [(ngModel)]="passwordConfirmation" autocomplete="new-password" required></label>
-        <button type="submit" [disabled]="busy">{{ busy ? 'Зберігаємо…' : 'Зберегти новий пароль' }}</button>
+        <label
+          >Повторіть пароль<input
+            type="password"
+            name="passwordConfirmation"
+            [(ngModel)]="passwordConfirmation"
+            autocomplete="new-password"
+            required
+        /></label>
+        <button type="submit" [disabled]="busy">
+          {{ busy ? 'Зберігаємо…' : 'Зберегти новий пароль' }}
+        </button>
       </form>
-      <p class="switch"><button type="button" (click)="show('sign-in')">Повернутися до входу</button></p>
+      <p class="switch">
+        <button type="button" (click)="show('sign-in')">
+          Повернутися до входу
+        </button>
+      </p>
     }
 
-    @if (error) { <div class="alert error" role="alert">{{ error }}</div> }
-    @if (notice) { <div class="alert success" role="status">{{ notice }}</div> }
+    @if (error) {
+      <div class="alert error" role="alert">{{ error }}</div>
+    }
+    @if (notice) {
+      <div class="alert success" role="status">{{ notice }}</div>
+    }
   </div>
 </section>

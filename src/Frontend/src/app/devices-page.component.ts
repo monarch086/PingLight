@@ -1,6 +1,12 @@
-
 import { DatePipe } from '@angular/common';
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+  inject,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Device, DeviceSettings, DevicesService } from './devices.service';
@@ -11,10 +17,11 @@ import { WorkspaceSession } from './workspace-session.service';
   selector: 'app-devices-page',
   imports: [DatePipe, FormsModule, RouterLink],
   templateUrl: './devices-page.component.html',
-  styleUrl: './devices-page.component.scss'
+  styleUrl: './devices-page.component.scss',
 })
 export class DevicesPageComponent implements OnInit, OnDestroy {
-  @ViewChild('removeDialog') private removeDialog?: ElementRef<HTMLDialogElement>;
+  @ViewChild('removeDialog')
+  private removeDialog?: ElementRef<HTMLDialogElement>;
   private api = inject(DevicesService);
   session = inject(WorkspaceSession);
 
@@ -30,9 +37,13 @@ export class DevicesPageComponent implements OnInit, OnDestroy {
   private removingTurnOff = new Set<string>();
   private destroyed = false;
 
-  get currentUser() { return this.session.currentUser; }
+  get currentUser() {
+    return this.session.currentUser;
+  }
 
-  ngOnInit(): void { void this.load(); }
+  ngOnInit(): void {
+    void this.load();
+  }
   ngOnDestroy(): void {
     this.destroyed = true;
     this.devices = [];
@@ -47,7 +58,9 @@ export class DevicesPageComponent implements OnInit, OnDestroy {
       if (!this.destroyed) this.devices = page.items;
     } catch (error) {
       if (!this.destroyed) this.error = errorMessage(error);
-    } finally { this.loading = false; }
+    } finally {
+      this.loading = false;
+    }
   }
 
   edit(device: Device): void {
@@ -57,7 +70,10 @@ export class DevicesPageComponent implements OnInit, OnDestroy {
     this.error = '';
   }
 
-  cancel(): void { this.selected = undefined; this.draft = undefined; }
+  cancel(): void {
+    this.selected = undefined;
+    this.draft = undefined;
+  }
 
   isChangingActive(device: Device): boolean {
     return this.changingActive.has(this.deviceKey(device));
@@ -74,7 +90,8 @@ export class DevicesPageComponent implements OnInit, OnDestroy {
   }
 
   cancelRemoveModal(): void {
-    if (!this.pendingRemoval || !this.isRemovingTurnOff(this.pendingRemoval)) this.pendingRemoval = undefined;
+    if (!this.pendingRemoval || !this.isRemovingTurnOff(this.pendingRemoval))
+      this.pendingRemoval = undefined;
   }
 
   onRemoveDialogCancel(event: Event): void {
@@ -93,7 +110,9 @@ export class DevicesPageComponent implements OnInit, OnDestroy {
       await this.api.setActive(device.deviceId, device.chatId, isActive);
       if (this.destroyed) return;
       device.isActive = isActive;
-      this.notice = isActive ? 'Сповіщення пристрою увімкнено.' : 'Сповіщення пристрою вимкнено.';
+      this.notice = isActive
+        ? 'Сповіщення пристрою увімкнено.'
+        : 'Сповіщення пристрою вимкнено.';
     } catch (error) {
       if (!this.destroyed) this.error = errorMessage(error);
     } finally {
@@ -133,7 +152,10 @@ export class DevicesPageComponent implements OnInit, OnDestroy {
   async save(): Promise<void> {
     if (!this.selected || !this.draft || this.saving) return;
     const device = this.selected;
-    const settings = { ...this.draft, description: this.draft.description.trim() };
+    const settings = {
+      ...this.draft,
+      description: this.draft.description.trim(),
+    };
     this.saving = true;
     this.session.pendingWrites++;
     this.error = '';
@@ -142,7 +164,8 @@ export class DevicesPageComponent implements OnInit, OnDestroy {
       await this.api.save(device.deviceId, device.chatId, settings);
       if (this.destroyed) return;
       device.settings = settings;
-      this.notice = 'Налаштування збережено. Наступні сповіщення враховуватимуть ваші параметри.';
+      this.notice =
+        'Налаштування збережено. Наступні сповіщення враховуватимуть ваші параметри.';
       this.cancel();
     } catch (error) {
       if (!this.destroyed) this.error = errorMessage(error);
@@ -158,7 +181,10 @@ export class DevicesPageComponent implements OnInit, OnDestroy {
 
   duration(startedAt: string, endedAt: string | null): string {
     if (!endedAt) return 'Триває';
-    const minutes = Math.max(0, Math.round((Date.parse(endedAt) - Date.parse(startedAt)) / 60000));
+    const minutes = Math.max(
+      0,
+      Math.round((Date.parse(endedAt) - Date.parse(startedAt)) / 60000),
+    );
     const hours = Math.floor(minutes / 60);
     const remainder = minutes % 60;
     return hours ? `${hours} год ${remainder} хв` : `${remainder} хв`;

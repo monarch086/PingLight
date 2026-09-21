@@ -10,7 +10,7 @@ import {
   resetPassword,
   signIn,
   signOut,
-  signUp
+  signUp,
 } from 'aws-amplify/auth';
 import { cognitoUserPoolsTokenProvider } from 'aws-amplify/auth/cognito';
 

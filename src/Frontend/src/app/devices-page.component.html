@@ -5,8 +5,25 @@
   <div class="alert success" role="status">{{ notice }}</div>
 }
 <section class="page-heading">
-  <div><p class="eyebrow">{{ currentUser?.isSystemAdmin ? 'СИСТЕМНЕ АДМІНІСТРУВАННЯ' : 'ВАШ РОБОЧИЙ ПРОСТІР' }}</p><h1>{{ currentUser?.isSystemAdmin ? 'Усі пристрої' : 'Мої пристрої' }}</h1><p>Керуйте сповіщеннями відповідно до своїх потреб.</p></div>
-  <button class="secondary" type="button" (click)="load()" [disabled]="loading || saving || !!selected">Оновити пристрої</button>
+  <div>
+    <p class="eyebrow">
+      {{
+        currentUser?.isSystemAdmin
+          ? 'СИСТЕМНЕ АДМІНІСТРУВАННЯ'
+          : 'ВАШ РОБОЧИЙ ПРОСТІР'
+      }}
+    </p>
+    <h1>{{ currentUser?.isSystemAdmin ? 'Усі пристрої' : 'Мої пристрої' }}</h1>
+    <p>Керуйте сповіщеннями відповідно до своїх потреб.</p>
+  </div>
+  <button
+    class="secondary"
+    type="button"
+    (click)="load()"
+    [disabled]="loading || saving || !!selected"
+  >
+    Оновити пристрої
+  </button>
 </section>
 @if (loading) {
   <p class="loading" role="status">Завантажуємо ваші пристрої…</p>
@@ -16,7 +33,10 @@
   <section class="empty panel">
     <span class="empty-icon" aria-hidden="true">↗</span>
     <h2>Ваш робочий простір готовий</h2>
-    <p>Тут з’являться пристрої, призначені вашому обліковому запису.<br>Зверніться до адміністратора, щоб підключити перший пристрій.</p>
+    <p>
+      Тут з’являться пристрої, призначені вашому обліковому запису.<br />Зверніться
+      до адміністратора, щоб підключити перший пристрій.
+    </p>
   </section>
 }
 
@@ -25,38 +45,105 @@
     <section class="device-list" aria-label="Ваші пристрої">
       @for (device of devices; track device.deviceId + ':' + device.chatId) {
         <article class="panel device" [class.inactive]="!device.isActive">
-        <div class="device-top"><span class="device-icon" aria-hidden="true">⌁</span>
-        <span class="badge" [class.muted]="!device.isActive">{{ device.isActive ? 'Сповіщення активні' : 'Сповіщення призупинені' }}</span>
-      </div>
-      <h2>{{ device.settings.description || device.deviceId }}</h2>
-      <p class="device-id">{{ device.deviceId }}</p>
-      <p class="device-id">Отримувач Telegram: {{ device.chatId }}</p>
-      <dl><div><dt>Затримка сповіщення</dt><dd>{{ device.settings.notificationDelaySec }} с</dd></div>
-      <div><dt>Звіти</dt><dd>{{ device.settings.isDailyStatsEnabled ? 'Щоденні ' : '' }}{{ device.settings.isWeeklyStatsEnabled ? 'Щотижневі ' : '' }}{{ device.settings.isMonthlyStatsEnabled ? 'Щомісячні' : '' }}{{ !device.settings.isDailyStatsEnabled && !device.settings.isWeeklyStatsEnabled && !device.settings.isMonthlyStatsEnabled ? 'Вимкнено' : '' }}</dd></div>
-      <div class="last-turn-off"><dt>Останнє відключення</dt>
-        @if (device.lastTurnOff; as period) {
-          <dd>{{ period.startedAt | date:'medium' }}<br>
-            <span>{{ period.endedAt ? (period.endedAt | date:'medium') : 'Відключення триває' }} · {{ duration(period.startedAt, period.endedAt) }}</span></dd>
-        } @else {
-          <dd>Відключень не зафіксовано</dd>
-        }
-      </div>
-    </dl>
-    <div class="history-actions">
-      <a class="history-link" [routerLink]="['/devices', device.deviceId, 'destinations', device.chatId, 'turn-offs']">Історія відключень</a>
-      <button class="danger-link" type="button" (click)="openRemoveModal(device)"
-        [disabled]="!device.lastTurnOff || isRemovingTurnOff(device)">{{ isRemovingTurnOff(device) ? 'Видаляємо…' : 'Видалити останнє' }}</button>
-    </div>
-    <label class="notification-switch">
-      <span>
-        <strong>Сповіщення</strong>
-        <small class="notification-state">{{ isChangingActive(device) ? 'Оновлюємо…' : (device.isActive ? 'Увімкнено' : 'Вимкнено') }}</small>
-      </span>
-      <input class="notification-toggle" type="checkbox" role="switch"
-        [checked]="device.isActive" [disabled]="isChangingActive(device)"
-        (change)="setActive(device, $any($event.target).checked)">
-    </label>
-    <button class="secondary full" type="button" (click)="edit(device)" [disabled]="saving || (!!selected && selected !== device)">Редагувати налаштування</button>
+          <div class="device-top">
+            <span class="device-icon" aria-hidden="true">⌁</span>
+            <span class="badge" [class.muted]="!device.isActive">{{
+              device.isActive ? 'Сповіщення активні' : 'Сповіщення призупинені'
+            }}</span>
+          </div>
+          <h2>{{ device.settings.description || device.deviceId }}</h2>
+          <p class="device-id">{{ device.deviceId }}</p>
+          <p class="device-id">Отримувач Telegram: {{ device.chatId }}</p>
+          <dl>
+            <div>
+              <dt>Затримка сповіщення</dt>
+              <dd>{{ device.settings.notificationDelaySec }} с</dd>
+            </div>
+            <div>
+              <dt>Звіти</dt>
+              <dd>
+                {{ device.settings.isDailyStatsEnabled ? 'Щоденні ' : ''
+                }}{{ device.settings.isWeeklyStatsEnabled ? 'Щотижневі ' : ''
+                }}{{ device.settings.isMonthlyStatsEnabled ? 'Щомісячні' : ''
+                }}{{
+                  !device.settings.isDailyStatsEnabled &&
+                  !device.settings.isWeeklyStatsEnabled &&
+                  !device.settings.isMonthlyStatsEnabled
+                    ? 'Вимкнено'
+                    : ''
+                }}
+              </dd>
+            </div>
+            <div class="last-turn-off">
+              <dt>Останнє відключення</dt>
+              @if (device.lastTurnOff; as period) {
+                <dd>
+                  {{ period.startedAt | date: 'medium' }}<br />
+                  <span
+                    >{{
+                      period.endedAt
+                        ? (period.endedAt | date: 'medium')
+                        : 'Відключення триває'
+                    }}
+                    · {{ duration(period.startedAt, period.endedAt) }}</span
+                  >
+                </dd>
+              } @else {
+                <dd>Відключень не зафіксовано</dd>
+              }
+            </div>
+          </dl>
+          <div class="history-actions">
+            <a
+              class="history-link"
+              [routerLink]="[
+                '/devices',
+                device.deviceId,
+                'destinations',
+                device.chatId,
+                'turn-offs',
+              ]"
+              >Історія відключень</a
+            >
+            <button
+              class="danger-link"
+              type="button"
+              (click)="openRemoveModal(device)"
+              [disabled]="!device.lastTurnOff || isRemovingTurnOff(device)"
+            >
+              {{
+                isRemovingTurnOff(device) ? 'Видаляємо…' : 'Видалити останнє'
+              }}
+            </button>
+          </div>
+          <label class="notification-switch">
+            <span>
+              <strong>Сповіщення</strong>
+              <small class="notification-state">{{
+                isChangingActive(device)
+                  ? 'Оновлюємо…'
+                  : device.isActive
+                    ? 'Увімкнено'
+                    : 'Вимкнено'
+              }}</small>
+            </span>
+            <input
+              class="notification-toggle"
+              type="checkbox"
+              role="switch"
+              [checked]="device.isActive"
+              [disabled]="isChangingActive(device)"
+              (change)="setActive(device, $any($event.target).checked)"
+            />
+          </label>
+          <button
+            class="secondary full"
+            type="button"
+            (click)="edit(device)"
+            [disabled]="saving || (!!selected && selected !== device)"
+          >
+            Редагувати налаштування
+          </button>
         </article>
       }
     </section>
@@ -64,42 +151,112 @@
 
   @if (selected && draft) {
     <section class="panel editor" aria-labelledby="settings-title">
-    <p class="eyebrow">НАЛАШТУВАННЯ ПРИСТРОЮ</p><h2 id="settings-title">Редагування налаштувань</h2>
-    <p class="device-id">{{ selected.deviceId }}</p>
-    <p class="device-id">Отримувач Telegram: {{ selected.chatId }}</p>
-    <form #settingsForm="ngForm" (ngSubmit)="save()">
-      <fieldset [disabled]="saving">
-        <label for="description">Опис</label>
-        <input id="description" name="description" [(ngModel)]="draft.description" maxlength="200" placeholder="Наприклад, Дім · Вітальня">
-        <label for="delay">Затримка сповіщення (у секундах)</label>
-        <input id="delay" name="delay" type="number" [(ngModel)]="draft.notificationDelaySec" required min="0" max="86400" step="1" pattern="[0-9]+" #delay="ngModel" aria-describedby="delay-help">
-        <small id="delay-help">Час очікування перед повідомленням про втрату сигналу: від 0 до 86 400 секунд.</small>
-        @if (delay.invalid && delay.touched) {
-          <p class="field-error">Введіть ціле число від 0 до 86 400.</p>
-        }
-        <h3>Звіти в Telegram</h3><p class="hint">Надсилаються в налаштований Telegram-чат цього пристрою.</p>
-        <label class="check"><input type="checkbox" name="daily" [(ngModel)]="draft.isDailyStatsEnabled">Щоденна статистика</label>
-        <label class="check"><input type="checkbox" name="weekly" [(ngModel)]="draft.isWeeklyStatsEnabled">Щотижнева статистика</label>
-        <label class="check"><input type="checkbox" name="monthly" [(ngModel)]="draft.isMonthlyStatsEnabled">Щомісячна статистика</label>
-        <div class="form-actions"><button type="submit" [disabled]="settingsForm.invalid || saving">{{ saving ? 'Зберігаємо…' : 'Зберегти зміни' }}</button>
-        <button class="quiet" type="button" (click)="cancel()">Скасувати</button></div>
-      </fieldset>
-    </form>
+      <p class="eyebrow">НАЛАШТУВАННЯ ПРИСТРОЮ</p>
+      <h2 id="settings-title">Редагування налаштувань</h2>
+      <p class="device-id">{{ selected.deviceId }}</p>
+      <p class="device-id">Отримувач Telegram: {{ selected.chatId }}</p>
+      <form #settingsForm="ngForm" (ngSubmit)="save()">
+        <fieldset [disabled]="saving">
+          <label for="description">Опис</label>
+          <input
+            id="description"
+            name="description"
+            [(ngModel)]="draft.description"
+            maxlength="200"
+            placeholder="Наприклад, Дім · Вітальня"
+          />
+          <label for="delay">Затримка сповіщення (у секундах)</label>
+          <input
+            id="delay"
+            name="delay"
+            type="number"
+            [(ngModel)]="draft.notificationDelaySec"
+            required
+            min="0"
+            max="86400"
+            step="1"
+            pattern="[0-9]+"
+            #delay="ngModel"
+            aria-describedby="delay-help"
+          />
+          <small id="delay-help"
+            >Час очікування перед повідомленням про втрату сигналу: від 0 до 86
+            400 секунд.</small
+          >
+          @if (delay.invalid && delay.touched) {
+            <p class="field-error">Введіть ціле число від 0 до 86 400.</p>
+          }
+          <h3>Звіти в Telegram</h3>
+          <p class="hint">
+            Надсилаються в налаштований Telegram-чат цього пристрою.
+          </p>
+          <label class="check"
+            ><input
+              type="checkbox"
+              name="daily"
+              [(ngModel)]="draft.isDailyStatsEnabled"
+            />Щоденна статистика</label
+          >
+          <label class="check"
+            ><input
+              type="checkbox"
+              name="weekly"
+              [(ngModel)]="draft.isWeeklyStatsEnabled"
+            />Щотижнева статистика</label
+          >
+          <label class="check"
+            ><input
+              type="checkbox"
+              name="monthly"
+              [(ngModel)]="draft.isMonthlyStatsEnabled"
+            />Щомісячна статистика</label
+          >
+          <div class="form-actions">
+            <button type="submit" [disabled]="settingsForm.invalid || saving">
+              {{ saving ? 'Зберігаємо…' : 'Зберегти зміни' }}
+            </button>
+            <button class="quiet" type="button" (click)="cancel()">
+              Скасувати
+            </button>
+          </div>
+        </fieldset>
+      </form>
     </section>
   }
 </div>
 
 @if (pendingRemoval; as device) {
-  <dialog #removeDialog class="modal panel" aria-labelledby="remove-turn-off-title"
-    aria-describedby="remove-turn-off-description" (cancel)="onRemoveDialogCancel($event)">
-      <p class="eyebrow">ПІДТВЕРДЖЕННЯ ВИДАЛЕННЯ</p>
-      <h2 id="remove-turn-off-title">Видалити останнє відключення?</h2>
-      <p id="remove-turn-off-description">Останній період відключення пристрою
-        <strong>{{ device.settings.description || device.deviceId }}</strong> буде видалено назавжди. Цю дію неможливо скасувати.</p>
-      <div class="modal-actions">
-        <button class="quiet" type="button" (click)="cancelRemoveModal()" [disabled]="isRemovingTurnOff(device)">Скасувати</button>
-        <button class="danger" type="button" (click)="confirmRemoveLastTurnOff()"
-          [disabled]="isRemovingTurnOff(device)">{{ isRemovingTurnOff(device) ? 'Видаляємо…' : 'Видалити відключення' }}</button>
-      </div>
+  <dialog
+    #removeDialog
+    class="modal panel"
+    aria-labelledby="remove-turn-off-title"
+    aria-describedby="remove-turn-off-description"
+    (cancel)="onRemoveDialogCancel($event)"
+  >
+    <p class="eyebrow">ПІДТВЕРДЖЕННЯ ВИДАЛЕННЯ</p>
+    <h2 id="remove-turn-off-title">Видалити останнє відключення?</h2>
+    <p id="remove-turn-off-description">
+      Останній період відключення пристрою
+      <strong>{{ device.settings.description || device.deviceId }}</strong> буде
+      видалено назавжди. Цю дію неможливо скасувати.
+    </p>
+    <div class="modal-actions">
+      <button
+        class="quiet"
+        type="button"
+        (click)="cancelRemoveModal()"
+        [disabled]="isRemovingTurnOff(device)"
+      >
+        Скасувати
+      </button>
+      <button
+        class="danger"
+        type="button"
+        (click)="confirmRemoveLastTurnOff()"
+        [disabled]="isRemovingTurnOff(device)"
+      >
+        {{ isRemovingTurnOff(device) ? 'Видаляємо…' : 'Видалити відключення' }}
+      </button>
+    </div>
   </dialog>
 }

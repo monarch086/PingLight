@@ -27,11 +27,11 @@ pages share only the current account and pending-write count through
 
 ## Setup and development
 
-~~~powershell
+```powershell
 npm ci
 ./configure-api.ps1 -Stage dev
 npm start
-~~~
+```
 
 The development server is at http://localhost:4201. See the
 [management API setup](../PingLight.WebApi/README.md) for backend configuration.
@@ -42,18 +42,21 @@ with the existing `/pings`, `/changes`, and `/test` endpoints.
 
 ## Build and verify
 
-~~~powershell
+```powershell
 npm run build:ssr
 npm run lint
+npm run format:check
 npm test -- --watch=false --browsers=ChromeHeadless
 npm run test:ssr
 npm run serve:ssr
-~~~
+```
 
 `npm run lint` checks TypeScript and Angular templates with the recommended
 Angular ESLint rules, including template accessibility, and checks SCSS with the
-standard SCSS Stylelint config. Run `npm run lint:fix` to apply safe automatic
-fixes before resolving any remaining findings manually.
+standard SCSS Stylelint config. It also verifies formatting with Prettier. Run
+`npm run format` to format maintained frontend files, or `npm run lint:fix` to
+apply Prettier and safe ESLint and Stylelint fixes before resolving any remaining
+findings manually.
 
 One build emits browser files into dist/pinglight/browser and ESM server bundles
 into dist/pinglight/server. The Lambda adapter dynamically imports server.mjs and
@@ -63,10 +66,10 @@ The standalone production preview listens at http://localhost:4000.
 
 ## Deploy
 
-~~~powershell
+```powershell
 npx serverless package --stage dev
 npx serverless deploy --stage dev
-~~~
+```
 
 Generate app-config.json for the target stage before building. Angular's SSR
 hostname allowlist is populated with dev.pinglight.xyz for dev and the stack's

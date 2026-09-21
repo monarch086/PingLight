@@ -3,13 +3,18 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from './auth.service';
 import { errorMessage } from './error-message';
 
-type AuthMode = 'sign-in' | 'sign-up' | 'confirm-sign-up' | 'forgot-password' | 'confirm-password';
+type AuthMode =
+  | 'sign-in'
+  | 'sign-up'
+  | 'confirm-sign-up'
+  | 'forgot-password'
+  | 'confirm-password';
 
 @Component({
   selector: 'app-auth-page',
   imports: [FormsModule],
   templateUrl: './auth-page.component.html',
-  styleUrl: './auth-page.component.scss'
+  styleUrl: './auth-page.component.scss',
 })
 export class AuthPageComponent {
   private auth = inject(AuthService);
@@ -67,14 +72,19 @@ export class AuthPageComponent {
     await this.run(async () => {
       await this.auth.requestPasswordReset(this.email);
       this.show('confirm-password');
-      this.notice = 'Якщо обліковий запис існує, ми надіслали код для зміни пароля.';
+      this.notice =
+        'Якщо обліковий запис існує, ми надіслали код для зміни пароля.';
     });
   }
 
   async submitPasswordReset(): Promise<void> {
     if (!this.passwordsMatch()) return;
     await this.run(async () => {
-      await this.auth.confirmPasswordReset(this.email, this.code, this.password);
+      await this.auth.confirmPasswordReset(
+        this.email,
+        this.code,
+        this.password,
+      );
       this.password = '';
       this.passwordConfirmation = '';
       this.code = '';
@@ -103,8 +113,12 @@ export class AuthPageComponent {
     this.busy = true;
     this.error = '';
     this.notice = '';
-    try { await action(); }
-    catch (error) { this.error = errorMessage(error); }
-    finally { this.busy = false; }
+    try {
+      await action();
+    } catch (error) {
+      this.error = errorMessage(error);
+    } finally {
+      this.busy = false;
+    }
   }
 }

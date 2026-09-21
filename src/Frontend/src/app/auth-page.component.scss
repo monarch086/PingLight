@@ -1,130 +1,139 @@
 .auth-page {
-  display:grid;
-  grid-template-columns:1fr minmax(340px,500px);
-  gap:70px;
-  align-items:center;
-  padding:20px 0 55px
+  display: grid;
+  grid-template-columns: 1fr minmax(340px, 500px);
+  gap: 70px;
+  align-items: center;
+  padding: 20px 0 55px;
 }
 
 .panel {
-  background:#fff;
-  border:1px solid #dfe6e1;
-  border-radius:20px
+  background: #fff;
+  border: 1px solid #dfe6e1;
+  border-radius: 20px;
 }
 
 .eyebrow {
-  margin:0 0 18px;
-  color:#648275;
-  font-size:11px;
-  font-weight:750;
-  letter-spacing:2px
+  margin: 0 0 18px;
+  color: #648275;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 2px;
 }
 
 .auth-intro h1 {
-  font-size:54px;
-  letter-spacing:-2.5px
+  font-size: 54px;
+  letter-spacing: -2.5px;
 }
 
-.auth-intro h1 span { color:#698a70 }
-.auth-intro>p:last-child { max-width:540px }
+.auth-intro h1 span {
+  color: #698a70;
+}
+
+.auth-intro > p:last-child {
+  max-width: 540px;
+}
 
 .auth-card {
-  padding:38px
+  padding: 38px;
 }
 
 .auth-card h2 {
-  margin:8px 0 24px;
-  font-size:32px
+  margin: 8px 0 24px;
+  font-size: 32px;
 }
 
-.auth-card>p:not(.eyebrow,.switch) {
-  color:#647269;
-  line-height:1.55
+.auth-card > p:not(.eyebrow, .switch) {
+  color: #647269;
+  line-height: 1.55;
 }
 
 form {
-  display:grid;
-  gap:16px;
-  margin-top:22px
+  display: grid;
+  gap: 16px;
+  margin-top: 22px;
 }
 
 label {
-  display:grid;
-  gap:7px;
-  color:#315141;
-  font-size:13px;
-  font-weight:650
+  display: grid;
+  gap: 7px;
+  color: #315141;
+  font-size: 13px;
+  font-weight: 650;
 }
 
 input {
-  width:100%;
-  padding:12px 14px;
-  border:1px solid #ccd9cf;
-  border-radius:9px;
-  background:white;
-  color:#203e30;
-  font:inherit
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #ccd9cf;
+  border-radius: 9px;
+  background: white;
+  color: #203e30;
+  font: inherit;
 }
 
 small {
-  color:#6f7c73;
-  line-height:1.45;
-  margin-top:-8px
+  color: #6f7c73;
+  line-height: 1.45;
+  margin-top: -8px;
 }
 
-.back,.text-button,.switch button {
-  padding:0;
-  background:transparent;
-  color:#315b42
+.back,
+.text-button,
+.switch button {
+  padding: 0;
+  background: transparent;
+  color: #315b42;
 }
 
 .back {
-  margin-bottom:28px
+  margin-bottom: 28px;
 }
 
-.back:hover:not(:disabled),.text-button:hover:not(:disabled),.switch button:hover:not(:disabled) {
-  background:transparent;
-  color:#173b30;
-  text-decoration:underline
+.back:hover:not(:disabled),
+.text-button:hover:not(:disabled),
+.switch button:hover:not(:disabled) {
+  background: transparent;
+  color: #173b30;
+  text-decoration: underline;
 }
 
 .text-button {
-  margin-top:18px
+  margin-top: 18px;
 }
 
 .switch {
-  margin:24px 0 0;
-  color:#647269;
-  font-size:13px
+  margin: 24px 0 0;
+  color: #647269;
+  font-size: 13px;
 }
 
 .alert {
-  margin:22px 0 0
+  margin: 22px 0 0;
 }
 
 .success {
-  background:#e6f1e7;
-  color:#28563a
+  background: #e6f1e7;
+  color: #28563a;
 }
 
 .error {
-  background:#fff0eb;
-  color:#9c4229
+  background: #fff0eb;
+  color: #9c4229;
 }
 
-@media(width <=800px) {
+@media (width <=800px) {
   .auth-page {
-    grid-template-columns:1fr;
-    gap:28px
+    grid-template-columns: 1fr;
+    gap: 28px;
   }
 
   .auth-intro h1 {
-    font-size:42px
+    font-size: 42px;
   }
 }
 
-@media(width <=500px) {
+@media (width <=500px) {
   .auth-card {
-    padding:26px 20px
+    padding: 26px 20px;
   }
 }
