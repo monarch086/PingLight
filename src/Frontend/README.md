@@ -14,8 +14,9 @@ devices. Device registration and Telegram destination changes are outside this v
 The device list is at `/devices` (All devices for administrators, My devices for
 general users). Administrators manage user device access at `/users`. Both URLs
 support direct visits, refresh, and browser back/forward navigation. Sign-in returns
-to the selected page; refreshing may require signing in again because tokens are
-kept in memory. General users visiting `/users` return to `/devices`.
+to the selected page. Login state is kept in session storage so refreshing the page
+keeps the user signed in within the current browser tab. General users visiting
+`/users` return to `/devices`.
 
 `AppComponent` owns the shared layout and account initialization. Its router outlet
 renders `DevicesPageComponent`, `UsersPageComponent`, or `AuthCallbackComponent`.

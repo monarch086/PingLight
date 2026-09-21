@@ -33,12 +33,15 @@
       <dl><div><dt>Notification delay</dt><dd>{{ device.settings.notificationDelaySec }} sec</dd></div>
       <div><dt>Reports</dt><dd>{{ device.settings.isDailyStatsEnabled ? 'Daily ' : '' }}{{ device.settings.isWeeklyStatsEnabled ? 'Weekly ' : '' }}{{ device.settings.isMonthlyStatsEnabled ? 'Monthly' : '' }}{{ !device.settings.isDailyStatsEnabled && !device.settings.isWeeklyStatsEnabled && !device.settings.isMonthlyStatsEnabled ? 'Off' : '' }}</dd></div>
     </dl>
-    <button class="secondary notification-toggle full" type="button"
-      [attr.aria-pressed]="device.isActive"
-      [disabled]="isChangingActive(device)"
-      (click)="setActive(device, !device.isActive)">
-      {{ isChangingActive(device) ? 'Updating notifications…' : (device.isActive ? 'Disable notifications' : 'Enable notifications') }}
-    </button>
+    <label class="notification-switch">
+      <span>
+        <strong>Notifications</strong>
+        <small class="notification-state">{{ isChangingActive(device) ? 'Updating…' : (device.isActive ? 'Enabled' : 'Disabled') }}</small>
+      </span>
+      <input class="notification-toggle" type="checkbox" role="switch"
+        [checked]="device.isActive" [disabled]="isChangingActive(device)"
+        (change)="setActive(device, $any($event.target).checked)">
+    </label>
     <button class="secondary full" type="button" (click)="edit(device)" [disabled]="saving || (!!selected && selected !== device)">Edit settings</button>
   </article>
 }

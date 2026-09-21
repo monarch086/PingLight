@@ -33,7 +33,7 @@ export class AuthService {
         throw new Error('Account access is not available. Please contact support.');
     }
     this.config = config;
-    const { UserManager, WebStorageStateStore, InMemoryWebStorage } = await import('oidc-client-ts');
+    const { UserManager, WebStorageStateStore } = await import('oidc-client-ts');
     this.manager = new UserManager({
       authority: config.authority,
       client_id: config.clientId,
@@ -41,8 +41,8 @@ export class AuthService {
       response_type: 'code',
       scope: 'openid email profile',
       automaticSilentRenew: true,
-      // Tokens stay in memory. Session storage holds only the short-lived PKCE transaction.
-      userStore: new WebStorageStateStore({ store: new InMemoryWebStorage() }),
+      // Keep the login within this browser tab so a page refresh can restore it.
+      userStore: new WebStorageStateStore({ store: window.sessionStorage }),
       stateStore: new WebStorageStateStore({ store: window.sessionStorage }),
       loadUserInfo: false,
       revokeTokenTypes: ['refresh_token']
@@ -56,6 +56,7 @@ export class AuthService {
       let returnUrl = '/devices';
       try {
         const user = await this.manager.signinRedirectCallback();
+        this.user$.next(user);
         const state = user.state as { returnUrl?: unknown } | undefined;
         if (typeof state?.returnUrl === 'string' && /^\/(devices|users)([?#]|$)/.test(state.returnUrl))
           returnUrl = state.returnUrl;
@@ -64,7 +65,11 @@ export class AuthService {
       } finally {
         await this.router.navigateByUrl(returnUrl, { replaceUrl: true });
       }
+      return;
     }
+    const user = await this.manager.getUser();
+    if (user && !user.expired) this.user$.next(user);
+    else if (user) await this.manager.removeUser();
   }
 
   async signIn(): Promise<void> {

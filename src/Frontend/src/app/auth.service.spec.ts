@@ -7,6 +7,7 @@ describe('Sign-in return route', () => {
   let originalUrl: string;
   let auth: AuthService;
   let router: Router;
+  let getUser: jasmine.Spy;
 
   beforeEach(() => {
     originalUrl = window.location.href;
@@ -20,6 +21,7 @@ describe('Sign-in return route', () => {
       clientId: 'test-client', cognitoDomain: 'https://login.example.test'
     })));
     spyOn(UserManager.prototype, 'clearStaleState').and.resolveTo();
+    getUser = spyOn(UserManager.prototype, 'getUser').and.resolveTo(null);
   });
 
   afterEach(() => window.history.replaceState({}, '', originalUrl));
@@ -30,6 +32,21 @@ describe('Sign-in return route', () => {
     await auth.initialize();
     await auth.signIn();
     expect(signIn).toHaveBeenCalledWith({ state: { returnUrl: '/users' } });
+  });
+
+  it('restores an unexpired user after a page refresh', async () => {
+    const restored = { expired: false, profile: { email: 'person@example.test' } } as User;
+    getUser.and.resolveTo(restored);
+    await auth.initialize();
+    expect(auth.user$.value).toBe(restored);
+  });
+
+  it('clears an expired stored user', async () => {
+    getUser.and.resolveTo({ expired: true } as User);
+    const removeUser = spyOn(UserManager.prototype, 'removeUser').and.resolveTo();
+    await auth.initialize();
+    expect(removeUser).toHaveBeenCalled();
+    expect(auth.user$.value).toBeNull();
   });
 
   it('returns to the selected page after the callback', async () => {

@@ -112,12 +112,13 @@ describe('Management dashboard', () => {
   it('disables notifications directly from the device card', async () => {
     await signIn();
     const component = devicesPage();
-    const toggle = fixture.nativeElement.querySelector('.notification-toggle') as HTMLButtonElement;
+    const toggle = fixture.nativeElement.querySelector('.notification-toggle') as HTMLInputElement;
     toggle.click();
     await settle();
     expect(api.setActive).toHaveBeenCalledWith('home', 'chat-a', false);
     expect(component.devices[0].isActive).toBeFalse();
-    expect(toggle.textContent).toContain('Enable notifications');
+    expect(toggle.checked).toBeFalse();
+    expect(fixture.nativeElement.querySelector('.notification-state').textContent).toContain('Disabled');
     expect(component.notice).toContain('disabled');
   });
 

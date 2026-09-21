@@ -84,9 +84,10 @@ domain. `configure-api.ps1` reads the management stack's `ApiUrl` output, which 
 `https://dev.api.pinglight.xyz` for dev. `app-config.json` contains only public
 endpoints and client IDs. Generate it before building.
 
-Sign-in uses authorization code + PKCE through `oidc-client-ts`. Tokens stay in
-memory; session storage holds only the temporary login transaction. Existing
-access tokens can remain valid for up to 15 minutes after sign-out.
+Sign-in uses authorization code + PKCE through `oidc-client-ts`. The OIDC user and
+temporary login transaction are stored in browser session storage, preserving the
+login across refreshes in the current tab. Sign-out removes the stored user.
+Existing access tokens can remain valid for up to 15 minutes after sign-out.
 
 ## Bootstrap the first system administrator
 
