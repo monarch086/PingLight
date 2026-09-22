@@ -1,0 +1,121 @@
+@use 'page-styles';
+
+.page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.workspace {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.device-list {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(265px, 1fr));
+  gap: 20px;
+}
+
+.device {
+  padding: 24px;
+}
+
+.device-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+dl {
+  margin: 25px 0;
+}
+
+dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  margin: 12px 0;
+}
+
+dt {
+  color: #7b857d;
+}
+
+dd {
+  margin: 0;
+  text-align: right;
+}
+
+.full {
+  width: 100%;
+}
+
+.editor {
+  width: min(100%, 520px);
+  padding: 26px;
+  margin: auto;
+}
+
+input:not([type='checkbox']) {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #cdd9d0;
+  border-radius: 8px;
+  background: #fafcf9;
+  color: #203e30;
+  font: inherit;
+  font-size: 14px;
+}
+
+h3 {
+  font-size: 15px;
+  margin-top: 28px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 28px;
+}
+
+.empty {
+  text-align: center;
+  padding: 55px 20px;
+}
+
+.empty-icon {
+  font-size: 36px;
+  color: #789373;
+}
+
+fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+@media (width <=850px) {
+  .workspace {
+    flex-direction: column;
+  }
+
+  .editor,
+  .device-list {
+    width: 100%;
+  }
+}
+
+@media (width <=600px) {
+  .page-heading {
+    align-items: flex-start;
+    gap: 20px;
+    flex-direction: column;
+  }
+}

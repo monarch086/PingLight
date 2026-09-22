@@ -1,0 +1,81 @@
+@use 'page-styles';
+
+:host {
+  display: block;
+}
+
+.topbar {
+  max-width: 1200px;
+  margin: auto;
+  padding: 28px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #dce4df;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #173b30;
+  text-decoration: none;
+  font-size: 23px;
+  font-weight: 750;
+  letter-spacing: -1px;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  background: #204b3c;
+  color: white;
+  border-radius: 10px;
+  width: 34px;
+  height: 34px;
+  font-size: 22px;
+}
+
+.brand-dot {
+  width: 7px;
+  height: 7px;
+  background: #d4b95c;
+  border-radius: 50%;
+}
+
+.account {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 14px;
+}
+
+main {
+  max-width: 1200px;
+  margin: auto;
+  padding: 48px 32px;
+  min-height: 75vh;
+}
+
+footer {
+  max-width: 1200px;
+  margin: auto;
+  padding: 24px 32px;
+  border-top: 1px solid #dce4df;
+  font-size: 12px;
+  color: #69806f;
+  display: flex;
+  justify-content: space-between;
+}
+
+@media (width <=600px) {
+  .topbar,
+  main {
+    padding: 24px 20px;
+  }
+
+  .account span,
+  footer span {
+    display: none;
+  }
+}

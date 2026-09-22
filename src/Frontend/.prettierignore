@@ -1,0 +1,6 @@
+.angular
+.serverless
+coverage
+dist
+node_modules
+src/assets/app-config.json

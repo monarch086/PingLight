@@ -50,6 +50,8 @@ public class Function
             var presentPercents = 100 - absentPercents;
 
             var chart = PieChartGenerator.Generate(presentPercents, absentPercents);
+            context.Logger.LogInformation($"Image size: {chart.Length} bytes.");
+
             await bot.PostImageBytes(chart, message, device.ChatId);
 
             context.Logger.LogInformation(message);

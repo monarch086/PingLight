@@ -8,7 +8,7 @@ const char* host = "https://dev.api.pinglight.xyz/pings";
 const int httpsPort = 443;
 
 const String deviceId = "test";
-const String query = "/?Id=" + deviceId;
+const String query = "?Id=" + deviceId;
 const String url = host + query;
 
 const String body = "{\"Id\": " + deviceId + "}";

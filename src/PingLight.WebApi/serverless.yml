@@ -1,0 +1,237 @@
+service: pinglight-management
+frameworkVersion: '4'
+# Keep validation enabled as warnings, matching the existing Lambda service.
+configValidationMode: warn
+
+params:
+  dev:
+    frontendOrigin: https://dev.pinglight.xyz
+    apiDomain: dev.api.pinglight.xyz
+  prod:
+    frontendOrigin: https://pinglight.xyz
+    apiDomain: api.pinglight.xyz
+
+custom:
+  coreStack: pinglight-${sls:stage}
+  cors:
+    origins:
+      - ${param:frontendOrigin}
+    headers:
+      - Authorization
+      - Content-Type
+    allowCredentials: false
+  authorizer:
+    name: pinglight-${sls:stage}-users
+    type: COGNITO_USER_POOLS
+    arn:
+      Fn::GetAtt: [UserPool, Arn]
+    # Direct Cognito SDK authentication issues access tokens with this reserved scope.
+    scopes:
+      - aws.cognito.signin.user.admin
+
+provider:
+  name: aws
+  runtime: dotnet10
+  region: eu-central-1
+  stage: dev
+  memorySize: 512
+  timeout: 15
+  logRetentionInDays: 14
+  environment:
+    ASPNETCORE_ENVIRONMENT: Production
+    Devices__TableName: PingLight.${sls:stage}.DeviceConfigs
+    Changes__TableName: PingLight.${sls:stage}.Changes
+    Users__TableName:
+      Ref: UsersTable
+    Cognito__Authority:
+      Fn::Sub: https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}
+    Cognito__ClientId:
+      Ref: UserPoolClient
+    Cognito__UserPoolId:
+      Ref: UserPool
+    AllowedOrigins__0: ${param:frontendOrigin}
+  apiGateway:
+    restApiId: ${env:PINGLIGHT_REST_API_ID, cf:${self:custom.coreStack}.RestApiId}
+    restApiRootResourceId: ${env:PINGLIGHT_REST_API_ROOT_RESOURCE_ID, cf:${self:custom.coreStack}.RestApiRootResourceId}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:UpdateItem
+          Resource:
+            Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/PingLight.${sls:stage}.DeviceConfigs
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:TransactWriteItems
+            - dynamodb:DeleteItem
+          Resource:
+            Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/PingLight.${sls:stage}.Changes
+        - Effect: Allow
+          Action:
+            - dynamodb:UpdateItem
+          Resource:
+            Fn::GetAtt: [UsersTable, Arn]
+        - Effect: Allow
+          Action:
+            - cognito-idp:ListUsers
+          Resource:
+            Fn::GetAtt: [UserPool, Arn]
+
+package:
+  artifact: bin/Release/management-api.zip
+
+functions:
+  api:
+    handler: PingLight.WebApi
+    events:
+      - http:
+          path: /devices
+          method: GET
+          cors: ${self:custom.cors}
+          authorizer: ${self:custom.authorizer}
+      - http:
+          path: /devices/{deviceId}/destinations/{chatId}/settings
+          method: PUT
+          cors: ${self:custom.cors}
+          authorizer: ${self:custom.authorizer}
+      - http:
+          path: /devices/{deviceId}/destinations/{chatId}/notifications
+          method: PUT
+          cors: ${self:custom.cors}
+          authorizer: ${self:custom.authorizer}
+      - http:
+          path: /devices/{deviceId}/destinations/{chatId}/turn-offs
+          method: GET
+          cors: ${self:custom.cors}
+          authorizer: ${self:custom.authorizer}
+      - http:
+          path: /devices/{deviceId}/destinations/{chatId}/turn-offs/latest
+          method: DELETE
+          cors: ${self:custom.cors}
+          authorizer: ${self:custom.authorizer}
+      - http:
+          path: /users/me
+          method: GET
+          cors: ${self:custom.cors}
+          authorizer: ${self:custom.authorizer}
+      - http:
+          path: /users
+          method: GET
+          cors: ${self:custom.cors}
+          authorizer: ${self:custom.authorizer}
+      - http:
+          path: /users/{userId}/devices/{deviceId}/destinations/{chatId}
+          method: PUT
+          cors: ${self:custom.cors}
+          authorizer: ${self:custom.authorizer}
+      - http:
+          path: /users/{userId}/devices/{deviceId}/destinations/{chatId}
+          method: DELETE
+          cors: ${self:custom.cors}
+          authorizer: ${self:custom.authorizer}
+
+resources:
+  Conditions:
+    IsDev:
+      Fn::Equals: ['${sls:stage}', dev]
+  Resources:
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      UpdateReplacePolicy: Retain
+      Properties:
+        TableName: PingLight.${sls:stage}.Users
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: UserId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: UserId
+            KeyType: HASH
+    UserPool:
+      Type: AWS::Cognito::UserPool
+      DeletionPolicy: Retain
+      UpdateReplacePolicy: Retain
+      Properties:
+        UserPoolName: pinglight-${sls:stage}-users
+        UsernameAttributes: [email]
+        AutoVerifiedAttributes: [email]
+        UsernameConfiguration:
+          CaseSensitive: false
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 12
+            RequireLowercase: true
+            RequireUppercase: true
+            RequireNumbers: true
+            RequireSymbols: false
+        AccountRecoverySetting:
+          RecoveryMechanisms:
+            - Name: verified_email
+              Priority: 1
+        Schema:
+          - Name: email
+            Required: true
+            Mutable: true
+    UserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        UserPoolId:
+          Ref: UserPool
+        ClientName: pinglight-${sls:stage}-frontend
+        GenerateSecret: false
+        ExplicitAuthFlows:
+          - ALLOW_USER_SRP_AUTH
+          - ALLOW_REFRESH_TOKEN_AUTH
+        AllowedOAuthFlowsUserPoolClient: true
+        AllowedOAuthFlows: [code]
+        AllowedOAuthScopes: [openid, email, profile]
+        SupportedIdentityProviders: [COGNITO]
+        PreventUserExistenceErrors: ENABLED
+        EnableTokenRevocation: true
+        AccessTokenValidity: 15
+        IdTokenValidity: 15
+        RefreshTokenValidity: 1
+        TokenValidityUnits:
+          AccessToken: minutes
+          IdToken: minutes
+          RefreshToken: days
+        CallbackURLs:
+          Fn::If:
+            - IsDev
+            - ['${param:frontendOrigin}/auth/callback', 'http://localhost:4201/auth/callback']
+            - ['${param:frontendOrigin}/auth/callback']
+        LogoutURLs:
+          Fn::If:
+            - IsDev
+            - ['${param:frontendOrigin}/', 'http://localhost:4201/']
+            - ['${param:frontendOrigin}/']
+    UserPoolDomain:
+      Type: AWS::Cognito::UserPoolDomain
+      Properties:
+        UserPoolId:
+          Ref: UserPool
+        Domain:
+          Fn::Sub: pinglight-${sls:stage}-${AWS::AccountId}
+  Outputs:
+    CognitoAuthority:
+      Value:
+        Fn::Sub: https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}
+    CognitoClientId:
+      Value:
+        Ref: UserPoolClient
+    CognitoDomain:
+      Value:
+        Fn::Sub: https://pinglight-${sls:stage}-${AWS::AccountId}.auth.${AWS::Region}.amazoncognito.com
+    CognitoUserPoolId:
+      Value:
+        Ref: UserPool
+    UsersTableName:
+      Value:
+        Ref: UsersTable
+    ApiUrl:
+      Value: https://${param:apiDomain}

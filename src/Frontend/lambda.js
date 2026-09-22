@@ -1,30 +1,34 @@
-const awsServerlessExpress = require("aws-serverless-express");
-const server = require("./dist/pinglight/server/main");
-const awsServerlessExpressMiddleware = require("aws-serverless-express/middleware");
+﻿const awsServerlessExpress = require('aws-serverless-express');
 
-const binaryMimeTypes = [
-  "application/javascript",
-  "application/json",
-  "application/octet-stream",
-  "application/xml",
-  "image/jpeg",
-  "image/png",
-  "image/gif",
-  "text/comma-separated-values",
-  "text/css",
-  "text/html",
-  "text/javascript",
-  "text/plain",
-  "text/text",
-  "text/xml",
-  "image/x-icon",
-  "image/svg+xml",
-  "application/x-font-ttf",
-];
+let serverPromise;
 
-const app = server.app();
-app.use(awsServerlessExpressMiddleware.eventContext());
-const serverProxy = awsServerlessExpress.createServer(app,null,binaryMimeTypes);
-
-module.exports.universal = (event, context) =>
-  awsServerlessExpress.proxy(serverProxy, event, context);
+// Angular's application builder emits ESM. Cache the server across warm invocations.
+exports.universal = async (event, context) => {
+  serverPromise ??= import('./dist/pinglight/server/server.mjs')
+    .then(({ reqHandler }) =>
+      awsServerlessExpress.createServer(reqHandler, null, [
+        'application/javascript',
+        'application/json',
+        'application/octet-stream',
+        'text/css',
+        'text/html',
+        'image/png',
+        'image/jpeg',
+        'image/gif',
+        'image/svg+xml',
+        'image/x-icon',
+        'font/woff',
+        'font/woff2',
+      ]),
+    )
+    .catch((error) => {
+      serverPromise = undefined;
+      throw error;
+    });
+  return awsServerlessExpress.proxy(
+    await serverPromise,
+    event,
+    context,
+    'PROMISE',
+  ).promise;
+};

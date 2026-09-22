@@ -1,0 +1,28 @@
+@host = http://localhost:5063
+@accessToken = REPLACE_WITH_COGNITO_ACCESS_TOKEN
+
+GET {{host}}/devices
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
+###
+PUT {{host}}/devices/REPLACE_WITH_ASSIGNED_DEVICE_ID/destinations/REPLACE_WITH_CHAT_ID/settings
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "description": "Home",
+  "notificationDelaySec": 120,
+  "isDailyStatsEnabled": true,
+  "isWeeklyStatsEnabled": false,
+  "isMonthlyStatsEnabled": false
+}
+
+###
+PUT {{host}}/devices/REPLACE_WITH_ASSIGNED_DEVICE_ID/destinations/REPLACE_WITH_CHAT_ID/notifications
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "isActive": true
+}

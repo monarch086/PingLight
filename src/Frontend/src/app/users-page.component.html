@@ -1,0 +1,66 @@
+@if (error) {
+  <div class="alert error" role="alert">{{ error }}</div>
+}
+@if (notice) {
+  <div class="alert success" role="status">{{ notice }}</div>
+}
+@if (session.currentUser?.isSystemAdmin) {
+  <section class="panel access-panel" aria-labelledby="access-title">
+    <p class="eyebrow">КЕРУВАННЯ ДОСТУПОМ</p>
+    <h1 id="access-title">Доступ користувачів до пристроїв</h1>
+    <button
+      class="secondary"
+      type="button"
+      (click)="load()"
+      [disabled]="loading || !!changingGrant"
+    >
+      Оновити користувачів і пристрої
+    </button>
+    @if (loading) {
+      <p class="loading" role="status">Завантажуємо користувачів і пристрої…</p>
+    }
+    <p>
+      Системні адміністратори завжди мають доступ до всіх пристроїв. Оберіть
+      пристрої, якими може керувати кожен звичайний користувач.
+    </p>
+    @for (user of users; track user) {
+      <div class="access-user">
+        <div class="access-user-heading">
+          <div>
+            <strong>{{ user.email || user.userId }}</strong
+            ><small>{{ user.userId }}</small>
+          </div>
+          @if (user.isSystemAdmin) {
+            <span class="badge">Системний адміністратор</span>
+          }
+        </div>
+        @if (!user.isSystemAdmin) {
+          <div class="grant-grid">
+            @for (device of devices; track device) {
+              <label class="check grant">
+                <input
+                  type="checkbox"
+                  [checked]="hasGrant(user, device)"
+                  [disabled]="!!changingGrant"
+                  (change)="setGrant(user, device, $any($event.target).checked)"
+                />
+                <span
+                  >{{ device.settings.description || device.deviceId
+                  }}<small
+                    >{{ device.deviceId }} · {{ device.chatId }}</small
+                  ></span
+                >
+              </label>
+            }
+            @if (!devices.length) {
+              <p class="hint">Немає доступних пристроїв.</p>
+            }
+          </div>
+        }
+      </div>
+    }
+    @if (!users.length) {
+      <p class="hint">Жоден користувач ще не входив у систему.</p>
+    }
+  </section>
+}

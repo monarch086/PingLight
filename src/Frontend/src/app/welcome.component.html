@@ -1,0 +1,29 @@
+<section class="welcome">
+  <div class="intro">
+    <h1>Відстежуйте наявність світла у Вашому домі.</h1>
+    <p class="lede">
+      Ваші пристрої, сповіщення та звіти.<br />Усе необхідне в одному місці.
+    </p>
+    <button
+      type="button"
+      (click)="signIn.emit()"
+      [disabled]="!ready || !configured"
+    >
+      {{ ready ? 'Увійти / створити обліковий запис' : 'Готуємося…' }}
+      <span aria-hidden="true">↗</span>
+    </button>
+    <p class="signin-note">
+      Безпечний доступ · Підтвердження електронної пошти · Відновлення пароля
+    </p>
+  </div>
+  <div class="welcome-card panel">
+    <div class="orb" aria-hidden="true"><span>⌁</span></div>
+    <p class="eyebrow">МЕНШЕ ПЕРЕВІРОК. БІЛЬШЕ ВПЕВНЕНОСТІ.</p>
+    <h2>Налаштуйте сповіщення<br />під свої потреби.</h2>
+    <ul>
+      <li><span>01</span>Переглядайте призначені пристрої</li>
+      <li><span>02</span>Налаштовуйте затримку сповіщень</li>
+      <li><span>03</span>Обирайте потрібні звіти</li>
+    </ul>
+  </div>
+</section>
