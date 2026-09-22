@@ -42,7 +42,10 @@ setTimeout(() => {
   for (const path of ['/devices', '/users']) {
     const response = await request(path);
     assert.equal(response.statusCode, 200, path + ': ' + body(response));
-    assert.match(body(response), /Залишайтеся на зв’язку/);
+    assert.match(
+      body(response),
+      /Відстежуйте наявність світла у Вашому домі\./,
+    );
   }
   const config = await request('/assets/app-config.json');
   assert.equal(config.statusCode, 200);

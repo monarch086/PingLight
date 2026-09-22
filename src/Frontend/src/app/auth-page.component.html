@@ -1,11 +1,7 @@
 <section class="auth-page">
   <div class="auth-intro">
     <p class="eyebrow">ВАШ ОБЛІКОВИЙ ЗАПИС</p>
-    <h1>Керуйте PingLight<br /><span>без зайвих переходів.</span></h1>
-    <p>
-      Вхід, реєстрація та відновлення доступу відбуваються безпосередньо на
-      сайті PingLight.
-    </p>
+    <h1>Керуйте датчиками PingLight</h1>
   </div>
 
   <div class="auth-card panel">
@@ -14,8 +10,7 @@
     </button>
 
     @if (mode === 'sign-in') {
-      <p class="eyebrow">ВХІД</p>
-      <h2>Раді бачити вас знову</h2>
+      <h2>ВХІД</h2>
       <form (ngSubmit)="submitSignIn()">
         <label
           >Електронна адреса<input
