@@ -1,3 +1,4 @@
+import { NgSelectComponent } from '@ng-select/ng-select';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { DevicesPageComponent } from './devices-page.component';
@@ -320,7 +321,7 @@ describe('Management dashboard', () => {
     expect(api.list).not.toHaveBeenCalled();
   });
 
-  it('shows user access controls to system administrators and grants a device', async () => {
+  it('saves edited device grants only after Save and discards cancelled changes', async () => {
     usersApi.me.and.resolveTo({
       userId: 'admin-a',
       email: 'admin@example.test',
@@ -344,14 +345,75 @@ describe('Management dashboard', () => {
     );
     const component = usersPage();
     const user = component.users[0];
-    await component.setGrant(user, component.devices[0], true);
-    expect(usersApi.setGrant).toHaveBeenCalledWith(
+    component.edit(user);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('ng-select')).not.toBeNull();
+    fixture.debugElement
+      .query(By.directive(NgSelectComponent))
+      .componentInstance.open();
+    await settle();
+    expect(document.querySelector('.ng-dropdown-panel')?.textContent).toContain(
+      'home · chat-a',
+    );
+    component.draftKeys = [component.deviceOptions[0].key];
+    expect(component.hasChanges(user)).toBeTrue();
+    expect(usersApi.setGrant).not.toHaveBeenCalled();
+    component.cancelEdit();
+    expect(user.grants).toEqual([]);
+    expect(usersApi.setGrant).not.toHaveBeenCalled();
+
+    component.edit(user);
+    component.draftKeys = [component.deviceOptions[0].key];
+    await component.save(user);
+    expect(usersApi.setGrant).toHaveBeenCalledOnceWith(
       'user-a',
       'home',
       'chat-a',
       true,
     );
-    expect(component.hasGrant(user, component.devices[0])).toBeTrue();
+    expect(user.grants).toEqual([{ deviceId: 'home', chatId: 'chat-a' }]);
+    expect(component.editingUserId).toBe('');
+
+    component.edit(user);
+    component.draftKeys = [];
+    await component.save(user);
+    expect(usersApi.setGrant).toHaveBeenCalledWith(
+      'user-a',
+      'home',
+      'chat-a',
+      false,
+    );
+    expect(user.grants).toEqual([]);
+  });
+
+  it('keeps the editor open after a failed grant save so it can be retried', async () => {
+    usersApi.me.and.resolveTo({
+      userId: 'admin-a',
+      email: 'admin@example.test',
+      isSystemAdmin: true,
+    });
+    usersApi.list.and.resolveTo({
+      items: [
+        {
+          userId: 'user-a',
+          email: 'person@example.test',
+          isSystemAdmin: false,
+          grants: [],
+        },
+      ],
+    });
+    await signIn();
+    await TestBed.inject(Router).navigateByUrl('/users');
+    await settle();
+    const component = usersPage();
+    const user = component.users[0];
+    component.edit(user);
+    component.draftKeys = [component.deviceOptions[0].key];
+    usersApi.setGrant.and.rejectWith(new Error('Save failed'));
+    await component.save(user);
+    expect(component.editingUserId).toBe('user-a');
+    expect(component.hasChanges(user)).toBeTrue();
+    expect(user.grants).toEqual([]);
   });
 
   it('opens the users page from its URL and preserves it when the app is recreated', async () => {
