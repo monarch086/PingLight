@@ -12,6 +12,7 @@ params:
     apiDomain: api.pinglight.xyz
 
 custom:
+  notificationEmailFrom: ${param:signupEmailFrom, 'sbarsuk88@gmail.com'}
   coreStack: pinglight-${sls:stage}
   cors:
     origins:
@@ -37,19 +38,6 @@ provider:
   memorySize: 512
   timeout: 15
   logRetentionInDays: 14
-  environment:
-    ASPNETCORE_ENVIRONMENT: Production
-    Devices__TableName: PingLight.${sls:stage}.DeviceConfigs
-    Changes__TableName: PingLight.${sls:stage}.Changes
-    Users__TableName:
-      Ref: UsersTable
-    Cognito__Authority:
-      Fn::Sub: https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}
-    Cognito__ClientId:
-      Ref: UserPoolClient
-    Cognito__UserPoolId:
-      Ref: UserPool
-    AllowedOrigins__0: ${param:frontendOrigin}
   apiGateway:
     restApiId: ${env:PINGLIGHT_REST_API_ID, cf:${self:custom.coreStack}.RestApiId}
     restApiRootResourceId: ${env:PINGLIGHT_REST_API_ROOT_RESOURCE_ID, cf:${self:custom.coreStack}.RestApiRootResourceId}
@@ -82,11 +70,97 @@ provider:
             Fn::GetAtt: [UserPool, Arn]
 
 package:
+  individually: true
   artifact: bin/Release/management-api.zip
 
 functions:
+  cognito-messages:
+    handler: PingLight.SignupNotifications.Lambda::PingLight.SignupNotifications.Lambda.CognitoMessages::Customize
+    role:
+      Fn::GetAtt: [CognitoMessagesRole, Arn]
+    timeout: 5
+    package:
+      artifact: bin/Release/signup-notifications.zip
+  access-change-notifications:
+    handler: PingLight.SignupNotifications.Lambda::PingLight.SignupNotifications.Lambda.Function::AccessChangedAsync
+    role:
+      Fn::GetAtt: [AccessChangeNotificationsRole, Arn]
+    timeout: 30
+    package:
+      artifact: bin/Release/signup-notifications.zip
+    environment:
+      OUTBOX_TABLE:
+        Ref: SignupNotificationsTable
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt: [UsersTable, StreamArn]
+          batchSize: 10
+          startingPosition: TRIM_HORIZON
+          functionResponseType: ReportBatchItemFailures
+          maximumRetryAttempts: 10
+          destinations:
+            onFailure:
+              arn:
+                Fn::GetAtt: [AccessChangeNotificationsFailureQueue, Arn]
+              type: sqs
+  signup-confirmation:
+    handler: PingLight.SignupNotifications.Lambda::PingLight.SignupNotifications.Lambda.Function::PostConfirmationAsync
+    role:
+      Fn::GetAtt: [SignupConfirmationRole, Arn]
+    timeout: 5
+    package:
+      artifact: bin/Release/signup-notifications.zip
+    environment:
+      OUTBOX_TABLE:
+        Ref: SignupNotificationsTable
+  signup-notifications:
+    handler: PingLight.SignupNotifications.Lambda::PingLight.SignupNotifications.Lambda.Function::DeliverAsync
+    role:
+      Fn::GetAtt: [SignupNotificationsRole, Arn]
+    timeout: 60
+    package:
+      artifact: bin/Release/signup-notifications.zip
+    environment:
+      OUTBOX_TABLE:
+        Ref: SignupNotificationsTable
+      STAGE: ${sls:stage}
+      PROJECT_NAME: PingLight
+      EMAIL_TO: sbarsuk88@gmail.com
+      DEVICES_URL: ${param:frontendOrigin}/devices
+      EMAIL_FROM: ${self:custom.notificationEmailFrom}
+      TELEGRAM_CHAT_ID: '38627946'
+      TELEGRAM_TOKEN_PARAMETER: /PingLight/${sls:stage}/TelegramBot.Token
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt: [SignupNotificationsTable, StreamArn]
+          batchSize: 2
+          startingPosition: TRIM_HORIZON
+          functionResponseType: ReportBatchItemFailures
+          maximumRetryAttempts: 10
+          destinations:
+            onFailure:
+              arn:
+                Fn::GetAtt: [SignupNotificationsFailureQueue, Arn]
+              type: sqs
   api:
     handler: PingLight.WebApi
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      Devices__TableName: PingLight.${sls:stage}.DeviceConfigs
+      Changes__TableName: PingLight.${sls:stage}.Changes
+      Users__TableName:
+        Ref: UsersTable
+      Cognito__Authority:
+        Fn::Sub: https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}
+      Cognito__ClientId:
+        Ref: UserPoolClient
+      Cognito__UserPoolId:
+        Ref: UserPool
+      AllowedOrigins__0: ${param:frontendOrigin}
     events:
       - http:
           path: /devices
@@ -139,6 +213,151 @@ resources:
     IsDev:
       Fn::Equals: ['${sls:stage}', dev]
   Resources:
+    SignupNotificationsTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      UpdateReplacePolicy: Retain
+      Properties:
+        TableName: PingLight.${sls:stage}.SignupNotifications
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: Id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: Id
+            KeyType: HASH
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+    SignupNotificationsFailureQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        MessageRetentionPeriod: 1209600
+    SignupConfirmationPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        Action: lambda:InvokeFunction
+        FunctionName:
+          Fn::GetAtt: [SignupDashconfirmationLambdaFunction, Arn]
+        Principal: cognito-idp.amazonaws.com
+        SourceAccount:
+          Ref: AWS::AccountId
+        SourceArn:
+          Fn::GetAtt: [UserPool, Arn]
+    SignupConfirmationRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument: &lambdaTrust
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+              Action: sts:AssumeRole
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        Policies:
+          - PolicyName: enqueue-signup-notifications
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action: dynamodb:PutItem
+                  Resource:
+                    Fn::GetAtt: [SignupNotificationsTable, Arn]
+    SignupNotificationsRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument: *lambdaTrust
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        Policies:
+          - PolicyName: deliver-signup-notifications
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action: [dynamodb:GetItem, dynamodb:UpdateItem]
+                  Resource:
+                    Fn::GetAtt: [SignupNotificationsTable, Arn]
+                - Effect: Allow
+                  Action: [dynamodb:DescribeStream, dynamodb:GetRecords, dynamodb:GetShardIterator]
+                  Resource:
+                    Fn::GetAtt: [SignupNotificationsTable, StreamArn]
+                - Effect: Allow
+                  Action: dynamodb:ListStreams
+                  Resource: '*'
+                - Effect: Allow
+                  Action: ssm:GetParameter
+                  Resource:
+                    Fn::Sub: arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/PingLight/${sls:stage}/TelegramBot.Token
+                - Effect: Allow
+                  Action: kms:Decrypt
+                  Resource:
+                    Fn::Sub: arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*
+                  Condition:
+                    StringEquals:
+                      kms:ViaService:
+                        Fn::Sub: ssm.${AWS::Region}.amazonaws.com
+                      kms:EncryptionContext:PARAMETER_ARN:
+                        Fn::Sub: arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/PingLight/${sls:stage}/TelegramBot.Token
+                - Effect: Allow
+                  Action: ses:SendEmail
+                  Resource:
+                    Fn::Sub: arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/*
+                  Condition:
+                    StringEquals:
+                      ses:FromAddress: ${self:custom.notificationEmailFrom}
+                - Effect: Allow
+                  Action: sqs:SendMessage
+                  Resource:
+                    Fn::GetAtt: [SignupNotificationsFailureQueue, Arn]
+    CognitoMessagesRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument: *lambdaTrust
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+    CognitoMessagesPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        Action: lambda:InvokeFunction
+        FunctionName:
+          Fn::GetAtt: [CognitoDashmessagesLambdaFunction, Arn]
+        Principal: cognito-idp.amazonaws.com
+        SourceAccount:
+          Ref: AWS::AccountId
+        SourceArn:
+          Fn::GetAtt: [UserPool, Arn]
+    AccessChangeNotificationsFailureQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        MessageRetentionPeriod: 1209600
+    AccessChangeNotificationsRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument: *lambdaTrust
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        Policies:
+          - PolicyName: enqueue-access-change-notifications
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action: dynamodb:PutItem
+                  Resource:
+                    Fn::GetAtt: [SignupNotificationsTable, Arn]
+                - Effect: Allow
+                  Action: [dynamodb:DescribeStream, dynamodb:GetRecords, dynamodb:GetShardIterator]
+                  Resource:
+                    Fn::GetAtt: [UsersTable, StreamArn]
+                - Effect: Allow
+                  Action: dynamodb:ListStreams
+                  Resource: '*'
+                - Effect: Allow
+                  Action: sqs:SendMessage
+                  Resource:
+                    Fn::GetAtt: [AccessChangeNotificationsFailureQueue, Arn]
     UsersTable:
       Type: AWS::DynamoDB::Table
       DeletionPolicy: Retain
@@ -152,12 +371,24 @@ resources:
         KeySchema:
           - AttributeName: UserId
             KeyType: HASH
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
     UserPool:
       Type: AWS::Cognito::UserPool
       DeletionPolicy: Retain
       UpdateReplacePolicy: Retain
       Properties:
         UserPoolName: pinglight-${sls:stage}-users
+        EmailConfiguration:
+          EmailSendingAccount: DEVELOPER
+          From: ${self:custom.notificationEmailFrom}
+          SourceArn:
+            Fn::Sub: arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/${param:signupEmailIdentity, self:custom.notificationEmailFrom}
+        LambdaConfig:
+          CustomMessage:
+            Fn::GetAtt: [CognitoDashmessagesLambdaFunction, Arn]
+          PostConfirmation:
+            Fn::GetAtt: [SignupDashconfirmationLambdaFunction, Arn]
         UsernameAttributes: [email]
         AutoVerifiedAttributes: [email]
         UsernameConfiguration:
@@ -235,3 +466,9 @@ resources:
         Ref: UsersTable
     ApiUrl:
       Value: https://${param:apiDomain}
+    SignupNotificationsFailureQueueUrl:
+      Value:
+        Ref: SignupNotificationsFailureQueue
+    AccessChangeNotificationsFailureQueueUrl:
+      Value:
+        Ref: AccessChangeNotificationsFailureQueue

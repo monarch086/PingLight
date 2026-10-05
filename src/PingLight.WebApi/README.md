@@ -89,6 +89,63 @@ are stored in browser session storage, preserving login across refreshes in the
 current tab. Sign-out removes the stored user.
 Existing access tokens can remain valid for up to 15 minutes after sign-out.
 
+## Email and signup notifications
+
+After a new account confirms its email, Cognito queues two administrator alerts:
+email to `sbarsuk88@gmail.com` and Telegram to chat `38627946`. Both contain the
+deployment stage (`dev`/`prod`), project name (`PingLight`), and the user's email.
+Password resets do not send these administrator alerts. All email subjects and
+bodies are Ukrainian, including signup alerts, access-change emails, and Cognito
+verification, invitation, sign-in, and password-recovery emails.
+
+The management stack deploys four .NET 10 Lambda functions from
+`../Lambdas/PingLight.SignupNotifications.Lambda` alongside the .NET API.
+`build.ps1` creates both deployment ZIP files. The confirmation hook atomically
+stores both alerts in the retained `PingLight.<stage>.SignupNotifications` outbox.
+The access-change function compares old and new `DeviceGrants` sets on the Users
+DynamoDB stream and queues one email to the user's stored email for each actual
+change. It lists added and revoked devices without ChatId, environment, or project
+metadata in either the subject or body. Cognito emails also omit project labels;
+metadata is reserved for administrator service emails. Access emails include an
+HTML button linking to the stage-specific
+frontend `/devices` page, plus a link in the plain-text alternative. Unchanged grants, logins,
+email updates, and administrator-role changes do not generate device-access emails.
+Direct DynamoDB grant edits also notify users. A stable stream event ID prevents
+re-enqueuing an email on retries.
+A DynamoDB stream worker delivers them independently and records completed sends.
+Repeated confirmations and stream retries skip completed alerts. Delivery is
+at least once: a crash after the provider accepts a message but before the worker
+records completion can duplicate that message.
+
+Before deployment, verify the sender `sbarsuk88@gmail.com` in SES in `eu-central-1`,
+or pass `--param="signupEmailFrom=YOUR_VERIFIED_SENDER"` to packaging and deployment.
+Cognito also uses this verified SES sender (`EmailSendingAccount: DEVELOPER`) so
+its custom-message function can return Ukrainian email text. If the SES identity
+is a verified domain instead of the sender address, also pass
+`--param="signupEmailIdentity=YOUR_VERIFIED_DOMAIN"`.
+In the SES sandbox, every recipient must also be verified. Sending access emails
+to arbitrary signed-up users requires SES production access in `eu-central-1`.
+The existing bot token is
+read with decryption from `/PingLight/<stage>/TelegramBot.Token`; the bot must be
+able to message chat `38627946`. No token is embedded in the deployment artifact.
+
+Failed deliveries retry up to ten times and then go to the SQS failure queue
+exported as `SignupNotificationsFailureQueueUrl`. The outbox retains undelivered
+rows for recovery. The failure queue contains stream failure metadata; use it to
+locate the outbox rows, fix the delivery configuration, and re-invoke the delivery
+function with an INSERT-shaped stream record for each undelivered row. Already
+delivered rows are skipped. The access-change enqueuer has a separate failure
+queue exported as `AccessChangeNotificationsFailureQueueUrl`. Its failures occur
+before an outbox row exists: use the stream failure metadata to retrieve and replay
+the original Users stream record while it is still available (DynamoDB streams
+retain records for 24 hours). Queue retention is fourteen days.
+
+Run notification tests with:
+
+~~~sh
+dotnet test ../Tests/PingLight.SignupNotifications.Tests/PingLight.SignupNotifications.Tests.csproj
+~~~
+
 ## Bootstrap the first system administrator
 
 Sign up, verify the email address, sign in, and allow the dashboard to load once.

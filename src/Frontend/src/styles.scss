@@ -1,4 +1,6 @@
-﻿* {
+@import '@ng-select/ng-select/themes/default.theme.css';
+
+* {
   box-sizing: border-box;
 }
 
@@ -93,25 +95,41 @@ button span {
 }
 
 .access-user-heading small,
-.grant small {
+.access-user ng-select small {
   display: block;
   color: var(--muted);
   font-weight: 400;
   margin-top: 0.2rem;
 }
 
-.grant-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+// Device grants are edited as a single draft per user.
+.grant-label {
+  display: block;
+  margin: 1rem 0 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.access-user ng-select {
+  max-width: 720px;
+}
+
+.access-user .ng-select .ng-select-container {
+  min-height: 44px;
+  border-color: var(--line);
+  border-radius: 9px;
+}
+
+.grant-actions {
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 1rem;
 }
 
-.check.grant {
-  align-items: flex-start;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 0.8rem;
+.grant-summary {
+  margin: 1rem 0 0.75rem;
+  color: var(--muted);
 }
 
 // Shared navigation styling.
